@@ -1,3 +1,5 @@
+use std::io;
+
 fn display_title() {
     for _ in 0..30 {
         print!("#");
@@ -6,8 +8,8 @@ fn display_title() {
 }
 
 fn print_menu() {
-    let mut choice: char = ' ';
-    while choice != '0' {
+    let mut choice = String::from("");
+    while !choice.eq("0") {
         display_title();
         println!("\n   WorgenX by Xen0rInspire \n");
         display_title();
@@ -17,15 +19,19 @@ fn print_menu() {
         println!("2 : Generate random password(s)");
         println!("3 : Hash plaintext");
         println!("4 : Benchmark CPU");
-        println!("5 : Exit WorgenX");
-        choice = '0';
-        // match choice {
-        //     '1' => create_wordlist(),
-        //     '2' => generate_password(),
-        //     '3' => hash_plaintext(),
-        //     '4' => benchmark_cpu(),
-        //     '5' => exit(),
-        //     _ => println!("Try again!"),
+        println!("0 : Exit WorgenX");
+
+        let mut buffer = String::new();
+        io::stdin().read_line(&mut buffer).expect("Failed to read line from stdin");
+        choice = buffer.trim().to_string();
+
+        match &*choice {
+            // '1' => create_wordlist(),
+            // '2' => generate_password(),
+            // '3' => hash_plaintext(),
+            // '4' => benchmark_cpu(),
+            _ => (),
+        }
     }
 }
 
