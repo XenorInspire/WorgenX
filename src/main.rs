@@ -1,5 +1,11 @@
+// Extern crates
 use std::io;
 
+// Internal crates
+mod system;
+mod password;
+
+// This function is charged to display the header menu
 fn display_title() {
     for _ in 0..30 {
         print!("#");
@@ -7,6 +13,7 @@ fn display_title() {
     println!();
 }
 
+// This functrion is charged to display the menu
 fn print_menu() {
     let mut choice = String::from("");
     while !choice.eq("0") {
@@ -14,11 +21,10 @@ fn print_menu() {
         println!("\n   WorgenX by Xen0rInspire \n");
         display_title();
 
-        print!("\n");
-        println!("\n1 : Create wordlist(s)");
+        print!("\n\n");
+        println!("1 : Create wordlist(s)");
         println!("2 : Generate random password(s)");
-        println!("3 : Hash plaintext");
-        println!("4 : Benchmark CPU");
+        println!("3 : Benchmark CPU");
         println!("0 : Exit WorgenX");
 
         let mut buffer = String::new();
@@ -27,14 +33,14 @@ fn print_menu() {
 
         match &*choice {
             // '1' => create_wordlist(),
-            // '2' => generate_password(),
-            // '3' => hash_plaintext(),
-            // '4' => benchmark_cpu(),
+            // '2' => generate_random_password(),
+            // '3' => benchmark_cpu(),
             _ => (),
         }
     }
 }
 
+// This function is the "entry point" of the program
 fn main() {
     print_menu();
     println!("Bye!");
