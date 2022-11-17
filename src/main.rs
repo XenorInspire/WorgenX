@@ -1,9 +1,6 @@
-// Extern crates
-use std::io;
-
 // Internal crates
-mod system;
 mod password;
+mod system;
 
 // This function is charged to display the header menu
 fn display_title() {
@@ -26,10 +23,7 @@ fn print_menu() {
         println!("2 : Generate random password(s)");
         println!("3 : Benchmark CPU");
         println!("0 : Exit WorgenX");
-
-        let mut buffer = String::new();
-        io::stdin().read_line(&mut buffer).expect("Failed to read line from stdin");
-        choice = buffer.trim().to_string();
+        choice = system::get_user_choice();
 
         match &*choice {
             // '1' => create_wordlist(),
