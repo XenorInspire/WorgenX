@@ -26,9 +26,9 @@ fn print_menu() {
         choice = system::get_user_choice();
 
         match &*choice {
-            // '1' => create_wordlist(),
-            // '2' => generate_random_password(),
-            // '3' => benchmark_cpu(),
+            "1" => password::main_passwd_generation(),
+            // "2" => generate_random_password(),
+            // "3" => benchmark_cpu(),
             _ => (),
         }
     }

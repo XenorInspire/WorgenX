@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::{stdin, Write};
 
 // This function is charged to save the password in a file
-fn save_password(password: &str, file_name: &str) {
+fn save_into_a_file(password: &str, file_name: &str) {
     let mut file = File::create(file_name).expect("Unable to create file");
     file.write_all(password.as_bytes())
         .expect("Unable to write data");
@@ -35,7 +35,7 @@ pub fn get_user_choice_int() -> u64 {
                     number = _n;
                 }
             }
-            Err(_e) => println!("Please enter a number greater than 0"),
+            Err(_e) => println!("Please enter a valid number greater than 0"),
         }
     }
 
