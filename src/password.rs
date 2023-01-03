@@ -20,22 +20,31 @@ struct PasswordConfig {
 
 // This is the main function of the random password generation module
 pub fn main_passwd_generation() {
-    let password_config = allocate_passwd_config();
-    println!("How many passwords do you want to generate ?");
-    let number_of_passwords = system::get_user_choice_int();
-    let passwords = generate_random_passwords(&password_config, number_of_passwords);
+    let mut again = String::from("y");
 
-    println!("Do you want to save the passwords in a file ? (y/n)");
-    let choice = system::get_user_choice();
-    if choice.eq("y") {
-        println!("Please enter the file name");
-        let file_name = system::get_user_choice();
-        system::save_into_a_file(&passwords, &file_name);
+    while again.eq("y") {
+        let password_config = allocate_passwd_config();
+        println!("How many passwords do you want to generate ?");
+        let number_of_passwords = system::get_user_choice_int();
+        let passwords = generate_random_passwords(&password_config, number_of_passwords);
+
+        println!("Do you want to save the passwords in a file ? (y/n)");
+        let choice = system::get_user_choice();
+        if choice.eq("y") {
+            println!("Please enter the file name");
+            let file_name = system::get_user_choice();
+            system::save_passwords_into_a_file(&passwords, &file_name);
+        }
+
+        println!("You can find your password(s) below :");
+        for password in passwords {
+            println!("{}", password);
+        }
+
+        println!("\nDo you want to generate another password(s) ? (y/n)");
+        again = system::get_user_choice();
     }
 
-    for password in passwords {
-        println!("{}", password);
-    }
 }
 
 // This function is charged to allocate the password config structure

@@ -2,9 +2,9 @@
 use std::fs::File;
 use std::io::{stdin, Write};
 
-// This function is charged to save the password in a file with \n as separator
-pub fn save_into_a_file(passwords: &Vec<String>, file_name: &str) {
-    let mut file = File::create(file_name).expect("Unable nto create file");
+// This function is charged to save the random password in a file with \n as separator
+pub fn save_passwords_into_a_file(passwords: &Vec<String>, file_name: &str) {
+    let mut file = File::create(file_name).expect("Unable to create file");
     for password in passwords {
         file.write_all(password.as_bytes()).expect("Unable to write data");
         file.write_all(b"\n").expect("Unable to write data");
