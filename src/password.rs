@@ -29,11 +29,9 @@ pub fn main_passwd_generation() {
         let passwords = generate_random_passwords(&password_config, number_of_passwords);
 
         println!("Do you want to save the passwords in a file ? (y/n)");
-        let choice = system::get_user_choice();
+        let choice = system::get_user_choice_yn();
         if choice.eq("y") {
-            println!("Please enter the file name");
-            let file_name = system::get_user_choice();
-            system::save_passwords_into_a_file(&passwords, &file_name);
+            system::save_passwords_into_a_file(&passwords);
         }
 
         println!("You can find your password(s) below :");
@@ -42,9 +40,8 @@ pub fn main_passwd_generation() {
         }
 
         println!("\nDo you want to generate another password(s) ? (y/n)");
-        again = system::get_user_choice();
+        again = system::get_user_choice_yn();
     }
-
 }
 
 // This function is charged to allocate the password config structure
@@ -57,34 +54,42 @@ fn allocate_passwd_config() -> PasswordConfig {
         length: 0,
     };
     let mut choice;
+    let mut error_counter: u8 = 0;
 
-    println!("\nChoose what your password is composed of :");
-    println!("Uppercase letters (A-Z) ? (y/n)");
-    choice = system::get_user_choice();
-    match &*choice {
-        "y" => password_config.uppercase = true,
-        _ => (),
-    }
+    while error_counter == 0 {
+        println!("\nChoose what your password is composed of :");
+        println!("Uppercase letters (A-Z) ? (y/n)");
+        choice = system::get_user_choice_yn();
+        match &*choice {
+            "y" => password_config.uppercase = true,
+            _ => error_counter += 1,
+        }
 
-    println!("Lowercase letters (a-z) ? (y/n)");
-    choice = system::get_user_choice();
-    match &*choice {
-        "y" => password_config.lowercase = true,
-        _ => (),
-    }
+        println!("Lowercase letters (a-z) ? (y/n)");
+        choice = system::get_user_choice_yn();
+        match &*choice {
+            "y" => password_config.lowercase = true,
+            _ => error_counter += 1,
+        }
 
-    println!("Numbers (0-9) ? (y/n)");
-    choice = system::get_user_choice();
-    match &*choice {
-        "y" => password_config.numbers = true,
-        _ => (),
-    }
+        println!("Numbers (0-9) ? (y/n)");
+        choice = system::get_user_choice_yn();
+        match &*choice {
+            "y" => password_config.numbers = true,
+            _ => error_counter += 1,
+        }
 
-    println!("Special characters ? (y/n)");
-    choice = system::get_user_choice();
-    match &*choice {
-        "y" => password_config.special_characters = true,
-        _ => (),
+        println!("Special characters ? (y/n)");
+        choice = system::get_user_choice_yn();
+        match &*choice {
+            "y" => password_config.special_characters = true,
+            _ => error_counter += 1,
+        }
+
+        if error_counter == 4 {
+            println!("You must choose at least one option !");
+            error_counter = 0;
+        }
     }
 
     println!("How long do you want your password to be ?");
