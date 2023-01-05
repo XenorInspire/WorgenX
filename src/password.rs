@@ -2,8 +2,8 @@
 use rand::Rng;
 
 // Internal crates
-use crate::system;
 use crate::dict;
+use crate::system;
 
 // This struct refers to a random password structure
 struct PasswordConfig {
@@ -20,15 +20,16 @@ pub fn main_passwd_generation() {
 
     while again.eq("y") {
         let password_config = allocate_passwd_config();
+
         println!("How many passwords do you want to generate ?");
         let number_of_passwords = system::get_user_choice_int();
-        let passwords = generate_random_passwords(&password_config, number_of_passwords);
 
         println!("Do you want to save the passwords in a file ? (y/n)");
         let choice = system::get_user_choice_yn();
+        let passwords = generate_random_passwords(&password_config, number_of_passwords);
         if choice.eq("y") {
-            system::save_passwords_into_a_file(&passwords);
-        }
+            system::save_passwords_into_a_file(&passwords)
+        };
 
         println!("You can find your password(s) below :");
         for password in passwords {
@@ -50,41 +51,52 @@ fn allocate_passwd_config() -> PasswordConfig {
         length: 0,
     };
     let mut choice;
-    let mut error_counter: u8 = 0;
+    let mut is_option_chosen = false;
 
-    while error_counter == 0 {
+    while !is_option_chosen {
         println!("\nChoose what your password is composed of :");
         println!("Uppercase letters (A-Z) ? (y/n)");
         choice = system::get_user_choice_yn();
         match &*choice {
-            "y" => password_config.uppercase = true,
-            _ => error_counter += 1,
+            "y" => {
+                password_config.uppercase = true;
+                is_option_chosen = true;
+            }
+            _ => (),
         }
 
         println!("Lowercase letters (a-z) ? (y/n)");
         choice = system::get_user_choice_yn();
         match &*choice {
-            "y" => password_config.lowercase = true,
-            _ => error_counter += 1,
+            "y" => {
+                password_config.lowercase = true;
+                is_option_chosen = true;
+            }
+            _ => (),
         }
 
         println!("Numbers (0-9) ? (y/n)");
         choice = system::get_user_choice_yn();
         match &*choice {
-            "y" => password_config.numbers = true,
-            _ => error_counter += 1,
+            "y" => {
+                password_config.numbers = true;
+                is_option_chosen = true;
+            }
+            _ => (),
         }
 
         println!("Special characters ? (y/n)");
         choice = system::get_user_choice_yn();
         match &*choice {
-            "y" => password_config.special_characters = true,
-            _ => error_counter += 1,
+            "y" => {
+                password_config.special_characters = true;
+                is_option_chosen = true;
+            }
+            _ => (),
         }
 
-        if error_counter == 4 {
+        if !is_option_chosen {
             println!("You must choose at least one option !");
-            error_counter = 0;
         }
     }
 
