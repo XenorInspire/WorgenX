@@ -1,7 +1,8 @@
 // Internal crates
+mod dict;
+mod generate;
 mod password;
 mod system;
-mod dict;
 
 // This function is charged to display the header menu
 fn display_title() {
@@ -16,7 +17,7 @@ fn print_menu() {
     display_title();
     println!("\n   WorgenX by Xen0rInspire \n");
     display_title();
-
+    
     print!("\n\n");
     println!("1 : Create wordlist(s)");
     println!("2 : Generate random password(s)");
@@ -30,7 +31,6 @@ fn main() {
     while !choice.eq("0") {
         print_menu();
         choice = system::get_user_choice();
-
         match &*choice {
             // "1" => generate_wordlist(),
             "2" => password::main_passwd_generation(),
