@@ -3,11 +3,7 @@ use rand::Rng;
 
 // Internal crates
 use crate::system;
-
-const LOWERCASE: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
-const UPPERCASE: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-const NUMBERS: &[u8] = b"0123456789";
-const SPECIAL_CHARACTERS: &[u8] = b"!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
+use crate::dict;
 
 // This struct refers to a random password structure
 struct PasswordConfig {
@@ -102,25 +98,25 @@ fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
     let mut password_content = Vec::new();
 
     if password_config.uppercase {
-        for character in UPPERCASE {
+        for character in dict::UPPERCASE {
             password_content.push(*character);
         }
     }
 
     if password_config.lowercase {
-        for character in LOWERCASE {
+        for character in dict::LOWERCASE {
             password_content.push(*character);
         }
     }
 
     if password_config.numbers {
-        for character in NUMBERS {
+        for character in dict::NUMBERS {
             password_content.push(*character);
         }
     }
 
     if password_config.special_characters {
-        for character in SPECIAL_CHARACTERS {
+        for character in dict::SPECIAL_CHARACTERS {
             password_content.push(*character);
         }
     }

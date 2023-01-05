@@ -1,6 +1,7 @@
 // Internal crates
 mod password;
 mod system;
+mod dict;
 
 // This function is charged to display the header menu
 fn display_title() {
