@@ -12,17 +12,22 @@ fn display_title() {
 
 // This functrion is charged to display the menu
 fn print_menu() {
+    display_title();
+    println!("\n   WorgenX by Xen0rInspire \n");
+    display_title();
+
+    print!("\n\n");
+    println!("1 : Create wordlist(s)");
+    println!("2 : Generate random password(s)");
+    println!("3 : Benchmark CPU");
+    println!("0 : Exit WorgenX");
+}
+
+// This function is the "entry point" of the program
+fn main() {
     let mut choice = String::from("");
     while !choice.eq("0") {
-        display_title();
-        println!("\n   WorgenX by Xen0rInspire \n");
-        display_title();
-
-        print!("\n\n");
-        println!("1 : Create wordlist(s)");
-        println!("2 : Generate random password(s)");
-        println!("3 : Benchmark CPU");
-        println!("0 : Exit WorgenX");
+        print_menu();
         choice = system::get_user_choice();
 
         match &*choice {
@@ -32,10 +37,5 @@ fn print_menu() {
             _ => (),
         }
     }
-}
-
-// This function is the "entry point" of the program
-fn main() {
-    print_menu();
     println!("Bye!");
 }
