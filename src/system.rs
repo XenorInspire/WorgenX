@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::{stdin, Write};
 
 const PASSWORD_PATH: &str = "passwords";
+const WORDLIST_PATH : &str = "wordlists";
 
 // This function is charged to save the random password in a file with \n as separator
 pub fn save_passwords_into_a_file(passwords: &Vec<String>) {

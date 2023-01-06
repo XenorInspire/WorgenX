@@ -103,7 +103,7 @@ fn allocate_passwd_config() -> PasswordConfig {
     println!("How long do you want your password to be ?");
     password_config.length = system::get_user_choice_int();
 
-    return password_config;
+    password_config
 }
 
 fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
@@ -133,7 +133,7 @@ fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
         }
     }
 
-    return password_content;
+    password_content
 }
 
 // This function is charged to generate an array of random passwords
@@ -155,5 +155,5 @@ fn generate_random_passwords(
         passwords.push(password);
     }
 
-    return passwords;
+    passwords
 }
