@@ -94,7 +94,7 @@ fn allocate_wordlist_config() -> WordlistConfig {
         println!("Enter the mask :");
         wordlist_config.mask = system::get_user_choice();
     } else {
-        println!("Enter the length of the wordlist :");
+        println!("Enter the length of the passwords in the wordlist :");
         wordlist_config.length = system::get_user_choice_int();
     }
 
