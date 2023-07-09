@@ -1,10 +1,16 @@
-// Internal crates
+// Internal modules
 mod dict;
-mod generate;
+mod error;
+mod generator;
 mod password;
 mod system;
 
-// This function is charged to display the header menu
+/// This function is charged to display the header menu
+/// 
+/// # Example
+/// ```
+/// display_title();
+/// ```
 fn display_title() {
     for _ in 0..30 {
         print!("#");
@@ -12,12 +18,17 @@ fn display_title() {
     println!();
 }
 
-// This functrion is charged to display the menu
+/// This functrion is charged to display the menu
+/// 
+/// # Example
+/// ```
+/// print_menu();
+/// ```
 fn print_menu() {
     display_title();
     println!("\n   WorgenX by Xen0rInspire \n");
     display_title();
-    
+
     print!("\n\n");
     println!("1 : Create wordlist(s)");
     println!("2 : Generate random password(s)");
@@ -25,13 +36,13 @@ fn print_menu() {
     println!("0 : Exit WorgenX");
 }
 
-// This function is the "entry point" of the program
+/// This function is the "entry point" of the program
 fn main() {
-    let mut choice = String::from("");
-    while !choice.eq("0") {
+    loop {
         print_menu();
-        choice = system::get_user_choice();
+        let choice = system::get_user_choice();
         match &*choice {
+            "0" => break,
             // "1" => generate_wordlist(),
             "2" => password::main_passwd_generation(),
             // "3" => benchmark_cpu(),

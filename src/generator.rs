@@ -1,7 +1,8 @@
 // Internal crates
+use crate::error::WorgenXError;
 use crate::system;
 
-// This struct refers to a wordlist structure
+// This struct refers to a wordlist set by the user
 struct WordlistConfig {
     pub numbers: bool,
     pub special_characters: bool,
@@ -18,12 +19,12 @@ pub fn main_wordlist_generation() {
     let mut again = String::from("y");
 
     while again.eq("y") {
-        let wordlist_config = allocate_wordlist_config();
+        let wordlist_config = create_wordlist_config_gui();
     }
 }
 
 // This function is charged to allocate the wordlist config structure
-fn allocate_wordlist_config() -> WordlistConfig {
+fn create_wordlist_config_gui() -> Result<WordlistConfig, WorgenXError> {
     let mut wordlist_config = WordlistConfig {
         numbers: false,
         special_characters: false,
@@ -35,7 +36,7 @@ fn allocate_wordlist_config() -> WordlistConfig {
         mask: String::from(""),
     };
 
-    let mut choice;
+    let mut choice: String;
     let mut is_option_chosen = false;
 
     while !is_option_chosen {
@@ -107,5 +108,5 @@ fn allocate_wordlist_config() -> WordlistConfig {
     }
     wordlist_config.wordlist_name = filename;
 
-    wordlist_config
+    Ok(wordlist_config)
 }
