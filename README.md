@@ -1,7 +1,7 @@
-# WorgenX-2.0
+# WorgenX
 
-WorgenX-2.0 is a powerful Rust wordlist generator with many functionalities.<br> 
-WorgenX-2.0 is a fully rewritten Rust version of <a href="https://github.com/XenorInspire/WorgenX">WorgenX</a>, initially developed in C code.
+WorgenX is a powerful Rust wordlist generator with many functionalities. You can use it in CLI or GUI mode.<br> 
+This is a fully rewritten Rust version of <a href="https://github.com/XenorInspire/WorgenX">WorgenX</a>, initially developed in C code.
 
 # Installation
 
@@ -12,7 +12,7 @@ In a directory of your choice copy the repository :
 Move in the directory :  
 `cd WorgenX-2.0/`
 
-### Compile WorgenX-2.0 :
+### Compile WorgenX :
   
 
 # Start WorgenX
