@@ -2,7 +2,7 @@
 use crate::error::WorgenXError;
 use crate::system;
 
-// This struct refers to a wordlist set by the user
+// This struct is built from the user's choices will be used to generate the wordlist
 struct WordlistConfig {
     pub numbers: bool,
     pub special_characters: bool,
