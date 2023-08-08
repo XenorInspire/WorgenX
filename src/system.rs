@@ -6,11 +6,11 @@ const PASSWORD_PATH: &str = "passwords";
 const WORDLIST_PATH: &str = "wordlists";
 
 /// This function is charged to save the random password in a file with \n as separator
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `passwords` - A vector of String that holds the passwords to save
-/// 
+///
 pub fn save_passwords_into_a_file(passwords: &Vec<String>) {
     let mut filename = String::new();
 
@@ -79,22 +79,26 @@ pub fn get_user_choice() -> String {
 }
 
 /// This function is charged to get user int input
-/// 
+///
 /// # Returns
-/// 
+///
 /// The value entered by the user. If an error occurs, the function returns 0.
-/// 
+///
 pub fn get_user_choice_int() -> u64 {
     let mut is_good_number = false;
     let mut number: u64 = 0;
 
     while !is_good_number {
         let choice = get_user_choice();
+        if choice.is_empty() {
+            println!("Please enter a valid number greater than 0");
+            continue;
+        }
         match choice.trim().parse::<u64>() {
-            Ok(_n) => {
-                if _n > 0 {
+            Ok(n) => {
+                if n > 0 {
                     is_good_number = true;
-                    number = _n;
+                    number = n;
                 } else {
                     println!("Please enter a valid number greater than 0");
                 }
@@ -107,13 +111,13 @@ pub fn get_user_choice_int() -> u64 {
 }
 
 /// This function is charged to check a filename
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `filename` - A string slice that holds the filename to check
-/// 
+///
 /// # Returns
-/// 
+///
 /// A boolean value that indicates if the filename is valid or not
 ///
 pub fn is_valid_filename(filename: &str) -> bool {
@@ -134,11 +138,11 @@ pub fn is_valid_filename(filename: &str) -> bool {
 }
 
 /// Check if folder exists unless create it
-/// 
+///
 /// # Arguments
-/// 
+///
 /// * `folder` - A string slice that holds the folder to check
-/// 
+///
 pub fn check_folder_exists(folder: &str) {
     if !std::path::Path::new(folder).exists() {
         std::fs::create_dir(folder).unwrap();
