@@ -1,11 +1,11 @@
 // External crates
-use rand::Rng;
+use rand::{seq::SliceRandom, Rng};
 
 // Internal crates
 use crate::dict;
 use crate::system;
 
-// This struct refers to a random password structure
+// This struct is built from the user's choices will be used to generate the random password
 struct PasswordConfig {
     pub numbers: bool,
     pub special_characters: bool,
@@ -19,7 +19,7 @@ pub fn main_passwd_generation() {
     let mut again = String::from("y");
 
     while again.eq("y") {
-        let password_config = allocate_passwd_config();
+        let password_config = allocate_passwd_config_gui();
 
         println!("How many passwords do you want to generate ?");
         let number_of_passwords = system::get_user_choice_int();
@@ -41,8 +41,13 @@ pub fn main_passwd_generation() {
     }
 }
 
-// This function is charged to allocate the password config structure
-fn allocate_passwd_config() -> PasswordConfig {
+/// This function is charged to allocate the password config structure from the user's choices in the GUI
+///
+/// # Example
+/// ```
+/// let password_config = allocate_passwd_config_gui();
+/// ```
+fn allocate_passwd_config_gui() -> PasswordConfig {
     let mut password_config = PasswordConfig {
         numbers: false,
         special_characters: false,
@@ -106,34 +111,61 @@ fn allocate_passwd_config() -> PasswordConfig {
     password_config
 }
 
+/// This function is charged to create the content of the password
+/// It returns a vector of u8 containing the characters that will be used to generate the password
+///
+/// # Example
+/// ```
+/// let password_content = create_passwd_content(&password_config);
+/// ```
 fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
-    let mut password_content = Vec::new();
+    let mut password_families: Vec<Vec<u8>> = Vec::new();
 
     if password_config.uppercase {
-        for character in dict::UPPERCASE {
-            password_content.push(*character);
-        }
+        password_families.push(shuffle_dict(&dict::UPPERCASE.to_vec()));
     }
 
     if password_config.lowercase {
-        for character in dict::LOWERCASE {
-            password_content.push(*character);
-        }
+        password_families.push(shuffle_dict(&dict::LOWERCASE.to_vec()));
     }
 
     if password_config.numbers {
-        for character in dict::NUMBERS {
-            password_content.push(*character);
-        }
+        password_families.push(shuffle_dict(&dict::NUMBERS.to_vec()));
     }
 
     if password_config.special_characters {
-        for character in dict::SPECIAL_CHARACTERS {
-            password_content.push(*character);
-        }
+        password_families.push(shuffle_dict(&dict::SPECIAL_CHARACTERS.to_vec()));
     }
 
+    // Generate the random indexes of the password families in a random order
+    let mut rng = rand::thread_rng();
+    let mut password_families_indexes: Vec<usize> = (0..password_families.len()).collect();
+    password_families_indexes.shuffle(&mut rng);
+
+    // Generate the final array of u8 containing the password content
+    let mut password_content: Vec<u8> = Vec::new();
+    for i in password_families_indexes {
+        password_content.extend(password_families[i].to_vec());
+    }
+    let mut rng = rand::thread_rng();
+    password_content.shuffle(&mut rng);
     password_content
+}
+
+/// This function is charged to shuffle a vector of u8 from the dict module
+///
+/// # Example
+/// ```
+/// let mut shuffled_uppercase = shuffle_dict(&dict::UPPERCASE.to_vec());
+/// let mut shuffled_lowercase = shuffle_dict(&dict::LOWERCASE.to_vec());
+/// let mut shuffled_numbers = shuffle_dict(&dict::NUMBERS.to_vec());
+/// let mut shuffled_special_characters = shuffle_dict(&dict::SPECIAL_CHARACTERS.to_vec());
+/// ```
+fn shuffle_dict(dict: &Vec<u8>) -> Vec<u8> {
+    let mut shuffled_dict = dict.to_vec();
+    let mut rng = rand::thread_rng();
+    shuffled_dict.shuffle(&mut rng);
+    shuffled_dict
 }
 
 // This function is charged to generate an array of random passwords
@@ -146,12 +178,11 @@ fn generate_random_passwords(
 
     for _ in 0..number_of_passwords {
         let mut rng = rand::thread_rng();
-        let password: String = (0..password_config.length)
-            .map(|_| {
-                let idx = rng.gen_range(0..password_content.len());
-                password_content[idx] as char
-            })
-            .collect();
+        let mut password: String = String::new();
+        for _ in 0..password_config.length {
+            let idx = rng.gen_range(0..password_content.len());
+            password.push(password_content[idx] as char);
+        }
         passwords.push(password);
     }
 
