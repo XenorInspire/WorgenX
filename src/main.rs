@@ -7,8 +7,8 @@ mod system;
 
 #[cfg(target_os = "windows")]
 pub const OS: &str = "windows";
-#[cfg(target_os = "unix")]
-pub const OS: &str = "unix";
+#[cfg(target_os = "linux")]
+pub const OS: &str = "linux";
 
 /// This function is charged to display the header menu
 ///
