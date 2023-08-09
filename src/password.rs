@@ -47,6 +47,9 @@ pub fn main_passwd_generation() {
 /// ```
 /// let password_config = allocate_passwd_config_gui();
 /// ```
+/// # Returns
+/// 
+/// The password config structure named PasswordConfig
 fn allocate_passwd_config_gui() -> PasswordConfig {
     let mut password_config = PasswordConfig {
         numbers: false,
@@ -118,6 +121,10 @@ fn allocate_passwd_config_gui() -> PasswordConfig {
 /// ```
 /// let password_content = create_passwd_content(&password_config);
 /// ```
+/// 
+/// # Returns
+/// 
+/// The vector of u8 containing the characters that will be used to generate the password
 fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
     let mut password_families: Vec<Vec<u8>> = Vec::new();
 
@@ -161,6 +168,10 @@ fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
 /// let mut shuffled_numbers = shuffle_dict(&dict::NUMBERS.to_vec());
 /// let mut shuffled_special_characters = shuffle_dict(&dict::SPECIAL_CHARACTERS.to_vec());
 /// ```
+/// 
+/// # Returns
+/// 
+/// The shuffled vector of u8 passed in parameter
 fn shuffle_dict(dict: &Vec<u8>) -> Vec<u8> {
     let mut shuffled_dict = dict.to_vec();
     let mut rng = rand::thread_rng();

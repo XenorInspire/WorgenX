@@ -23,7 +23,7 @@ fn display_title() {
     println!();
 }
 
-/// This functrion is charged to display the menu
+/// This function is charged to display the menu
 ///
 /// # Example
 /// ```
