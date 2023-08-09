@@ -5,7 +5,7 @@ use crate::system;
 // External crates
 use rand::{seq::SliceRandom, Rng};
 
-/// This struct is built from the user's choices will be used to generate the random password
+/// This struct built from the user's choices will be used to generate the random password
 /// 
 struct PasswordConfig {
     pub numbers: bool,

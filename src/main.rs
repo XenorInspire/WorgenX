@@ -8,12 +8,19 @@ pub const OS: &str = "linux";
 #[cfg(all(not(feature = "gui"), not(feature = "cli")))]
 compile_error!("You must specify a mode: 'gui' or 'cli'.");
 
+
 /// This constant is charged to store the program mode (GUI or CLI)
 #[cfg(feature = "gui")]
-pub const MODE: &str = "GUI";
+mod mode {
+    pub mod gui;
+    pub const MODE: &str = "GUI";
+}
 
 #[cfg(feature = "cli")]
-pub const MODE: &str = "CLI";
+mod mode {
+    pub mod cli;
+    pub const MODE: &str = "CLI";
+}
 
 // Internal modules
 mod dict;
@@ -28,6 +35,7 @@ mod system;
 /// ```
 /// display_title();
 /// ```
+/// 
 fn display_title() {
     for _ in 0..30 {
         print!("#");
@@ -41,6 +49,7 @@ fn display_title() {
 /// ```
 /// print_menu();
 /// ```
+/// 
 fn print_menu() {
     display_title();
     println!("\n   WorgenX by Xen0rInspire \n");
@@ -54,7 +63,9 @@ fn print_menu() {
 }
 
 /// This function is the "entry point" of the program
+/// 
 fn main() {
+    println!("{}", mode::MODE);
     loop {
         print_menu();
         let choice = system::get_user_choice();
