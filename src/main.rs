@@ -5,6 +5,9 @@ pub const OS: &str = "windows";
 #[cfg(target_os = "linux")]
 pub const OS: &str = "linux";
 
+#[cfg(target_os = "macos")]
+pub const OS: &str = "macos";
+
 #[cfg(all(not(feature = "gui"), not(feature = "cli")))]
 compile_error!("You must specify a mode: 'gui' or 'cli'.");
 
