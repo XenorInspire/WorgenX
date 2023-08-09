@@ -1,14 +1,26 @@
+/// This constant is charged to store the OS name
+#[cfg(target_os = "windows")]
+pub const OS: &str = "windows";
+
+#[cfg(target_os = "linux")]
+pub const OS: &str = "linux";
+
+#[cfg(all(not(feature = "gui"), not(feature = "cli")))]
+compile_error!("You must specify a mode: 'gui' or 'cli'.");
+
+/// This constant is charged to store the program mode (GUI or CLI)
+#[cfg(feature = "gui")]
+pub const MODE: &str = "GUI";
+
+#[cfg(feature = "cli")]
+pub const MODE: &str = "CLI";
+
 // Internal modules
 mod dict;
 mod error;
 mod generator;
 mod password;
 mod system;
-
-#[cfg(target_os = "windows")]
-pub const OS: &str = "windows";
-#[cfg(target_os = "linux")]
-pub const OS: &str = "linux";
 
 /// This function is charged to display the header menu
 ///
