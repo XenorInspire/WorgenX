@@ -1,11 +1,12 @@
-// External crates
-use rand::{seq::SliceRandom, Rng};
-
 // Internal crates
 use crate::dict;
 use crate::system;
 
-// This struct is built from the user's choices will be used to generate the random password
+// External crates
+use rand::{seq::SliceRandom, Rng};
+
+/// This struct is built from the user's choices will be used to generate the random password
+/// 
 struct PasswordConfig {
     pub numbers: bool,
     pub special_characters: bool,
@@ -50,6 +51,7 @@ pub fn main_passwd_generation() {
 /// # Returns
 /// 
 /// The password config structure named PasswordConfig
+/// 
 fn allocate_passwd_config_gui() -> PasswordConfig {
     let mut password_config = PasswordConfig {
         numbers: false,
@@ -125,6 +127,7 @@ fn allocate_passwd_config_gui() -> PasswordConfig {
 /// # Returns
 /// 
 /// The vector of u8 containing the characters that will be used to generate the password
+/// 
 fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
     let mut password_families: Vec<Vec<u8>> = Vec::new();
 
@@ -172,6 +175,7 @@ fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
 /// # Returns
 /// 
 /// The shuffled vector of u8 passed in parameter
+/// 
 fn shuffle_dict(dict: &Vec<u8>) -> Vec<u8> {
     let mut shuffled_dict = dict.to_vec();
     let mut rng = rand::thread_rng();
@@ -179,7 +183,18 @@ fn shuffle_dict(dict: &Vec<u8>) -> Vec<u8> {
     shuffled_dict
 }
 
-// This function is charged to generate an array of random passwords
+/// This function is charged to generate an array of random passwords
+/// 
+/// # Arguments
+/// 
+/// * `password_config` - The password config structure
+/// * `number_of_passwords` - The number of passwords to generate
+/// 
+/// # Example
+/// ```
+/// let passwords = generate_random_passwords(&password_config, number_of_passwords);
+/// ```
+/// 
 fn generate_random_passwords(
     password_config: &PasswordConfig,
     number_of_passwords: u64,
