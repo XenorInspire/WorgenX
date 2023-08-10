@@ -46,11 +46,11 @@ pub fn save_passwords_into_a_file(passwords: &Vec<String>) {
 }
 
 /// This function is charged to get user String input y/n
-/// 
+///
 /// # Returns
-/// 
+///
 /// The value entered by the user. If an error occurs, the function returns an empty String.
-/// 
+///
 pub fn get_user_choice_yn() -> String {
     let mut choice = get_user_choice();
     while !choice.eq("y") && !choice.eq("n") {
@@ -71,7 +71,7 @@ pub fn get_user_choice_yn() -> String {
 /// ```
 /// let choice = system::get_user_choice();
 /// ```
-/// 
+///
 pub fn get_user_choice() -> String {
     let mut buffer = String::new();
     let result = stdin().read_line(&mut buffer);
@@ -89,7 +89,7 @@ pub fn get_user_choice() -> String {
 /// # Returns
 ///
 /// The value entered by the user. If an error occurs, the function returns 0.
-/// 
+///
 pub fn get_user_choice_int() -> u64 {
     let mut is_good_number = false;
     let mut number: u64 = 0;

@@ -13,10 +13,10 @@ compile_error!("You must specify a mode: 'gui' or 'cli'.");
 
 /// This constant is charged to store the program mode (GUI or CLI)
 mod mode {
-    #[cfg(feature = "gui")]
-    pub mod gui;
     #[cfg(feature = "cli")]
     pub mod cli;
+    #[cfg(feature = "gui")]
+    pub mod gui;
 }
 
 // Internal modules
@@ -27,7 +27,7 @@ mod password;
 mod system;
 
 /// This function is the "entry point" of the program
-/// 
+///
 fn main() {
     #[cfg(feature = "gui")]
     mode::gui::run();
