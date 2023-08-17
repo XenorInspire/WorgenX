@@ -2,6 +2,9 @@
 use crate::password::{self, PasswordConfig};
 use crate::system;
 
+/// This function is charged to schedule in GUI mode the execution of the different features of the program
+/// according to the user's choices
+/// 
 pub fn run(){
    loop {
         print_menu();
