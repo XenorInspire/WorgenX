@@ -1,0 +1,10 @@
+{
+    "rust-analyzer.showUnlinkedFileNotification": false,
+    // Doesn't show error for compile_error! macro
+    "rust-analyzer.check.overrideCommand": [
+        "cargo",
+        "test",
+        "--all-features",
+        "--message-format=json"
+    ]
+}
