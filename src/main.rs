@@ -33,5 +33,10 @@ fn main() {
     mode::gui::run();
 
     #[cfg(feature = "cli")]
-    mode::cli::run();
+    match mode::cli::run() {
+        Ok(_) => {}
+        Err(e) => {
+            println!("{}", e);
+        }
+    }
 }
