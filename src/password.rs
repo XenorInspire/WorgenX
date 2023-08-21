@@ -12,6 +12,9 @@ pub struct PasswordConfig {
     pub uppercase: bool,
     pub lowercase: bool,
     pub length: u64,
+    pub number_of_passwords: u64,
+    pub output_file: String,
+    pub json: bool,
 }
 
 /// This function is charged to create the content of the password
@@ -93,14 +96,11 @@ fn shuffle_dict(dict: &Vec<u8>) -> Vec<u8> {
 /// let passwords = generate_random_passwords(&password_config, number_of_passwords);
 /// ```
 ///
-pub fn generate_random_passwords(
-    password_config: &PasswordConfig,
-    number_of_passwords: u64,
-) -> Vec<String> {
+pub fn generate_random_passwords(password_config: &PasswordConfig) -> Vec<String> {
     let mut passwords: Vec<String> = Vec::new();
     let password_content: Vec<u8> = create_passwd_content(password_config);
 
-    for _ in 0..number_of_passwords {
+    for _ in 0..password_config.number_of_passwords {
         let mut rng = rand::thread_rng();
         let mut password: String = String::new();
         for _ in 0..password_config.length {
