@@ -77,11 +77,9 @@ fn display_help() {
     println!("    -x, --special-characters\t\tAdd special characters to the words");
     println!("\n  This parameter is mandatory:");
     println!("    -s <size>, --size <size>\t\tSize of the words");
-    println!("\n  The following options are optional:");
     println!("    -o <path>, --output <path>\t\tSave the wordlist in a file");
-    println!(
-        "    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist"
-    );
+    println!("\n  The following options are optional:");
+    println!("    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist");
     println!("    -j, --json\t\t\t\tOutput in JSON format, it automatically disables the loading bar\n\t\t\t\t\tCombine with -o to save the json output in a file");
     println!("\n  --- Password generation ---");
     println!("  You must specify at least one of the following options: -l, -u, -n, -s");
