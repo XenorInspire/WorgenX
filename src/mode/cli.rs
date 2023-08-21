@@ -22,7 +22,11 @@ pub fn run() -> Result<(), WorgenXError> {
             }
             match allocate_passwd_config_cli(args) {
                 Ok(password_config) => {
-                    password::generate_random_passwords(&password_config);
+                    let passwords = password::generate_random_passwords(&password_config);
+                    println!("You can find your password(s) below:\n");
+                    for password in passwords {
+                        println!("{}", password);
+                    }
                 }
                 Err(e) => {
                     return Err(WorgenXError::ArgError(e));
@@ -77,7 +81,12 @@ fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordConfig, ArgEr
     let mut output_file = String::new();
     let mut json = false;
 
+    let mut skip = false;
     for i in 2..args.len() {
+        if skip {
+            skip = false;
+            continue;
+        }
         match args[i].as_str() {
             "-l" | "--lowercase" => {
                 lowercase = true;
@@ -113,11 +122,19 @@ fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordConfig, ArgEr
                 } else {
                     return Err(ArgError::MissingArgument(args[i].clone()));
                 }
+                skip = true;
+                continue;
             }
             "-c" | "--count" => {
                 if i + 1 < args.len() {
                     match args[i + 1].parse::<u64>() {
                         Ok(value) => {
+                            if value == 0 {
+                                return Err(ArgError::InvalidNumericalValue(
+                                    args[i + 1].clone(),
+                                    args[i].clone(),
+                                ));
+                            }
                             number_of_passwords = value;
                         }
                         Err(_) => {
@@ -130,6 +147,8 @@ fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordConfig, ArgEr
                 } else {
                     return Err(ArgError::MissingArgument(args[i].clone()));
                 }
+                skip = true;
+                continue;
             }
             "-o" | "--output" => {
                 if i + 1 < args.len() {
@@ -137,6 +156,8 @@ fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordConfig, ArgEr
                 } else {
                     return Err(ArgError::MissingArgument(args[i].clone()));
                 }
+                skip = true;
+                continue;
             }
             "-j" | "--json" => {
                 json = true;
