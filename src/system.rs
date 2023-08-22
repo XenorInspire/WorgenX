@@ -14,7 +14,7 @@ const WORDLIST_PATH: &str = "wordlists";
 pub fn save_passwords_into_a_file(passwords: &Vec<String>) {
     let mut filename = String::new();
 
-    while !is_valid_filename(filename.as_str()) {
+    while !is_valid_path(filename.as_str()) {
         println!("Please enter the file name");
         filename = get_user_choice();
     }
@@ -116,21 +116,17 @@ pub fn get_user_choice_int() -> u64 {
     number
 }
 
-/// This function is charged to check a filename
+/// This function is charged to check a path/filename
 ///
 /// # Arguments
 ///
-/// * `filename` - A string slice that holds the filename to check
+/// * `path` - A string slice that holds the path/filename to check
 ///
 /// # Returns
 ///
-/// A boolean value that indicates if the filename is valid or not
+/// A boolean value that indicates if the path is valid or not
 ///
-pub fn is_valid_filename(filename: &str) -> bool {
-    if filename.is_empty() {
-        return false;
-    };
-
+pub fn is_valid_path(path: &str) -> bool {
     // For Windows platforms
     #[cfg(windows)]
     const INVALID_CHARS: &[char] = &[
@@ -140,7 +136,7 @@ pub fn is_valid_filename(filename: &str) -> bool {
     #[cfg(not(windows))]
     const INVALID_CHARS: &[char] = &['/', '\0'];
 
-    !filename.chars().any(|c| INVALID_CHARS.contains(&c))
+    !path.is_empty() && !path.chars().any(|c| INVALID_CHARS.contains(&c))
 }
 
 /// Check if folder exists unless create it
