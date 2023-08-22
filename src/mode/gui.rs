@@ -26,11 +26,6 @@ pub fn run() {
 
 /// This function is charged to display the header menu
 ///
-/// # Example
-/// ```
-/// display_title();
-/// ```
-///
 fn display_title() {
     for _ in 0..30 {
         print!("#");
@@ -39,11 +34,6 @@ fn display_title() {
 }
 
 /// This function is charged to display the menu
-///
-/// # Example
-/// ```
-/// print_menu();
-/// ```
 ///
 fn print_menu() {
     display_title();
@@ -83,10 +73,6 @@ fn main_passwd_generation() {
 
 /// This function is charged to allocate the password config structure from the user's choices in the GUI
 ///
-/// # Example
-/// ```
-/// let password_config = allocate_passwd_config_gui();
-/// ```
 /// # Returns
 ///
 /// The password config structure named PasswordConfig

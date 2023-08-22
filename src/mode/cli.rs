@@ -224,11 +224,6 @@ fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordGenerationPar
 ///
 /// * `args` - A vector of String containing the arguments passed to the program
 ///
-/// # Example
-/// ```
-/// allocate_wordlist_config_cli(args);
-/// ```
-///
 fn allocate_wordlist_config_cli(args: Vec<String>) -> Result<(), ArgError> {
     Ok(())
 }
