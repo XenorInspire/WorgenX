@@ -1,6 +1,7 @@
 // Extern crates
 use std::fs::File;
 use std::io::{stdin, Write};
+use std::path::Path;
 
 /// Theses constants are charged to store the path of the wordlists and passwords folders
 pub const PASSWORD_PATH: &str = "passwords";
@@ -95,36 +96,46 @@ pub fn is_valid_path(path: &str) -> bool {
         return false;
     }
 
-    !path.is_empty() && !path.chars().any(|c| invalid_chars.contains(&c))
+    check_if_folder_exists(path) && !path.chars().any(|c| invalid_chars.contains(&c))
 }
 
-/// Check if folder exists unless create it
+/// Check if folder exists
 ///
 /// # Arguments
 ///
 /// * `folder` - A string slice that holds the folder to check
 ///
-pub fn check_folder_exists(folder: &str) {
-    if !std::path::Path::new(folder).exists() {
-        std::fs::create_dir(folder).unwrap();
-    }
+/// # Returns
+///
+/// A boolean value that indicates if the folder exists or not
+/// True if the folder exists, false otherwise
+///
+pub fn check_if_folder_exists(folder: &str) -> bool {
+    match Path::new(folder).parent() {
+        Some(_) => return true,
+        None => {
+            return false;
+        }
+    };
 }
 
 /// This function send the invalid chars for windows path
 ///
 /// # Returns
-/// 
-/// '<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@'
+///
+/// '<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@' chars
+///
 #[cfg(target_family = "windows")]
 fn get_invalid_chars() -> &'static [char] {
     &['<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@',]
 }
 
 /// This function send the invalid chars for linux platforms path
-/// 
+///
 /// # Returns
-/// 
+///
 /// '/' and '\0' chars
+///
 #[cfg(target_family = "unix")]
 fn get_invalid_chars() -> &'static [char] {
     &['/', '\0']

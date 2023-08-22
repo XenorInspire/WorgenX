@@ -1,6 +1,6 @@
 // Extern crates
 use std::fs::File;
-use std::io::{stdin, Write};
+use std::io::Write;
 
 // Internal crates
 use crate::password::{self, PasswordConfig};
@@ -159,7 +159,7 @@ pub fn password_saving_procedure(passwords: &Vec<String>) {
         filename = system::get_user_choice();
     }
 
-    system::check_folder_exists(system::PASSWORD_PATH);
+    system::check_if_folder_exists(system::PASSWORD_PATH);
     let mut file = File::create(system::PASSWORD_PATH.to_string() + "/" + &filename);
     while file.is_err() {
         println!(

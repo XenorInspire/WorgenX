@@ -1,6 +1,7 @@
 // Internal crates
-use crate::error::{ArgError, WorgenXError};
+use crate::error::{ArgError, SystemError, WorgenXError};
 use crate::password::{self, PasswordConfig};
+use crate::system;
 
 /// This struct built from PasswordConfig and optional arguments will be used to generate the random password
 ///
@@ -41,7 +42,7 @@ pub fn run() -> Result<(), WorgenXError> {
                     }
                 }
                 Err(e) => {
-                    return Err(WorgenXError::ArgError(e));
+                    return Err(e);
                 }
             }
         }
@@ -77,24 +78,23 @@ pub fn run() -> Result<(), WorgenXError> {
 ///
 /// * `Result<(), ArgError>` - An ArgError if the syntax is incorrect (or invalid config/values), Ok(PasswordConfig) if the syntax is correct
 ///
-/// # Example
-/// ```
-/// let args = std::env::args().collect::<Vec<String>>();
-/// let result = check_passwd_config_cli(args);
-/// ```
-///
-fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordGenerationParameters, ArgError> {
-    let mut numbers = false;
-    let mut special_characters = false;
-    let mut uppercase = false;
-    let mut lowercase = false;
-    let mut length = 0;
-    let mut number_of_passwords = 0;
+fn allocate_passwd_config_cli(
+    args: Vec<String>,
+) -> Result<PasswordGenerationParameters, WorgenXError> {
     let mut output_file = String::new();
     let mut json = false;
     let mut no_display = false;
-
     let mut skip = false;
+    let mut one_path = false;
+    let mut password_config = PasswordConfig {
+        numbers: false,
+        special_characters: false,
+        uppercase: false,
+        lowercase: false,
+        length: 0,
+        number_of_passwords: 0,
+    };
+
     for i in 2..args.len() {
         if skip {
             skip = false;
@@ -102,38 +102,42 @@ fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordGenerationPar
         }
         match args[i].as_str() {
             "-l" | "--lowercase" => {
-                lowercase = true;
+                password_config.lowercase = true;
             }
             "-u" | "--uppercase" => {
-                uppercase = true;
+                password_config.uppercase = true;
             }
             "-n" | "--numbers" => {
-                numbers = true;
+                password_config.numbers = true;
             }
             "-x" | "--special-characters" => {
-                special_characters = true;
+                password_config.special_characters = true;
             }
             "-s" | "--size" => {
                 if i + 1 < args.len() {
                     match args[i + 1].parse::<u64>() {
                         Ok(value) => {
                             if value == 0 {
-                                return Err(ArgError::InvalidNumericalValue(
-                                    args[i + 1].clone(),
-                                    args[i].clone(),
+                                return Err(WorgenXError::ArgError(
+                                    ArgError::InvalidNumericalValue(
+                                        args[i + 1].clone(),
+                                        args[i].clone(),
+                                    ),
                                 ));
                             }
-                            length = value;
+                            password_config.length = value;
                         }
                         Err(_) => {
-                            return Err(ArgError::InvalidNumericalValue(
+                            return Err(WorgenXError::ArgError(ArgError::InvalidNumericalValue(
                                 args[i + 1].clone(),
                                 args[i].clone(),
-                            ));
+                            )));
                         }
                     }
                 } else {
-                    return Err(ArgError::MissingValue(args[i].clone()));
+                    return Err(WorgenXError::ArgError(ArgError::MissingValue(
+                        args[i].clone(),
+                    )));
                 }
                 skip = true;
                 continue;
@@ -143,33 +147,47 @@ fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordGenerationPar
                     match args[i + 1].parse::<u64>() {
                         Ok(value) => {
                             if value == 0 {
-                                return Err(ArgError::InvalidNumericalValue(
-                                    args[i + 1].clone(),
-                                    args[i].clone(),
+                                return Err(WorgenXError::ArgError(
+                                    ArgError::InvalidNumericalValue(
+                                        args[i + 1].clone(),
+                                        args[i].clone(),
+                                    ),
                                 ));
                             }
-                            number_of_passwords = value;
+                            password_config.number_of_passwords = value;
                         }
                         Err(_) => {
-                            return Err(ArgError::InvalidNumericalValue(
+                            return Err(WorgenXError::ArgError(ArgError::InvalidNumericalValue(
                                 args[i + 1].clone(),
                                 args[i].clone(),
-                            ));
+                            )));
                         }
                     }
                 } else {
-                    return Err(ArgError::MissingValue(args[i].clone()));
+                    return Err(WorgenXError::ArgError(ArgError::MissingValue(
+                        args[i].clone(),
+                    )));
                 }
                 skip = true;
                 continue;
             }
             "-o" | "--output" => {
                 if i + 1 < args.len() {
-                    // TODO: Check if the path is valid
+                    if one_path {
+                        return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
+                    }
                     output_file = args[i + 1].clone();
+                    if !system::is_valid_path(&output_file) {
+                        return Err(WorgenXError::SystemError(SystemError::InvalidPath(
+                            output_file.clone(),
+                        )));
+                    }
                 } else {
-                    return Err(ArgError::MissingValue(args[i].clone()));
+                    return Err(WorgenXError::ArgError(ArgError::MissingValue(
+                        args[i].clone(),
+                    )));
                 }
+                one_path = true;
                 skip = true;
                 continue;
             }
@@ -178,33 +196,55 @@ fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordGenerationPar
             }
             "-O" | "--output-only" => {
                 if i + 1 < args.len() {
-                    // TODO: Check if the path is valid
+                    if one_path {
+                        return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
+                    }
                     output_file = args[i + 1].clone();
-                    no_display = true;
+                    if !system::is_valid_path(&output_file) {
+                        return Err(WorgenXError::SystemError(SystemError::InvalidPath(
+                            output_file.clone(),
+                        )));
+                    }
                 } else {
-                    return Err(ArgError::MissingValue(args[i].clone()));
+                    return Err(WorgenXError::ArgError(ArgError::MissingValue(
+                        args[i].clone(),
+                    )));
                 }
+
+                no_display = true;
+                one_path = true;
                 skip = true;
                 continue;
             }
             _ => {
-                return Err(ArgError::UnknownArgument(args[i].clone()));
+                return Err(WorgenXError::ArgError(ArgError::UnknownArgument(
+                    args[i].clone(),
+                )));
             }
         }
     }
 
-    if !lowercase && !uppercase && !numbers && !special_characters {
-        return Err(ArgError::MissingConfiguration(args[1].clone()));
+    if !password_config.lowercase
+        && !password_config.uppercase
+        && !password_config.numbers
+        && !password_config.special_characters
+    {
+        return Err(WorgenXError::ArgError(ArgError::MissingConfiguration(
+            args[1].clone(),
+        )));
     }
 
-    let password_config = PasswordConfig {
-        numbers,
-        special_characters,
-        uppercase,
-        lowercase,
-        length,
-        number_of_passwords,
-    };
+    if password_config.length == 0 {
+        return Err(WorgenXError::ArgError(ArgError::MissingArgument(
+            "-s or --size".to_string(),
+        )));
+    }
+
+    if password_config.number_of_passwords == 0 {
+        return Err(WorgenXError::ArgError(ArgError::MissingArgument(
+            "-c or --count".to_string(),
+        )));
+    }
 
     Ok(PasswordGenerationParameters {
         password_config,
@@ -252,7 +292,7 @@ fn display_help() {
     println!("    -n, --numbers\t\t\tAdd numbers to the words");
     println!("    -x, --special-characters\t\tAdd special characters to the words");
     println!("\n  This parameter is mandatory:");
-    println!("    -s <size>, --size <size>\t\tSize of the words");
+    println!("    -s <size>, --size <size>\t\tSize of the words in characters");
     println!("    -o <path>, --output <path>\t\tSave the wordlist in a file");
     println!("\n  The following options are optional:");
     println!("    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist");
@@ -265,7 +305,7 @@ fn display_help() {
     println!("    -n, --numbers\t\t\tAdd numbers to the words");
     println!("    -x, --special-characters\t\tAdd special characters to the words");
     println!("\n  These parameters are mandatory:");
-    println!("    -s <size>, --size <size>\t\tSize of the passwords");
+    println!("    -s <size>, --size <size>\t\tSize of the passwords in characters");
     println!("    -c <count>, --count <count>\t\tNumber of passwords to generate");
     println!("\n  The following options are optional:");
     println!("    -o <path>, --output <path>\t\tSave the passwords in a file");
