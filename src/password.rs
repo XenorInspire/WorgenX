@@ -13,8 +13,6 @@ pub struct PasswordConfig {
     pub lowercase: bool,
     pub length: u64,
     pub number_of_passwords: u64,
-    pub output_file: String,
-    pub json: bool,
 }
 
 /// This function is charged to create the content of the password

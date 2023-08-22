@@ -59,15 +59,17 @@ fn main_passwd_generation() {
 
     while again.eq("y") {
         let password_config = allocate_passwd_config_gui();
-
         let passwords = password::generate_random_passwords(&password_config);
-        if !password_config.output_file.is_empty() {
-            system::save_passwords_into_a_file(&passwords)
-        };
 
         println!("You can find your password(s) below :");
-        for password in passwords {
+        for password in &passwords {
             println!("{}", password);
+        }
+
+        println!("\nDo you want to save the passwords in a file ? (y/n)");
+        let choice = system::get_user_choice_yn();
+        if choice.eq("y") {
+            system::save_passwords_into_a_file(&passwords)
         }
 
         println!("\nDo you want to generate another password(s) ? (y/n)");
@@ -93,8 +95,6 @@ fn allocate_passwd_config_gui() -> PasswordConfig {
         lowercase: false,
         length: 0,
         number_of_passwords: 0,
-        output_file: String::new(),
-        json: false,
     };
     let mut choice;
     let mut is_option_chosen = false;
@@ -151,13 +151,6 @@ fn allocate_passwd_config_gui() -> PasswordConfig {
 
     println!("How many passwords do you want to generate ?");
     password_config.number_of_passwords = system::get_user_choice_int();
-
-    println!("Do you want to save the passwords in a file ? (y/n)");
-    let choice = system::get_user_choice_yn();
-    if choice.eq("y") {
-        println!("Enter the path of the file :");
-        password_config.output_file = system::get_user_choice();
-    }
 
     password_config
 }

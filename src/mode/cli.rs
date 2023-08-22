@@ -2,6 +2,15 @@
 use crate::error::{ArgError, WorgenXError};
 use crate::password::{self, PasswordConfig};
 
+/// This struct built from PasswordConfig and optional arguments will be used to generate the random password
+///
+struct PasswordGenerationParameters {
+    password_config: PasswordConfig,
+    json: bool,
+    output_file: String,
+    no_display: bool,
+}
+
 /// This function is charged to schedule in CLI mode the execution of the different features of the program
 /// according to the user's choices
 ///
@@ -21,8 +30,11 @@ pub fn run() -> Result<(), WorgenXError> {
                 )));
             }
             match allocate_passwd_config_cli(args) {
-                Ok(password_config) => {
-                    let passwords = password::generate_random_passwords(&password_config);
+                Ok(password_generation_parameters) => {
+                    let passwords = password::generate_random_passwords(
+                        &password_generation_parameters.password_config,
+                    );
+                    // TODO: check no_display and output_file and json
                     println!("You can find your password(s) below:\n");
                     for password in passwords {
                         println!("{}", password);
@@ -71,7 +83,7 @@ pub fn run() -> Result<(), WorgenXError> {
 /// let result = check_passwd_config_cli(args);
 /// ```
 ///
-fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordConfig, ArgError> {
+fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordGenerationParameters, ArgError> {
     let mut numbers = false;
     let mut special_characters = false;
     let mut uppercase = false;
@@ -80,6 +92,7 @@ fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordConfig, ArgEr
     let mut number_of_passwords = 0;
     let mut output_file = String::new();
     let mut json = false;
+    let mut no_display = false;
 
     let mut skip = false;
     for i in 2..args.len() {
@@ -120,7 +133,7 @@ fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordConfig, ArgEr
                         }
                     }
                 } else {
-                    return Err(ArgError::MissingArgument(args[i].clone()));
+                    return Err(ArgError::MissingValue(args[i].clone()));
                 }
                 skip = true;
                 continue;
@@ -145,22 +158,34 @@ fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordConfig, ArgEr
                         }
                     }
                 } else {
-                    return Err(ArgError::MissingArgument(args[i].clone()));
+                    return Err(ArgError::MissingValue(args[i].clone()));
                 }
                 skip = true;
                 continue;
             }
             "-o" | "--output" => {
                 if i + 1 < args.len() {
+                    // TODO: Check if the path is valid
                     output_file = args[i + 1].clone();
                 } else {
-                    return Err(ArgError::MissingArgument(args[i].clone()));
+                    return Err(ArgError::MissingValue(args[i].clone()));
                 }
                 skip = true;
                 continue;
             }
             "-j" | "--json" => {
                 json = true;
+            }
+            "-O" | "--output-only" => {
+                if i + 1 < args.len() {
+                    // TODO: Check if the path is valid
+                    output_file = args[i + 1].clone();
+                    no_display = true;
+                } else {
+                    return Err(ArgError::MissingValue(args[i].clone()));
+                }
+                skip = true;
+                continue;
             }
             _ => {
                 return Err(ArgError::UnknownArgument(args[i].clone()));
@@ -172,15 +197,20 @@ fn allocate_passwd_config_cli(args: Vec<String>) -> Result<PasswordConfig, ArgEr
         return Err(ArgError::MissingConfiguration(args[1].clone()));
     }
 
-    Ok(PasswordConfig {
+    let password_config = PasswordConfig {
         numbers,
         special_characters,
         uppercase,
         lowercase,
         length,
         number_of_passwords,
-        output_file,
+    };
+
+    Ok(PasswordGenerationParameters {
+        password_config,
         json,
+        output_file,
+        no_display,
     })
 }
 
@@ -219,6 +249,7 @@ fn display_help() {
     println!("  -v, --version\t\tDisplay the version of WorgenX");
     println!("  -h, --help\t\tDisplay this help message\n\n");
     println!("Below are the options for the main features:\n");
+
     println!("  --- Dictionary generation ---");
     println!("  You must specify at least one of the following options: -l, -u, -n, -s");
     println!("    -l, --lowercase\t\t\tAdd lowercase characters to the words");
@@ -231,6 +262,7 @@ fn display_help() {
     println!("\n  The following options are optional:");
     println!("    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist");
     println!("    -j, --json\t\t\t\tOutput in JSON format, it automatically disables the loading bar\n\t\t\t\t\tCombine with -o to save the json output in a file");
+
     println!("\n  --- Password generation ---");
     println!("  You must specify at least one of the following options: -l, -u, -n, -s");
     println!("    -l, --lowercase\t\t\tAdd lowercase characters to the words");
@@ -241,6 +273,7 @@ fn display_help() {
     println!("    -s <size>, --size <size>\t\tSize of the passwords");
     println!("    -c <count>, --count <count>\t\tNumber of passwords to generate");
     println!("\n  The following options are optional:");
-    println!("    -o <path>, --output <path>\t\tSave the wordlist in a file");
+    println!("    -o <path>, --output <path>\t\tSave the passwords in a file");
+    println!("    -O, --output-only <path>\t\tSave the passwords in a file and do not display it");
     println!("    -j, --json\t\t\t\tOutput in JSON format\n\t\t\t\t\tCombine with -o to save the json output in a file");
 }
