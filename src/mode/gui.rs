@@ -1,3 +1,7 @@
+// Extern crates
+use std::fs::File;
+use std::io::{stdin, Write};
+
 // Internal crates
 use crate::password::{self, PasswordConfig};
 use crate::system;
@@ -69,7 +73,7 @@ fn main_passwd_generation() {
         println!("\nDo you want to save the passwords in a file ? (y/n)");
         let choice = system::get_user_choice_yn();
         if choice.eq("y") {
-            system::save_passwords_into_a_file(&passwords)
+            password_saving_procedure(&passwords)
         }
 
         println!("\nDo you want to generate another password(s) ? (y/n)");
@@ -153,4 +157,44 @@ fn allocate_passwd_config_gui() -> PasswordConfig {
     password_config.number_of_passwords = system::get_user_choice_int();
 
     password_config
+}
+
+/// This function is charged to save the random password in a file with \n as separator in GUI mode
+///
+/// # Arguments
+///
+/// * `passwords` - A vector of String that holds the passwords to save
+///
+pub fn password_saving_procedure(passwords: &Vec<String>) {
+    let mut filename = String::new();
+
+    while !system::is_valid_path(filename.as_str()) {
+        println!("Please enter the file name");
+        filename = system::get_user_choice();
+    }
+
+    system::check_folder_exists(system::PASSWORD_PATH);
+    let mut file = File::create(system::PASSWORD_PATH.to_string() + "/" + &filename);
+    while file.is_err() {
+        println!(
+            "Unable to create the file '{}': {}",
+            filename,
+            file.unwrap_err()
+        );
+        println!("Please enter a new file name:");
+        filename = system::get_user_choice();
+        file = File::create(&filename);
+    }
+
+    let mut file = file.unwrap();
+    for password in passwords {
+        match file.write_all(password.as_bytes()) {
+            Ok(_) => (),
+            Err(e) => println!("Unable to write data: {}", e),
+        }
+        match file.write_all(b"\n") {
+            Ok(_) => (),
+            Err(e) => println!("Unable to write data: {}", e),
+        }
+    }
 }

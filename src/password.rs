@@ -73,7 +73,7 @@ fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
 ///
 /// # Returns
 ///
-/// The shuffled vector of u8 passed in parameter
+/// The shuffled vector of u8 sent in parameter
 ///
 fn shuffle_dict(dict: &Vec<u8>) -> Vec<u8> {
     let mut shuffled_dict = dict.to_vec();

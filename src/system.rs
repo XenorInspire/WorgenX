@@ -2,48 +2,9 @@
 use std::fs::File;
 use std::io::{stdin, Write};
 
-const PASSWORD_PATH: &str = "passwords";
+/// Theses constants are charged to store the path of the wordlists and passwords folders
+pub const PASSWORD_PATH: &str = "passwords";
 const WORDLIST_PATH: &str = "wordlists";
-
-/// This function is charged to save the random password in a file with \n as separator
-///
-/// # Arguments
-///
-/// * `passwords` - A vector of String that holds the passwords to save
-///
-pub fn save_passwords_into_a_file(passwords: &Vec<String>) {
-    let mut filename = String::new();
-
-    while !is_valid_path(filename.as_str()) {
-        println!("Please enter the file name");
-        filename = get_user_choice();
-    }
-
-    check_folder_exists(PASSWORD_PATH);
-    let mut file = File::create(PASSWORD_PATH.to_string() + "/" + &filename);
-    while file.is_err() {
-        println!(
-            "Unable to create the file '{}': {}",
-            filename,
-            file.unwrap_err()
-        );
-        println!("Please enter a new file name:");
-        filename = get_user_choice();
-        file = File::create(&filename);
-    }
-
-    let mut file = file.unwrap();
-    for password in passwords {
-        match file.write_all(password.as_bytes()) {
-            Ok(_) => (),
-            Err(e) => println!("Unable to write data: {}", e),
-        }
-        match file.write_all(b"\n") {
-            Ok(_) => (),
-            Err(e) => println!("Unable to write data: {}", e),
-        }
-    }
-}
 
 /// This function is charged to get user String input y/n
 ///
@@ -127,16 +88,14 @@ pub fn get_user_choice_int() -> u64 {
 /// A boolean value that indicates if the path is valid or not
 ///
 pub fn is_valid_path(path: &str) -> bool {
-    // For Windows platforms
-    #[cfg(windows)]
-    const INVALID_CHARS: &[char] = &[
-        '<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@',
-    ];
-    // For other platforms
-    #[cfg(not(windows))]
-    const INVALID_CHARS: &[char] = &['/', '\0'];
+    let invalid_chars: &[char] = get_invalid_chars();
 
-    !path.is_empty() && !path.chars().any(|c| INVALID_CHARS.contains(&c))
+    #[cfg(target_family = "windows")]
+    if path.len() > 260 {
+        return false;
+    }
+
+    !path.is_empty() && !path.chars().any(|c| invalid_chars.contains(&c))
 }
 
 /// Check if folder exists unless create it
@@ -149,4 +108,24 @@ pub fn check_folder_exists(folder: &str) {
     if !std::path::Path::new(folder).exists() {
         std::fs::create_dir(folder).unwrap();
     }
+}
+
+/// This function send the invalid chars for windows path
+///
+/// # Returns
+/// 
+/// '<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@'
+#[cfg(target_family = "windows")]
+fn get_invalid_chars() -> &'static [char] {
+    &['<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@',]
+}
+
+/// This function send the invalid chars for linux platforms path
+/// 
+/// # Returns
+/// 
+/// '/' and '\0' chars
+#[cfg(target_family = "unix")]
+fn get_invalid_chars() -> &'static [char] {
+    &['/', '\0']
 }
