@@ -1,6 +1,9 @@
 #[cfg(all(not(feature = "gui"), not(feature = "cli")))]
 compile_error!("You must specify a mode: 'gui' or 'cli'.");
 
+#[cfg(all(feature = "gui", feature = "cli"))]
+compile_error!("You must specify only one mode: 'gui' or 'cli'.");
+
 // Internal modules
 mod dict;
 mod error;
