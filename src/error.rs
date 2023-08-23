@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-#[derive(Debug, Clone, Error)]
+#[derive(Debug, Error)]
 pub enum WorgenXError {
     #[error("Error: {0}")]
     ArgError(ArgError),
@@ -8,7 +8,7 @@ pub enum WorgenXError {
     SystemError(SystemError),
 }
 
-#[derive(Debug, Clone, Error)]
+#[derive(Debug, Error)]
 pub enum ArgError {
     /// This error is raised if the user doesn't specify any argument
     #[error("no argument specified\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
@@ -33,7 +33,7 @@ pub enum ArgError {
     BothOutputArguments,
 }
 
-#[derive(Debug, Clone, Error)]
+#[derive(Debug, Error)]
 pub enum SystemError {
     /// This error is raised if the user hasn't specified a valid path for the -o or --output argument
     #[error("invalid path `{0}` for output file.\nPlease specify a valid path")]
