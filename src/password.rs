@@ -26,19 +26,19 @@ fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
     let mut password_families: Vec<Vec<u8>> = Vec::new();
 
     if password_config.uppercase {
-        password_families.push(shuffle_dict(&dict::UPPERCASE.to_vec()));
+        password_families.push(shuffle_dict(dict::UPPERCASE));
     }
 
     if password_config.lowercase {
-        password_families.push(shuffle_dict(&dict::LOWERCASE.to_vec()));
+        password_families.push(shuffle_dict(dict::LOWERCASE));
     }
 
     if password_config.numbers {
-        password_families.push(shuffle_dict(&dict::NUMBERS.to_vec()));
+        password_families.push(shuffle_dict(dict::NUMBERS));
     }
 
     if password_config.special_characters {
-        password_families.push(shuffle_dict(&dict::SPECIAL_CHARACTERS.to_vec()));
+        password_families.push(shuffle_dict(dict::SPECIAL_CHARACTERS));
     }
 
     // Generate the random indexes of the password families in a random order
@@ -62,7 +62,7 @@ fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
 ///
 /// The shuffled vector of u8 sent in parameter
 ///
-fn shuffle_dict(dict: &Vec<u8>) -> Vec<u8> {
+fn shuffle_dict(dict: &[u8]) -> Vec<u8> {
     let mut shuffled_dict = dict.to_vec();
     let mut rng = rand::thread_rng();
     shuffled_dict.shuffle(&mut rng);

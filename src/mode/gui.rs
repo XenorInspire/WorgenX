@@ -93,42 +93,30 @@ fn allocate_passwd_config_gui() -> PasswordConfig {
         println!("\nChoose what your password is composed of :");
         println!("Uppercase letters (A-Z) ? (y/n)");
         choice = system::get_user_choice_yn();
-        match &*choice {
-            "y" => {
-                password_config.uppercase = true;
-                is_option_chosen = true;
-            }
-            _ => (),
+        if &*choice == "y" {
+            password_config.uppercase = true;
+            is_option_chosen = true;
         }
 
         println!("Lowercase letters (a-z) ? (y/n)");
         choice = system::get_user_choice_yn();
-        match &*choice {
-            "y" => {
-                password_config.lowercase = true;
-                is_option_chosen = true;
-            }
-            _ => (),
+        if &*choice == "y" {
+            password_config.lowercase = true;
+            is_option_chosen = true;
         }
 
         println!("Numbers (0-9) ? (y/n)");
         choice = system::get_user_choice_yn();
-        match &*choice {
-            "y" => {
-                password_config.numbers = true;
-                is_option_chosen = true;
-            }
-            _ => (),
+        if &*choice == "y" {
+            password_config.numbers = true;
+            is_option_chosen = true;
         }
 
         println!("Special characters ? (y/n)");
         choice = system::get_user_choice_yn();
-        match &*choice {
-            "y" => {
-                password_config.special_characters = true;
-                is_option_chosen = true;
-            }
-            _ => (),
+        if &*choice == "y" {
+            password_config.special_characters = true;
+            is_option_chosen = true;
         }
 
         if !is_option_chosen {

@@ -103,9 +103,9 @@ pub fn is_valid_path(path: &str) -> Result<(), SystemError> {
     }
 
     if path.chars().any(|c| invalid_chars.contains(&c)) {
-        return Err(SystemError::InvalidPath(path.to_string()));
+        Err(SystemError::InvalidPath(path.to_string()))
     } else {
-        return Ok(());
+        Ok(())
     }
 }
 
@@ -121,12 +121,7 @@ pub fn is_valid_path(path: &str) -> Result<(), SystemError> {
 /// True if the folder exists, false otherwise
 ///
 pub fn check_if_folder_exists(folder: &str) -> bool {
-    match Path::new(folder).parent() {
-        Some(_) => return true,
-        None => {
-            return false;
-        }
-    };
+    Path::new(folder).parent().is_some()
 }
 
 /// This function send the invalid chars for windows path
@@ -137,7 +132,7 @@ pub fn check_if_folder_exists(folder: &str) -> bool {
 ///
 #[cfg(target_family = "windows")]
 fn get_invalid_chars() -> &'static [char] {
-    &['<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@', '\0', '\r', '\n']
+    &['<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@', '\0', '\r', '\n',]
 }
 
 /// This function send the invalid chars for unix platforms path

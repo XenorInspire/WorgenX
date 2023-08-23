@@ -3,8 +3,11 @@
     // Doesn't show error for compile_error! macro
     "rust-analyzer.check.overrideCommand": [
         "cargo",
-        "test",
+        "clippy",
         "--all-features",
-        "--message-format=json"
-    ]
+        "--message-format=json",
+        "--all-targets",
+        "--workspace",
+        "--all",
+    ],
 }

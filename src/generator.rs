@@ -43,42 +43,29 @@ fn create_wordlist_config_gui() -> Result<WordlistConfig, WorgenXError> {
         println!("\nChoose what your wordlist is composed of :");
         println!("Uppercase letters (A-Z) ? (y/n)");
         choice = system::get_user_choice_yn();
-        match &*choice {
-            "y" => {
-                wordlist_config.uppercase = true;
-                is_option_chosen = true;
-            }
-            _ => (),
+        if &*choice == "y" {
+            wordlist_config.uppercase = true;
+            is_option_chosen = true;
         }
 
         println!("Lowercase letters (a-z) ? (y/n)");
         choice = system::get_user_choice_yn();
-        match &*choice {
-            "y" => {
-                wordlist_config.lowercase = true;
-                is_option_chosen = true;
-            }
-            _ => (),
+        if &*choice == "y" {
+            wordlist_config.lowercase = true;
+            is_option_chosen = true;
         }
 
         println!("Numbers (0-9) ? (y/n)");
         choice = system::get_user_choice_yn();
-        match &*choice {
-            "y" => {
-                wordlist_config.numbers = true;
-                is_option_chosen = true;
-            }
-            _ => (),
+        if &*choice == "y" {
+            wordlist_config.numbers = true;
+            is_option_chosen = true;
         }
-
         println!("Special characters ? (y/n)");
         choice = system::get_user_choice_yn();
-        match &*choice {
-            "y" => {
-                wordlist_config.special_characters = true;
-                is_option_chosen = true;
-            }
-            _ => (),
+        if &*choice == "y" {
+            wordlist_config.special_characters = true;
+            is_option_chosen = true;
         }
 
         if !is_option_chosen {
