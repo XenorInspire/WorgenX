@@ -1,5 +1,5 @@
 // Internal crates
-use crate::error::{ArgError, SystemError, WorgenXError};
+use crate::error::{ArgError, WorgenXError};
 use crate::password::{self, PasswordConfig};
 use crate::system;
 
@@ -35,10 +35,12 @@ pub fn run() -> Result<(), WorgenXError> {
                     let passwords = password::generate_random_passwords(
                         &password_generation_parameters.password_config,
                     );
-                    // TODO: check no_display and output_file and json
-                    println!("You can find your password(s) below:\n");
-                    for password in passwords {
-                        println!("{}", password);
+                    // TODO: check output_file and json
+                    if !password_generation_parameters.no_display {
+                        println!("You can find your password(s) below:\n");
+                        for password in passwords {
+                            println!("{}", password);
+                        }
                     }
                 }
                 Err(e) => {
@@ -177,10 +179,11 @@ fn allocate_passwd_config_cli(
                         return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
                     }
                     output_file = args[i + 1].clone();
-                    if !system::is_valid_path(&output_file) {
-                        return Err(WorgenXError::SystemError(SystemError::InvalidPath(
-                            output_file.clone(),
-                        )));
+                    match system::is_valid_path(&output_file) {
+                        Ok(_) => (),
+                        Err(e) => {
+                            return Err(WorgenXError::SystemError(e));
+                        }
                     }
                 } else {
                     return Err(WorgenXError::ArgError(ArgError::MissingValue(
@@ -200,10 +203,11 @@ fn allocate_passwd_config_cli(
                         return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
                     }
                     output_file = args[i + 1].clone();
-                    if !system::is_valid_path(&output_file) {
-                        return Err(WorgenXError::SystemError(SystemError::InvalidPath(
-                            output_file.clone(),
-                        )));
+                    match system::is_valid_path(&output_file) {
+                        Ok(_) => (),
+                        Err(e) => {
+                            return Err(WorgenXError::SystemError(e));
+                        }
                     }
                 } else {
                     return Err(WorgenXError::ArgError(ArgError::MissingValue(

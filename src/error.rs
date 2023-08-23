@@ -38,4 +38,10 @@ pub enum SystemError {
     /// This error is raised if the user hasn't specified a valid path for the -o or --output argument
     #[error("invalid path `{0}` for output file.\nPlease specify a valid path")]
     InvalidPath(String),
+    // This error is raised if parent folder doesn't exist
+    #[error("parent folder `{0}` doesn't exist.\nPlease specify a valid path")]
+    ParentFolderDoesntExist(String),
+    // This error is raised if the path given by the user is a too long (Windows only)
+    #[error("path `{0}` is too long (>260).\nPlease specify a valid path")]
+    PathTooLong(String),
 }

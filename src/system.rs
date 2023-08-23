@@ -3,6 +3,8 @@ use std::fs::File;
 use std::io::{stdin, Write};
 use std::path::Path;
 
+use crate::error::SystemError;
+
 /// Theses constants are charged to store the path of the wordlists and passwords folders
 pub const PASSWORD_PATH: &str = "passwords";
 const WORDLIST_PATH: &str = "wordlists";
@@ -88,15 +90,23 @@ pub fn get_user_choice_int() -> u64 {
 ///
 /// A boolean value that indicates if the path is valid or not
 ///
-pub fn is_valid_path(path: &str) -> bool {
+pub fn is_valid_path(path: &str) -> Result<(), SystemError> {
     let invalid_chars: &[char] = get_invalid_chars();
 
     #[cfg(target_family = "windows")]
     if path.len() > 260 {
-        return false;
+        return Err(SystemError::PathTooLong(path.to_string()));
     }
 
-    check_if_folder_exists(path) && !path.chars().any(|c| invalid_chars.contains(&c))
+    if !check_if_folder_exists(path) {
+        return Err(SystemError::ParentFolderDoesntExist(path.to_string()));
+    }
+
+    if path.chars().any(|c| invalid_chars.contains(&c)) {
+        return Err(SystemError::InvalidPath(path.to_string()));
+    } else {
+        return Ok(());
+    }
 }
 
 /// Check if folder exists
@@ -123,20 +133,20 @@ pub fn check_if_folder_exists(folder: &str) -> bool {
 ///
 /// # Returns
 ///
-/// '<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@' chars
+/// '<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@', '\0', '\r', '\n' chars
 ///
 #[cfg(target_family = "windows")]
 fn get_invalid_chars() -> &'static [char] {
-    &['<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@',]
+    &['<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@', '\0', '\r', '\n']
 }
 
-/// This function send the invalid chars for linux platforms path
+/// This function send the invalid chars for unix platforms path
 ///
 /// # Returns
 ///
-/// '/' and '\0' chars
+/// '/', '\0', '\r', '\n' chars
 ///
 #[cfg(target_family = "unix")]
 fn get_invalid_chars() -> &'static [char] {
-    &['/', '\0']
+    &['/', '\0', '\r', '\n']
 }

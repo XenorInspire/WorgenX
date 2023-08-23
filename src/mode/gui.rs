@@ -154,7 +154,7 @@ fn allocate_passwd_config_gui() -> PasswordConfig {
 pub fn password_saving_procedure(passwords: &Vec<String>) {
     let mut filename = String::new();
 
-    while !system::is_valid_path(filename.as_str()) {
+    while system::is_valid_path(filename.as_str()).is_err() {
         println!("Please enter the file name");
         filename = system::get_user_choice();
     }
