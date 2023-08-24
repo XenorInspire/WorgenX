@@ -2,46 +2,55 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum WorgenXError {
-    #[error("Error: {0}")]
+    #[error("{0}")]
     ArgError(ArgError),
-    #[error("Error: {0}")]
+    #[error("{0}")]
     SystemError(SystemError),
 }
 
 #[derive(Debug, Error)]
 pub enum ArgError {
     /// This error is raised if the user doesn't specify any argument
-    #[error("no argument specified\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
+    #[error("Error: no argument specified\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
     NoArgument,
     /// This error is raised if the user specifies an unknown argument
-    #[error("unknown argument {0}\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
+    #[error("Error: unknown argument {0}\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
     UnknownArgument(String),
     /// This error is raised if the user specifies an argument that requires a value but doesn't give it
-    #[error("missing value for {0}")]
+    #[error("Error: missing value for {0}")]
     MissingValue(String),
     //// This error is raised if the user doesn't specify a mandatory argument
-    #[error("missing argument {0}\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
+    #[error("Error: missing argument {0}\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
     MissingArgument(String),
     /// This error is raised if the user specified and invalid numerical value for an argument
-    #[error("invalid value `{0}` for argument `{1}`\nPlease specify a valid numerical value between 1 and {}\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.", u64::MAX)]
+    #[error("Error: invalid value `{0}` for argument `{1}`\nPlease specify a valid numerical value between 1 and {}\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.", u64::MAX)]
     InvalidNumericalValue(String, String),
     /// This error is raised if there isn't any configuration given by the user (for example just -d or --dict without any values after)
-    #[error("no configuration given for argument {0}\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
+    #[error("Error: no configuration given for argument {0}\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
     MissingConfiguration(String),
     /// This error is raised if the user has specified both -o and -O arguments
-    #[error("cannot specify both -o and -O arguments\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
+    #[error("Error: cannot specify both -o and -O arguments\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
     BothOutputArguments,
 }
 
 #[derive(Debug, Error)]
 pub enum SystemError {
     /// This error is raised if the user hasn't specified a valid path for the -o or --output argument
-    #[error("invalid path `{0}` for output file.\nPlease specify a valid path")]
+    #[error("Error: invalid path `{0}` for output file.\nPlease specify a valid path")]
     InvalidPath(String),
-    // This error is raised if parent folder doesn't exist
-    #[error("parent folder `{0}` doesn't exist.\nPlease specify a valid path")]
+    /// This error is raised if parent folder doesn't exist
+    #[error("Error: parent folder `{0}` doesn't exist.\nPlease specify a valid path")]
     ParentFolderDoesntExist(String),
-    // This error is raised if the path given by the user is a too long (Windows only)
-    #[error("path `{0}` is too long (>260).\nPlease specify a valid path")]
+    /// This error is raised if the path given by the user is a too long (Windows only)
+    #[error("Error: path `{0}` is too long (>260).\nPlease specify a valid path")]
     PathTooLong(String),
+    /// This error is raised if the file can't be created
+    #[error("Error: unable to create file `{0}`.\n{1}")]
+    UnableToCreateFile(String, String),
+    /// This error is raised if there is an error while writing to the file
+    #[error("Error: unable to write to file `{0}`.\n[{1}]")]
+    UnableToWriteToFile(String, String),
+    /// This error is raised if the passwords or wordlists folder can't be created (for GUI mode only)
+    #[error("Error: unable to create folder `{0}`.\n{1}")]
+    UnableToCreateFolder(String, String),
 }
