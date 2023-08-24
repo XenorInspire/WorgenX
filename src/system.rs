@@ -39,11 +39,6 @@ pub fn get_user_choice_yn() -> String {
 ///
 /// The value entered by the user. If an error occurs, the function returns an empty String.
 ///
-/// # Example
-/// ```
-/// let choice = system::get_user_choice();
-/// ```
-///
 pub fn get_user_choice() -> String {
     let mut buffer = String::new();
     match stdin().read_line(&mut buffer) {
@@ -56,7 +51,7 @@ pub fn get_user_choice() -> String {
 ///
 /// # Returns
 ///
-/// The value entered by the user. If an error occurs, the function returns 0.
+/// The value entered by the user. If an error occurs, the function returns 0
 ///
 pub fn get_user_choice_int() -> u64 {
     let mut is_good_number = false;
@@ -93,7 +88,7 @@ pub fn get_user_choice_int() -> u64 {
 ///
 /// # Returns
 ///
-/// A boolean value that indicates if the path is valid or not
+/// Ok if the path is valid, SystemError otherwise
 ///
 pub fn is_valid_path(path: &str, mode: &str) -> Result<(), SystemError> {
     #[cfg(target_family = "windows")]
@@ -137,7 +132,7 @@ pub fn check_if_folder_exists(folder: &str) -> bool {
 /// # Returns
 ///
 /// A boolean value that indicates if the password has been saved or not
-/// True if the password has been saved, false otherwise
+/// Ok if the password has been saved, SystemError otherwise
 ///
 pub fn save_passwords(file_path: String, passwords: &Vec<String>) -> Result<(), SystemError> {
     let mut file = match File::create(&file_path) {
@@ -176,10 +171,14 @@ pub fn save_passwords(file_path: String, passwords: &Vec<String>) -> Result<(), 
 
 /// This function is charged to create the passwords or wordlists folder if it doesn't exist
 ///
+/// # Arguments
+///
+/// * `folder` - A string slice that holds the folder to create
+///
 /// # Returns
 ///
 /// A boolean value that indicates if the folder has been created or not
-/// True if the folder has been created, false otherwise
+/// Ok if the folder has been created, SystemError otherwise
 ///
 pub fn create_folder_if_not_exists(folder: &str) -> Result<(), SystemError> {
     let mut folder = String::from(folder);
