@@ -1,10 +1,15 @@
-// Extern crates
-use std::fs::File;
-use std::io::Write;
+// External crates
+use std::env;
 
 // Internal crates
 use crate::password::{self, PasswordConfig};
 use crate::system;
+
+#[cfg(target_family = "unix")]
+use system::unix as target;
+
+#[cfg(target_family = "windows")]
+use system::windows as target;
 
 /// This function is charged to schedule in GUI mode the execution of the different features of the program
 /// according to the user's choices
@@ -69,6 +74,8 @@ fn main_passwd_generation() {
         println!("\nDo you want to generate another password(s) ? (y/n)");
         again = system::get_user_choice_yn();
     }
+
+    println!("\n");
 }
 
 /// This function is charged to allocate the password config structure from the user's choices in the GUI
@@ -140,35 +147,43 @@ fn allocate_passwd_config_gui() -> PasswordConfig {
 /// * `passwords` - A vector of String that holds the passwords to save
 ///
 pub fn password_saving_procedure(passwords: &Vec<String>) {
-    let mut filename = String::new();
-
-    while system::is_valid_path(filename.as_str()).is_err() {
-        println!("Please enter the file name");
-        filename = system::get_user_choice();
-    }
-
-    system::check_if_folder_exists(system::PASSWORD_PATH);
-    let mut file = File::create(system::PASSWORD_PATH.to_string() + "/" + &filename);
-    while file.is_err() {
-        println!(
-            "Unable to create the file '{}': {}",
-            filename,
-            file.unwrap_err()
-        );
+    println!("Please enter the file name");
+    let mut filename = system::get_user_choice();
+    let mut result = system::is_valid_path(filename.as_str(), "FILE");
+    while result.is_err() {
+        println!("{}", result.unwrap_err());
         println!("Please enter a new file name:");
         filename = system::get_user_choice();
-        file = File::create(&filename);
+        result = system::is_valid_path(filename.as_str(), "FILE");
     }
 
-    let mut file = file.unwrap();
-    for password in passwords {
-        match file.write_all(password.as_bytes()) {
-            Ok(_) => (),
-            Err(e) => println!("Unable to write data: {}", e),
+    let filename = match env::var(target::HOME_ENV_VAR) {
+        Ok(home_path) => {
+            let parent_folder = format!("{}{}", home_path, target::PASSWORDS_FOLDER);
+            let parent_folder_created = match system::create_folder_if_not_exists(&parent_folder) {
+                Ok(_) => format!("{}{}", home_path, target::PASSWORDS_FOLDER),
+                Err(e) => {
+                    println!("{}", e);
+                    println!("Unable to create the folder, the passwords will be saved in the current directory");
+                    String::from(format!("./{}", filename))
+                }
+            };
+            format!("{}{}", parent_folder_created, filename)
         }
-        match file.write_all(b"\n") {
-            Ok(_) => (),
-            Err(e) => println!("Unable to write data: {}", e),
+        Err(_) => {
+            println!("Unable to get the home directory, the passwords will be saved in the current directory\n");
+            String::from(format!("./{}", filename))
+        }
+    };
+
+    while let Err(e) = system::save_passwords(filename.clone(), passwords) {
+        println!("\n{}", e);
+        println!("Do you want to try again ? (y/n)");
+        let choice = system::get_user_choice_yn();
+        if choice.eq("n") {
+            return;
         }
     }
+
+    println!("The passwords have been saved in {}", filename);
 }

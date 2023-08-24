@@ -179,7 +179,7 @@ fn allocate_passwd_config_cli(
                         return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
                     }
                     output_file = args[i + 1].clone();
-                    match system::is_valid_path(&output_file) {
+                    match system::is_valid_path(&output_file, "DIRECTORY") {
                         Ok(_) => (),
                         Err(e) => {
                             return Err(WorgenXError::SystemError(e));
@@ -203,7 +203,7 @@ fn allocate_passwd_config_cli(
                         return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
                     }
                     output_file = args[i + 1].clone();
-                    match system::is_valid_path(&output_file) {
+                    match system::is_valid_path(&output_file, "DIRECTORY") {
                         Ok(_) => (),
                         Err(e) => {
                             return Err(WorgenXError::SystemError(e));

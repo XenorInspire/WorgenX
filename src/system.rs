@@ -46,13 +46,9 @@ pub fn get_user_choice_yn() -> String {
 ///
 pub fn get_user_choice() -> String {
     let mut buffer = String::new();
-    let result = stdin().read_line(&mut buffer);
-    match result {
+    match stdin().read_line(&mut buffer) {
         Ok(_) => buffer.trim().to_string(),
-        Err(e) => {
-            println!("Error: {}", e);
-            String::new()
-        }
+        Err(_) => String::new(),
     }
 }
 
@@ -93,23 +89,23 @@ pub fn get_user_choice_int() -> u64 {
 /// # Arguments
 ///
 /// * `path` - A string slice that holds the path/filename to check
+/// * `mode` - A string slice that holds the mode of the path/filename to check (FILE or DIRECTORY)
 ///
 /// # Returns
 ///
 /// A boolean value that indicates if the path is valid or not
 ///
-pub fn is_valid_path(path: &str) -> Result<(), SystemError> {
-    let invalid_chars: &[char] = get_invalid_chars();
-
+pub fn is_valid_path(path: &str, mode: &str) -> Result<(), SystemError> {
     #[cfg(target_family = "windows")]
     if path.len() > 260 {
         return Err(SystemError::PathTooLong(path.to_string()));
     }
 
-    if !check_if_folder_exists(path) {
+    if mode.eq("DIRECTORY") && !check_if_folder_exists(path) {
         return Err(SystemError::ParentFolderDoesntExist(path.to_string()));
     }
 
+    let invalid_chars: &[char] = get_invalid_chars();
     if path.chars().any(|c| invalid_chars.contains(&c)) {
         Err(SystemError::InvalidPath(path.to_string()))
     } else {
@@ -129,7 +125,79 @@ pub fn is_valid_path(path: &str) -> Result<(), SystemError> {
 /// True if the folder exists, false otherwise
 ///
 pub fn check_if_folder_exists(folder: &str) -> bool {
-    Path::new(folder).parent().is_some()
+    Path::new(folder).exists()
+}
+
+/// Save the password in a file
+///
+/// # Arguments
+///
+/// * `passwords` - A vector of String that holds the passwords to save
+///
+/// # Returns
+///
+/// A boolean value that indicates if the password has been saved or not
+/// True if the password has been saved, false otherwise
+///
+pub fn save_passwords(file_path: String, passwords: &Vec<String>) -> Result<(), SystemError> {
+    let mut file = match File::create(&file_path) {
+        Ok(f) => f,
+        Err(e) => {
+            return Err(SystemError::UnableToCreateFile(
+                file_path.clone(),
+                e.to_string(),
+            ))
+        }
+    };
+
+    for password in passwords {
+        match file.write_all(password.as_bytes()) {
+            Ok(_) => (),
+            Err(e) => {
+                return Err(SystemError::UnableToWriteToFile(
+                    file_path.clone(),
+                    e.to_string(),
+                ))
+            }
+        }
+        match file.write_all(b"\n") {
+            Ok(_) => (),
+            Err(e) => {
+                return Err(SystemError::UnableToWriteToFile(
+                    file_path.clone(),
+                    e.to_string(),
+                ))
+            }
+        }
+    }
+
+    Ok(())
+}
+
+/// This function is charged to create the passwords or wordlists folder if it doesn't exist
+///
+/// # Returns
+///
+/// A boolean value that indicates if the folder has been created or not
+/// True if the folder has been created, false otherwise
+///
+pub fn create_folder_if_not_exists(folder: &str) -> Result<(), SystemError> {
+    let mut folder = String::from(folder);
+    if folder.pop().is_none() {
+        return Err(SystemError::InvalidPath(folder.clone()));
+    }
+    if !check_if_folder_exists(&folder) {
+        match std::fs::create_dir_all(&folder) {
+            Ok(_) => return Ok(()),
+            Err(e) => {
+                return Err(SystemError::UnableToCreateFolder(
+                    folder.clone(),
+                    e.to_string(),
+                ))
+            }
+        };
+    }
+    Ok(())
 }
 
 /// This function send the invalid chars for windows path

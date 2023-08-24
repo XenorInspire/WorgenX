@@ -89,7 +89,7 @@ fn create_wordlist_config_gui() -> Result<WordlistConfig, WorgenXError> {
     println!("Enter the name of the wordlist :");
     let mut filename = String::new();
 
-    while system::is_valid_path(filename.as_str()).is_err() {
+    while system::is_valid_path(filename.as_str(), "FILE").is_err() {
         println!("Please enter the file name");
         filename = system::get_user_choice();
     }
