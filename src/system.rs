@@ -5,9 +5,17 @@ use std::path::Path;
 
 use crate::error::SystemError;
 
-/// Theses constants are charged to store the path of the wordlists and passwords folders
-pub const PASSWORD_PATH: &str = "passwords";
-const WORDLIST_PATH: &str = "wordlists";
+/// OS specific constants
+#[cfg(target_family = "unix")]
+pub mod unix {
+    pub const HOME_ENV_VAR: &str = "HOME";
+    pub const PASSWORDS_FOLDER: &str = "/worgenx/passwords/";
+}
+#[cfg(target_family = "windows")]
+pub mod windows {
+    pub const HOME_ENV_VAR: &str = "USERPROFILE";
+    pub const PASSWORDS_FOLDER: &str = "\\worgenx\\passwords\\";
+}
 
 /// This function is charged to get user String input y/n
 ///
