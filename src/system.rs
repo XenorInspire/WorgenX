@@ -1,17 +1,19 @@
 // Extern crates
 use std::fs::File;
-use std::io::{stdin, Write};
+#[cfg(feature = "gui")]
+use std::io::stdin;
+use std::io::Write;
 use std::path::Path;
 
 use crate::error::SystemError;
 
-/// OS specific constants
-#[cfg(target_family = "unix")]
+/// OS specific constants for GUI mode
+#[cfg(all(target_family = "unix", feature = "gui"))]
 pub mod unix {
     pub const HOME_ENV_VAR: &str = "HOME";
     pub const PASSWORDS_FOLDER: &str = "/worgenx/passwords/";
 }
-#[cfg(target_family = "windows")]
+#[cfg(all(target_family = "windows", feature = "gui"))]
 pub mod windows {
     pub const HOME_ENV_VAR: &str = "USERPROFILE";
     pub const PASSWORDS_FOLDER: &str = "\\worgenx\\passwords\\";
@@ -23,6 +25,7 @@ pub mod windows {
 ///
 /// The value entered by the user. If an error occurs, the function returns an empty String.
 ///
+#[cfg(feature = "gui")]
 pub fn get_user_choice_yn() -> String {
     let mut choice = get_user_choice();
     while !choice.eq("y") && !choice.eq("n") {
@@ -39,6 +42,7 @@ pub fn get_user_choice_yn() -> String {
 ///
 /// The value entered by the user. If an error occurs, the function returns an empty String.
 ///
+#[cfg(feature = "gui")]
 pub fn get_user_choice() -> String {
     let mut buffer = String::new();
     match stdin().read_line(&mut buffer) {
@@ -53,6 +57,7 @@ pub fn get_user_choice() -> String {
 ///
 /// The value entered by the user. If an error occurs, the function returns 0
 ///
+#[cfg(feature = "gui")]
 pub fn get_user_choice_int() -> u64 {
     let mut is_good_number = false;
     let mut number: u64 = 0;
@@ -178,6 +183,7 @@ pub fn save_passwords(file_path: String, passwords: &Vec<String>) -> Result<(), 
 /// A boolean value that indicates if the folder has been created or not
 /// Ok if the folder has been created, SystemError otherwise
 ///
+#[cfg(feature = "gui")]
 pub fn create_folder_if_not_exists(folder: &str) -> Result<(), SystemError> {
     let mut folder = String::from(folder);
     if folder.pop().is_none() {
