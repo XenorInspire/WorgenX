@@ -313,6 +313,6 @@ fn display_help() {
     println!("    -c <count>, --count <count>\t\tNumber of passwords to generate");
     println!("\n  The following options are optional:");
     println!("    -o <path>, --output <path>\t\tSave the passwords in a file");
-    println!("    -O, --output-only <path>\t\tSave the passwords in a file and do not display it");
+    println!("    -O, --output-only <path>\t\tSave the passwords only in a file, not in stdout");
     println!("    -j, --json\t\t\t\tOutput in JSON format\n\t\t\t\t\tCombine with -o to save the json output in a file");
 }
