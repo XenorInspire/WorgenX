@@ -42,6 +42,7 @@ pub enum SystemError {
     #[error("Error: parent folder `{0}` doesn't exist.\nPlease specify a valid path")]
     ParentFolderDoesntExist(String),
     /// This error is raised if the path given by the user is a too long (Windows only)
+    #[cfg(target_family = "windows")]
     #[error("Error: path `{0}` is too long (>260).\nPlease specify a valid path")]
     PathTooLong(String),
     /// This error is raised if the file can't be created
@@ -51,6 +52,7 @@ pub enum SystemError {
     #[error("Error: unable to write to file `{0}`.\n[{1}]")]
     UnableToWriteToFile(String, String),
     /// This error is raised if the passwords or wordlists folder can't be created (for GUI mode only)
+    #[cfg(feature = "gui")]
     #[error("Error: unable to create folder `{0}`.\n{1}")]
     UnableToCreateFolder(String, String),
 }
