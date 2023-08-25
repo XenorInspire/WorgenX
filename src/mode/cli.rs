@@ -1,5 +1,6 @@
 // Internal crates
 use crate::error::{ArgError, WorgenXError};
+use crate::json;
 use crate::password::{self, PasswordConfig};
 use crate::system;
 
@@ -36,19 +37,8 @@ pub fn run() -> Result<(), WorgenXError> {
                     args[1].clone(),
                 )));
             }
-            match allocate_passwd_config_cli(args) {
-                Ok(password_generation_parameters) => {
-                    let passwords = password::generate_random_passwords(
-                        &password_generation_parameters.password_config,
-                    );
-                    // TODO: check output_file and json
-                    if !password_generation_parameters.no_display {
-                        println!("You can find your password(s) below:\n");
-                        for password in passwords {
-                            println!("{}", password);
-                        }
-                    }
-                }
+            match run_passwd(&args) {
+                Ok(_) => (),
                 Err(e) => {
                     return Err(e);
                 }
@@ -72,6 +62,68 @@ pub fn run() -> Result<(), WorgenXError> {
     Ok(())
 }
 
+/// This function is charged to schedule the execution of the password feature of the program
+///
+/// # Arguments
+///
+/// * `args` - A vector of String containing the arguments passed to the program
+///
+/// # Returns
+///
+/// Ok if the password has been generated, WorgenXError otherwise
+///
+fn run_passwd(args: &[String]) -> Result<(), WorgenXError> {
+    match allocate_passwd_config_cli(args) {
+        Ok(password_generation_parameters) => {
+            let passwords = password::generate_random_passwords(
+                &password_generation_parameters.password_config,
+            );
+
+            if password_generation_parameters.json {
+                let json_content = json::password_config_to_json(
+                    &password_generation_parameters.password_config,
+                    &passwords,
+                );
+                if !password_generation_parameters.no_display {
+                    println!("{}", json_content);
+                }
+                if !password_generation_parameters.output_file.is_empty() {
+                    match system::save_json_to_file(
+                        password_generation_parameters.output_file,
+                        &json_content,
+                    ) {
+                        Ok(_) => (),
+                        Err(e) => {
+                            return Err(WorgenXError::SystemError(e));
+                        }
+                    }
+                }
+            } else {
+                if !password_generation_parameters.no_display {
+                    for password in &passwords {
+                        println!("{}", password);
+                    }
+                }
+                if !password_generation_parameters.output_file.is_empty() {
+                    match system::save_passwords(
+                        password_generation_parameters.output_file,
+                        &passwords,
+                    ) {
+                        Ok(_) => (),
+                        Err(e) => {
+                            return Err(WorgenXError::SystemError(e));
+                        }
+                    }
+                }
+            }
+        }
+        Err(e) => {
+            return Err(e);
+        }
+    }
+    Ok(())
+}
+
 /// This function is charged to check the syntax of the arguments passed to the program
 /// It does not check the values of the arguments
 /// This function is called only if the user specifies the -p or --passwd argument
@@ -87,7 +139,7 @@ pub fn run() -> Result<(), WorgenXError> {
 /// * `Result<(), ArgError>` - An ArgError if the syntax is incorrect (or invalid config/values), Ok(PasswordConfig) if the syntax is correct
 ///
 fn allocate_passwd_config_cli(
-    args: Vec<String>,
+    args: &[String],
 ) -> Result<PasswordGenerationParameters, WorgenXError> {
     let mut output_file = String::new();
     let mut json = false;
@@ -185,7 +237,7 @@ fn allocate_passwd_config_cli(
                         return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
                     }
                     output_file = args[i + 1].clone();
-                    match system::is_valid_path(&output_file, "DIRECTORY") {
+                    match system::is_valid_path(output_file.clone(), "DIRECTORY") {
                         Ok(_) => (),
                         Err(e) => {
                             return Err(WorgenXError::SystemError(e));
@@ -209,7 +261,7 @@ fn allocate_passwd_config_cli(
                         return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
                     }
                     output_file = args[i + 1].clone();
-                    match system::is_valid_path(&output_file, "DIRECTORY") {
+                    match system::is_valid_path(output_file.clone(), "DIRECTORY") {
                         Ok(_) => (),
                         Err(e) => {
                             return Err(WorgenXError::SystemError(e));
@@ -266,7 +318,7 @@ fn allocate_passwd_config_cli(
 
 /// This function is charged to check the syntax of the arguments passed to the program
 /// It does not check the values of the arguments
-/// This function is called only if the user specifies the -d or --dict argument
+/// This function is called only if the user specifies the -w or --wordlist argument
 /// It returns an ArgError if the syntax is incorrect
 /// It returns Ok(()) if the syntax is correct
 ///
@@ -274,7 +326,7 @@ fn allocate_passwd_config_cli(
 ///
 /// * `args` - A vector of String containing the arguments passed to the program
 ///
-fn allocate_wordlist_config_cli(args: Vec<String>) -> Result<(), ArgError> {
+fn allocate_wordlist_config_cli(args: &[String]) -> Result<(), ArgError> {
     Ok(())
 }
 

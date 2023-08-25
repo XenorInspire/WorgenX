@@ -149,12 +149,12 @@ fn allocate_passwd_config_gui() -> PasswordConfig {
 pub fn password_saving_procedure(passwords: &Vec<String>) {
     println!("Please enter the file name");
     let mut filename = system::get_user_choice();
-    let mut result = system::is_valid_path(filename.as_str(), "FILE");
+    let mut result = system::is_valid_path(filename.clone(), "FILE");
     while result.is_err() {
         println!("{}", result.unwrap_err());
         println!("Please enter a new file name:");
         filename = system::get_user_choice();
-        result = system::is_valid_path(filename.as_str(), "FILE");
+        result = system::is_valid_path(filename.clone(), "FILE");
     }
 
     let filename = match env::var(target::HOME_ENV_VAR) {
@@ -165,14 +165,14 @@ pub fn password_saving_procedure(passwords: &Vec<String>) {
                 Err(e) => {
                     println!("{}", e);
                     println!("Unable to create the folder, the passwords will be saved in the current directory");
-                    String::from(format!("./{}", filename))
+                    format!("./{}", filename)
                 }
             };
             format!("{}{}", parent_folder_created, filename)
         }
         Err(_) => {
             println!("Unable to get the home directory, the passwords will be saved in the current directory\n");
-            String::from(format!("./{}", filename))
+            format!("./{}", filename)
         }
     };
 

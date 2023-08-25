@@ -172,6 +172,42 @@ pub fn save_passwords(file_path: String, passwords: &Vec<String>) -> Result<(), 
     Ok(())
 }
 
+/// This function is charged to save the JSON string given in parameter in a file
+///
+/// # Arguments
+///
+/// * `file_path` - A string slice that holds the path of the file to create
+/// * `json_content` - A string slice that holds the JSON string to save
+///
+/// # Returns
+///
+/// Ok if the password has been saved, SystemError otherwise
+///
+#[cfg(feature = "cli")]
+pub fn save_json_to_file(file_path: String, json_content: &str) -> Result<(), SystemError> {
+    let mut file = match File::create(&file_path) {
+        Ok(f) => f,
+        Err(e) => {
+            return Err(SystemError::UnableToCreateFile(
+                file_path.clone(),
+                e.to_string(),
+            ))
+        }
+    };
+
+    match file.write_all(json_content.as_bytes()) {
+        Ok(_) => (),
+        Err(e) => {
+            return Err(SystemError::UnableToWriteToFile(
+                file_path.clone(),
+                e.to_string(),
+            ))
+        }
+    }
+
+    Ok(())
+}
+
 /// This function is charged to create the passwords or wordlists folder if it doesn't exist
 ///
 /// # Arguments
