@@ -95,22 +95,52 @@ pub fn get_user_choice_int() -> u64 {
 ///
 /// Ok if the path is valid, SystemError otherwise
 ///
-pub fn is_valid_path(path: &str, mode: &str) -> Result<(), SystemError> {
-    #[cfg(target_family = "windows")]
-    if path.len() > 260 {
-        return Err(SystemError::PathTooLong(path.to_string()));
-    }
-
-    if mode.eq("DIRECTORY") && !check_if_folder_exists(path) {
-        return Err(SystemError::ParentFolderDoesntExist(path.to_string()));
-    }
-
+pub fn is_valid_path(path: String, mode: &str) -> Result<(), SystemError> {
     let invalid_chars: &[char] = get_invalid_chars();
     if path.chars().any(|c| invalid_chars.contains(&c)) {
-        Err(SystemError::InvalidPath(path.to_string()))
-    } else {
-        Ok(())
+        println!("3");
+        return Err(SystemError::InvalidPath(path.to_string()));
     }
+
+    if mode.eq("DIRECTORY") {
+        let parent_folder = match Path::new(&path).parent() {
+            Some(p) => match p.to_str() {
+                Some(p) => p,
+                None => return Err(SystemError::InvalidPath(path.to_string())),
+            },
+            None => return Err(SystemError::InvalidPath(path.to_string())),
+        };
+
+        // Use Path::new().is_absolute() instead of starts_with("/") because it doesn't work
+        if !parent_folder.starts_with("./") {
+            let current_dir = match std::env::current_dir() {
+                Ok(c) => c,
+                Err(e) => {
+                    return Err(SystemError::UnableToCreateFile(
+                        path.to_string(),
+                        e.to_string(),
+                    ))
+                }
+            };
+            let current_dir = match current_dir.to_str() {
+                Some(c) => c,
+                None => return Err(SystemError::InvalidPath(path.to_string())),
+            };
+            // Delete the "./" at the beginning of the path
+            let parent_folder = &path[2..];
+            // println!("0{:?}", parent_folder);
+            let full_path = current_dir.to_owned() + "/" + parent_folder;
+
+            #[cfg(target_family = "windows")]
+            if full_path.len() > 260 {
+                return Err(SystemError::PathTooLong(path.to_string()));
+            }
+        } else if !check_if_folder_exists(parent_folder) {
+            return Err(SystemError::ParentFolderDoesntExist(path.to_string()));
+        }
+    }
+
+    Ok(())
 }
 
 /// Check if folder exists
