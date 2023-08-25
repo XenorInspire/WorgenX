@@ -116,7 +116,6 @@ pub fn is_valid_path(path: &str, mode: &str) -> Result<(), SystemError> {
 ///
 /// # Returns
 ///
-/// A boolean value that indicates if the folder exists or not
 /// True if the folder exists, false otherwise
 ///
 pub fn check_if_folder_exists(folder: &str) -> bool {
@@ -131,7 +130,6 @@ pub fn check_if_folder_exists(folder: &str) -> bool {
 ///
 /// # Returns
 ///
-/// A boolean value that indicates if the password has been saved or not
 /// Ok if the password has been saved, SystemError otherwise
 ///
 pub fn save_passwords(file_path: String, passwords: &Vec<String>) -> Result<(), SystemError> {
