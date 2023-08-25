@@ -93,54 +93,49 @@ pub fn get_user_choice_int() -> u64 {
 ///
 /// # Returns
 ///
-/// Ok if the path is valid, SystemError otherwise
+/// Ok(String) if the path/filename is valid, containing the full path, SystemError otherwise
 ///
-pub fn is_valid_path(path: String, mode: &str) -> Result<(), SystemError> {
+pub fn is_valid_path(path: String) -> Result<String, SystemError> {
+    let filename = match Path::new(&path).file_name() {
+        Some(f) => match f.to_str() {
+            Some(f) => f.to_string(),
+            None => return Err(SystemError::InvalidPath(path.to_string())),
+        },
+        None => return Err(SystemError::InvalidPath(path.to_string())),
+    };
+
     let invalid_chars: &[char] = get_invalid_chars();
-    if path.chars().any(|c| invalid_chars.contains(&c)) {
-        println!("3");
-        return Err(SystemError::InvalidPath(path.to_string()));
+    if filename.chars().any(|c| invalid_chars.contains(&c)) {
+        return Err(SystemError::InvalidFilename(filename.to_string()));
     }
 
-    if mode.eq("DIRECTORY") {
-        let parent_folder = match Path::new(&path).parent() {
-            Some(p) => match p.to_str() {
-                Some(p) => p,
+    #[cfg(target_family = "windows")]
+    if full_path.len() > 260 {
+        return Err(SystemError::PathTooLong(path.to_string()));
+    }
+
+    let full_path = if !Path::new(&path).is_absolute() {
+        let current_dir = match std::env::current_dir() {
+            Ok(c) => match c.to_str() {
+                Some(s) => s.to_string(),
                 None => return Err(SystemError::InvalidPath(path.to_string())),
             },
-            None => return Err(SystemError::InvalidPath(path.to_string())),
-        };
-
-        // Use Path::new().is_absolute() instead of starts_with("/") because it doesn't work
-        if !parent_folder.starts_with("./") {
-            let current_dir = match std::env::current_dir() {
-                Ok(c) => c,
-                Err(e) => {
-                    return Err(SystemError::UnableToCreateFile(
-                        path.to_string(),
-                        e.to_string(),
-                    ))
-                }
-            };
-            let current_dir = match current_dir.to_str() {
-                Some(c) => c,
-                None => return Err(SystemError::InvalidPath(path.to_string())),
-            };
-            // Delete the "./" at the beginning of the path
-            let parent_folder = &path[2..];
-            // println!("0{:?}", parent_folder);
-            let full_path = current_dir.to_owned() + "/" + parent_folder;
-
-            #[cfg(target_family = "windows")]
-            if full_path.len() > 260 {
-                return Err(SystemError::PathTooLong(path.to_string()));
+            Err(e) => {
+                return Err(SystemError::UnableToCreateFile(
+                    path.to_string(),
+                    e.to_string(),
+                ))
             }
-        } else if !check_if_folder_exists(parent_folder) {
-            return Err(SystemError::ParentFolderDoesntExist(path.to_string()));
-        }
+        };
+        current_dir + "/" + &filename
+    } else {
+        path.clone()
+    };
+    println!("{}", &full_path);
+    if !check_if_folder_exists(&full_path) {
+        return Err(SystemError::ParentFolderDoesntExist(path.to_string()));
     }
-
-    Ok(())
+    Ok(full_path)
 }
 
 /// Check if folder exists
@@ -154,7 +149,7 @@ pub fn is_valid_path(path: String, mode: &str) -> Result<(), SystemError> {
 /// True if the folder exists, false otherwise
 ///
 pub fn check_if_folder_exists(folder: &str) -> bool {
-    Path::new(folder).exists()
+    Path::new(folder).parent().is_some()
 }
 
 /// Save the password in a file
@@ -255,7 +250,7 @@ pub fn create_folder_if_not_exists(folder: &str) -> Result<(), SystemError> {
     if folder.pop().is_none() {
         return Err(SystemError::InvalidPath(folder.clone()));
     }
-    if !check_if_folder_exists(&folder) {
+    if !Path::new(&folder).exists() {
         match std::fs::create_dir_all(&folder) {
             Ok(_) => return Ok(()),
             Err(e) => {

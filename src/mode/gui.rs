@@ -149,12 +149,12 @@ fn allocate_passwd_config_gui() -> PasswordConfig {
 pub fn password_saving_procedure(passwords: &Vec<String>) {
     println!("Please enter the file name");
     let mut filename = system::get_user_choice();
-    let mut result = system::is_valid_path(filename.clone(), "FILE");
+    let mut result = system::is_valid_path(filename.clone());
     while result.is_err() {
         println!("{}", result.unwrap_err());
         println!("Please enter a new file name:");
         filename = system::get_user_choice();
-        result = system::is_valid_path(filename.clone(), "FILE");
+        result = system::is_valid_path(filename.clone());
     }
 
     let filename = match env::var(target::HOME_ENV_VAR) {

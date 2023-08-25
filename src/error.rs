@@ -2,12 +2,14 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum WorgenXError {
+    #[cfg(feature = "cli")]
     #[error("{0}")]
     ArgError(ArgError),
     #[error("{0}")]
     SystemError(SystemError),
 }
 
+#[cfg(feature = "cli")]
 #[derive(Debug, Error)]
 pub enum ArgError {
     /// This error is raised if the user doesn't specify any argument
@@ -55,4 +57,7 @@ pub enum SystemError {
     #[cfg(feature = "gui")]
     #[error("Error: unable to create folder `{0}`.\n{1}")]
     UnableToCreateFolder(String, String),
+    /// This error is raised when the file name contains invalid characters
+    #[error("Error: The file name `{0}` is invalid")]
+    InvalidFilename(String),
 }
