@@ -20,8 +20,14 @@ pub fn run() -> Result<(), WorgenXError> {
     if args.len() < 2 {
         return Err(WorgenXError::ArgError(ArgError::NoArgument));
     }
+
     match args[1].as_str() {
-        "-d" | "--dict" => {
+        "-w" | "--wordlist" => {
+            if args.len() < 3 {
+                return Err(WorgenXError::ArgError(ArgError::MissingConfiguration(
+                    args[1].clone(),
+                )));
+            }
             println!("Not implemented yet");
         }
         "-p" | "--passwd" => {
@@ -282,7 +288,7 @@ fn allocate_wordlist_config_cli(args: Vec<String>) -> Result<(), ArgError> {
 fn display_help() {
     println!("Usage: worgenx_cli <command> [options]");
     println!("Commands:");
-    println!("  -d, --dict\t\tGenerate a wordlist");
+    println!("  -w, --wordlist\t\tGenerate a wordlist");
     println!("  -p, --passwd\t\tGenerate random password(s)");
     println!("  -b, --benchmark\tBenchmark CPU");
     println!("  -v, --version\t\tDisplay the version of WorgenX");
@@ -313,6 +319,6 @@ fn display_help() {
     println!("    -c <count>, --count <count>\t\tNumber of passwords to generate");
     println!("\n  The following options are optional:");
     println!("    -o <path>, --output <path>\t\tSave the passwords in a file");
-    println!("    -O, --output-only <path>\t\tSave the passwords only in a file, not in stdout");
+    println!("    -O <path>, --output-only <path>\tSave the passwords only in a file, not in stdout");
     println!("    -j, --json\t\t\t\tOutput in JSON format\n\t\t\t\t\tCombine with -o to save the json output in a file");
 }
