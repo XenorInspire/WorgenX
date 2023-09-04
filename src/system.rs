@@ -109,10 +109,7 @@ pub fn is_valid_path(path: String) -> Result<String, SystemError> {
         return Err(SystemError::InvalidFilename(filename.to_string()));
     }
 
-    #[cfg(target_family = "windows")]
-    if full_path.len() > 260 {
-        return Err(SystemError::PathTooLong(path.to_string()));
-    }
+
 
     let full_path = if !Path::new(&path).is_absolute() {
         let current_dir = match std::env::current_dir() {
@@ -131,7 +128,12 @@ pub fn is_valid_path(path: String) -> Result<String, SystemError> {
     } else {
         path.clone()
     };
-    println!("{}", &full_path);
+    
+    #[cfg(target_family = "windows")]
+    if full_path.len() > 260 {
+        return Err(SystemError::PathTooLong(path.to_string()));
+    }
+
     if !check_if_folder_exists(&full_path) {
         return Err(SystemError::ParentFolderDoesntExist(path.to_string()));
     }
