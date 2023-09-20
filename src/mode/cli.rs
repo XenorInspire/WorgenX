@@ -3,6 +3,7 @@ use crate::error::{ArgError, WorgenXError};
 use crate::json;
 use crate::password::{self, PasswordConfig};
 use crate::system;
+use crate::wordlist::{self, WordlistConfig};
 
 /// This struct built from PasswordConfig and optional arguments will be used to generate the random password
 ///
@@ -11,6 +12,15 @@ struct PasswordGenerationParameters {
     json: bool,
     output_file: String,
     no_display: bool,
+}
+
+/// This struct built from WordlistConfig and optional arguments will be used to generate the wordlist
+///
+struct WordlistGenerationParameters {
+    wordlist_config: WordlistConfig,
+    json: bool,
+    output_file: String,
+    loading_bar: bool,
 }
 
 /// This function is charged to schedule in CLI mode the execution of the different features of the program
@@ -356,7 +366,7 @@ fn display_help() {
     println!("    -o <path>, --output <path>\t\tSave the wordlist in a file");
     println!("\n  The following options are optional:");
     println!("    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist");
-    println!("    -j, --json\t\t\t\tOutput in JSON format, it automatically disables the loading bar\n\t\t\t\t\tCombine with -o to save the json output in a file");
+    println!("    -j, --json\t\t\t\tSave the wordlist in JSON format");
 
     println!("\n  --- Password generation ---");
     println!("  You must specify at least one of the following options: -l, -u, -n, -s");

@@ -7,7 +7,7 @@ compile_error!("You must specify only one mode: 'gui' or 'cli'.");
 // Internal modules
 mod dict;
 mod error;
-mod generator;
+mod wordlist;
 mod mode;
 mod password;
 mod system;
