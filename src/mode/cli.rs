@@ -20,7 +20,7 @@ struct WordlistGenerationParameters {
     wordlist_config: WordlistConfig,
     json: bool,
     output_file: String,
-    loading_bar: bool,
+    no_loading_bar: bool,
 }
 
 /// This function is charged to schedule in CLI mode the execution of the different features of the program
@@ -39,7 +39,12 @@ pub fn run() -> Result<(), WorgenXError> {
                     args[1].clone(),
                 )));
             }
-            println!("Not implemented yet");
+            match run_wordlist(&args) {
+                Ok(_) => (),
+                Err(e) => {
+                    return Err(e);
+                }
+            }
         }
         "-p" | "--passwd" => {
             if args.len() < 3 {
@@ -72,7 +77,7 @@ pub fn run() -> Result<(), WorgenXError> {
     Ok(())
 }
 
-/// This function is charged to schedule the execution of the password feature of the program
+/// This function is charged to schedule the execution of the random password generation feature of the program
 ///
 /// # Arguments
 ///
@@ -137,8 +142,6 @@ fn run_passwd(args: &[String]) -> Result<(), WorgenXError> {
 /// This function is charged to check the syntax of the arguments passed to the program
 /// It does not check the values of the arguments
 /// This function is called only if the user specifies the -p or --passwd argument
-/// It returns an ArgError if the syntax is incorrect
-/// It returns Ok(()) if the syntax is correct
 ///
 /// # Arguments
 ///
@@ -146,7 +149,7 @@ fn run_passwd(args: &[String]) -> Result<(), WorgenXError> {
 ///
 /// # Return
 ///
-/// * `Result<(), ArgError>` - An ArgError if the syntax is incorrect (or invalid config/values), Ok(PasswordConfig) if the syntax is correct
+/// PasswordGenerationParameters containing the password configuration and optional arguments or WorgenXError if an error occurs
 ///
 fn allocate_passwd_config_cli(
     args: &[String],
@@ -263,6 +266,7 @@ fn allocate_passwd_config_cli(
             }
             "-j" | "--json" => {
                 json = true;
+                continue;
             }
             "-O" | "--output-only" => {
                 if i + 1 < args.len() {
@@ -324,18 +328,159 @@ fn allocate_passwd_config_cli(
     })
 }
 
-/// This function is charged to check the syntax of the arguments passed to the program
-/// It does not check the values of the arguments
-/// This function is called only if the user specifies the -w or --wordlist argument
-/// It returns an ArgError if the syntax is incorrect
-/// It returns Ok(()) if the syntax is correct
+/// This function is charged to schedule the execution of the wordlist generation feature of the program
 ///
 /// # Arguments
 ///
 /// * `args` - A vector of String containing the arguments passed to the program
 ///
-fn allocate_wordlist_config_cli(args: &[String]) -> Result<(), ArgError> {
+/// # Returns
+///
+/// Ok if the wordlist has been generated, WorgenXError otherwise
+///
+fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
     Ok(())
+}
+
+/// This function is charged to check the syntax of the arguments passed to the program
+/// It does not check the values of the arguments
+/// This function is called only if the user specifies the -w or --wordlist argument
+///
+/// # Arguments
+///
+/// * `args` - A vector of String containing the arguments passed to the program
+///
+/// # Return
+///
+/// WordlistGenerationParameters containing the wordlist configuration and optional arguments or WorgenXError if an error occurs
+///
+fn allocate_wordlist_config_cli(
+    args: &[String],
+) -> Result<WordlistGenerationParameters, WorgenXError> {
+    let mut output_file = String::new();
+    let mut json = false;
+    let mut no_loading_bar = false;
+    let mut skip = false;
+    let mut one_path = false;
+    let mut wordlist_config = WordlistConfig {
+        numbers: false,
+        special_characters: false,
+        uppercase: false,
+        lowercase: false,
+        length: 0,
+    };
+
+    for i in 2..args.len() {
+        if skip {
+            skip = false;
+            continue;
+        }
+        match args[i].as_str() {
+            "-l" | "--lowercase" => {
+                wordlist_config.lowercase = true;
+            }
+            "-u" | "--uppercase" => {
+                wordlist_config.uppercase = true;
+            }
+            "-n" | "--numbers" => {
+                wordlist_config.numbers = true;
+            }
+            "-x" | "--special-characters" => {
+                wordlist_config.special_characters = true;
+            }
+            "-s" | "--size" => {
+                if i + 1 < args.len() {
+                    match args[i + 1].parse::<u64>() {
+                        Ok(value) => {
+                            if value == 0 {
+                                return Err(WorgenXError::ArgError(
+                                    ArgError::InvalidNumericalValue(
+                                        args[i + 1].clone(),
+                                        args[i].clone(),
+                                    ),
+                                ));
+                            }
+                            wordlist_config.length = value;
+                        }
+                        Err(_) => {
+                            return Err(WorgenXError::ArgError(ArgError::InvalidNumericalValue(
+                                args[i + 1].clone(),
+                                args[i].clone(),
+                            )));
+                        }
+                    }
+                } else {
+                    return Err(WorgenXError::ArgError(ArgError::MissingValue(
+                        args[i].clone(),
+                    )));
+                }
+                skip = true;
+                continue;
+            }
+            "-o" | "--output" => {
+                if i + 1 < args.len() {
+                    if one_path {
+                        return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
+                    }
+                    output_file = match system::is_valid_path(args[i + 1].clone()) {
+                        Ok(full_path) => full_path,
+                        Err(e) => {
+                            return Err(WorgenXError::SystemError(e));
+                        }
+                    }
+                } else {
+                    return Err(WorgenXError::ArgError(ArgError::MissingValue(
+                        args[i].clone(),
+                    )));
+                }
+                one_path = true;
+                skip = true;
+                continue;
+            }
+            "-j" | "--json" => {
+                json = true;
+                continue;
+            }
+            "-d" | "--disable-loading-bar" => {
+                no_loading_bar = true;
+                continue;
+            }
+            _ => {
+                return Err(WorgenXError::ArgError(ArgError::UnknownArgument(
+                    args[i].clone(),
+                )));
+            }
+        }
+    }
+
+    if !wordlist_config.lowercase
+        && !wordlist_config.uppercase
+        && !wordlist_config.numbers
+        && !wordlist_config.special_characters
+    {
+        return Err(WorgenXError::ArgError(ArgError::MissingConfiguration(
+            args[1].clone(),
+        )));
+    }
+
+    if wordlist_config.length == 0 {
+        return Err(WorgenXError::ArgError(ArgError::MissingArgument(
+            "-s or --size".to_string(),
+        )));
+    }
+
+    if output_file.is_empty() {
+        return Err(WorgenXError::ArgError(ArgError::MissingArgument(
+            "-o or --output".to_string(),
+        )));
+    }
+
+    Ok(WordlistGenerationParameters {
+        wordlist_config,
+        json,
+        output_file,
+        no_loading_bar,
+    })
 }
 
 /// This function is charged to display the help message with all the features of the program
