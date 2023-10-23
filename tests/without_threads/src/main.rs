@@ -60,7 +60,7 @@ fn main() {
     println!("Final Mask : \t{:?}", final_mask);
     println!("Mask indexes : \t{:?}", mask_indexes);
 
-    // nb of possibilities = pow(dict.len(),nb o '?')
+    // nb of possibilities = pow(dict.len(), nb of '?')
     let nb_of_passwd = dict.len().pow(mask_indexes.len() as u32);
     let mut dict_indexes: Vec<usize> = vec![0; mask_indexes.len()];
     println!("Dict indexes : \t{:?}", dict_indexes);
@@ -81,7 +81,6 @@ fn main() {
             if !found {
                 line.push(final_mask[i])
             }
-
         });
         for idx in (0..dict_indexes.len()).rev() {
             if dict_indexes[idx] < dict.len() - 1 {
@@ -95,8 +94,6 @@ fn main() {
         // println!("Dict indexes : \t{:?}", dict_indexes);
         save_passwords("passwords.txt".to_string(), line);
     }
-
-    // let num_cpus = num_cpus::get(); // number of cores
 
     println!("Time elapsed is: {:?}", start.elapsed());
 }
