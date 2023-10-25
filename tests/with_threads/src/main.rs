@@ -5,6 +5,8 @@ use std::{
     time::{Duration, Instant},
 };
 
+use std::thread::Thread;
+
 /// The default dictionaries used to generate the password(s)
 pub const LOWERCASE: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
 pub const UPPERCASE: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";
@@ -62,40 +64,60 @@ fn main() {
 
     // nb of possibilities = pow(dict.len(), nb of '?')
     let nb_of_passwd = dict.len().pow(mask_indexes.len() as u32);
-    let mut dict_indexes: Vec<usize> = vec![0; mask_indexes.len()];
-    println!("Dict indexes : \t{:?}", dict_indexes);
     sleep(Duration::from_secs(2));
 
-    for _ in 0..nb_of_passwd {
-        let mut line = String::new();
-        (0..final_mask.len()).for_each(|i| {
-            let mut found = false;
-            for idx in 0..mask_indexes.len() {
-                if i == mask_indexes[idx] {
-                    found = true;
-                    line.push(dict[dict_indexes[idx]] as char);
-                    break;
-                }
-            }
+    let num_cpus = num_cpus::get(); // number of cores
+    let mut threads: Vec<Thread> = Vec::new();
+    let mut nb_of_passwd_per_thread = nb_of_passwd / num_cpus;
+    let mut nb_of_passwd_last_thread = nb_of_passwd_per_thread + nb_of_passwd % num_cpus;
 
-            if !found {
-                line.push(final_mask[i])
-            }
-        });
-        for idx in (0..dict_indexes.len()).rev() {
-            if dict_indexes[idx] < dict.len() - 1 {
-                dict_indexes[idx] += 1;
-                break;
-            } else {
-                dict_indexes[idx] = 0;
-            }
+    // Divide the work between the threads in order to have the same amount of work for each thread
+    // Divide dict_indexes in num_cpus parts
+
+    let mut dict_indexes_per_thread: Vec<Vec<usize>> = Vec::new();
+    let mut start_idx = 0;
+    let mut end_idx = 0;
+    if num_cpus > 1 {
+        for i in 0..num_cpus {
+
         }
-        // sleep(Duration::from_millis(200));
-        // println!("Dict indexes : \t{:?}", dict_indexes);
-        save_passwords("passwords.txt".to_string(), line);
+    } else {
+        dict_indexes_per_thread.push(vec![0; mask_indexes.len()]);
+    }
+    
+    for dict in dict_indexes_per_thread {
+        println!("Dict : \t\t{:?}", dict);
     }
 
-    let num_cpus = num_cpus::get(); // number of cores
+    // for _ in 0..nb_of_passwd {
+    //     let mut line = String::new();
+    //     (0..final_mask.len()).for_each(|i| {
+    //         let mut found = false;
+    //         for idx in 0..mask_indexes.len() {
+    //             if i == mask_indexes[idx] {
+    //                 found = true;
+    //                 line.push(dict[dict_indexes[idx]] as char);
+    //                 break;
+    //             }
+    //         }
+
+    //         if !found {
+    //             line.push(final_mask[i])
+    //         }
+    //     });
+    //     for idx in (0..dict_indexes.len()).rev() {
+    //         if dict_indexes[idx] < dict.len() - 1 {
+    //             dict_indexes[idx] += 1;
+    //             break;
+    //         } else {
+    //             dict_indexes[idx] = 0;
+    //         }
+    //     }
+    //     // sleep(Duration::from_millis(200));
+    //     // println!("Dict indexes : \t{:?}", dict_indexes);
+    //     save_passwords("passwords.txt".to_string(), line);
+    // }
+
     println!("Number of cores : {}", num_cpus);
 
     println!("Time elapsed is: {:?}", start.elapsed());
