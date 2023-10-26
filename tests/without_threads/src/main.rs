@@ -1,9 +1,4 @@
-use std::{
-    fs::OpenOptions,
-    io::Write,
-    thread::sleep,
-    time::{Duration, Instant},
-};
+use std::{fs::OpenOptions, io::Write, time::Instant};
 
 /// The default dictionaries used to generate the password(s)
 pub const LOWERCASE: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
@@ -64,7 +59,6 @@ fn main() {
     let nb_of_passwd = dict.len().pow(mask_indexes.len() as u32);
     let mut dict_indexes: Vec<usize> = vec![0; mask_indexes.len()];
     println!("Dict indexes : \t{:?}", dict_indexes);
-    sleep(Duration::from_secs(2));
 
     for _ in 0..nb_of_passwd {
         let mut line = String::new();
@@ -90,8 +84,7 @@ fn main() {
                 dict_indexes[idx] = 0;
             }
         }
-        // sleep(Duration::from_millis(200));
-        // println!("Dict indexes : \t{:?}", dict_indexes);
+
         save_passwords("passwords.txt".to_string(), line);
     }
 

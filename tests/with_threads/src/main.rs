@@ -3,7 +3,7 @@ use std::{
     io::Write,
     sync::{Arc, Mutex},
     thread,
-    time::{Duration, Instant},
+    time::Instant,
 };
 
 /// The default dictionaries used to generate the password(s)
@@ -18,10 +18,10 @@ fn main() {
     // let mask = "a&X;\\\\\\???15!/";
     // Create an array with all charachters from the constants
     let mut dict: Vec<u8> = Vec::new();
-    // dict.extend(LOWERCASE);
-    // dict.extend(UPPERCASE);
+    dict.extend(LOWERCASE);
+    dict.extend(UPPERCASE);
     dict.extend(NUMBERS);
-    // dict.extend(SPECIAL_CHARACTERS);
+    dict.extend(SPECIAL_CHARACTERS);
 
     // // Create an array with all the indexes of the mask
     let mut mask_indexes: Vec<usize> = Vec::new();
@@ -68,7 +68,6 @@ fn main() {
     println!("Nb of passwd : \t{}", nb_of_passwd);
     let num_cpus = num_cpus::get();
     let dict_indexes: Vec<usize> = vec![0; mask_indexes.len()];
-    // sleep(Duration::from_secs(2));
 
     if num_cpus >= 2 && num_cpus < nb_of_passwd {
         println!("Number of cores : {}", num_cpus);
@@ -88,15 +87,19 @@ fn main() {
         ));
 
         let mut threads = Vec::new();
-        // let mut array_of_dict_indexes: Vec<Vec<usize>> = Vec::new();
-        // array_of_dict_indexes.push(dict_indexes.clone());
 
-        let nb_of_idx_per_thread = dict_size / num_cpus;
-        let nb_of_passwd_per_thread = nb_of_passwd / num_cpus;
+        let mut nb_of_passwd_per_thread = nb_of_passwd / num_cpus;
         let nb_of_passwd_last_thread = nb_of_passwd_per_thread + nb_of_passwd % num_cpus;
-        let nb_of_idx_last_thread = nb_of_idx_per_thread + dict_size % num_cpus;
         let mut temp = dict_indexes.clone();
-        for _ in 0..num_cpus {
+
+        println!("Nb of passwd per thread : {}", nb_of_passwd_per_thread);
+        println!("Nb of passwd last thread : {}", nb_of_passwd_last_thread);
+
+        for i in 0..num_cpus {
+            if i == num_cpus - 1 {
+                nb_of_passwd_per_thread = nb_of_passwd_last_thread;
+            }
+
             let shared_final_mask = Arc::clone(&shared_final_mask);
             let shared_mask_indexes = Arc::clone(&shared_mask_indexes);
             let shared_dict = Arc::clone(&shared_dict);
@@ -126,20 +129,9 @@ fn main() {
             }
         }
 
-        println!("Nb of idx per thread : {}", nb_of_idx_per_thread);
-        println!("Nb of passwd per thread : {}", nb_of_passwd_per_thread);
-        println!("Nb of idx last thread : {}", nb_of_idx_last_thread);
-        println!("Nb of passwd last thread : {}", nb_of_passwd_last_thread);
-
         for thread in threads {
             thread.join().unwrap();
         }
-
-        // println!();
-        // for k in &array_of_dict_indexes {
-        //     println!("Array : {:?}", k);
-        // }
-        // println!();
     }
     println!("Time elapsed is: {:?}", start.elapsed());
 }
@@ -176,7 +168,7 @@ fn generate_wordlist_part(
                 dict_indexes[idx] = 0;
             }
         }
-        // sleep(Duration::from_millis(200));
+
         save_passwords(Arc::clone(&file), line);
     }
 }
