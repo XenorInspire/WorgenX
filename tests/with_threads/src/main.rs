@@ -66,7 +66,7 @@ fn main() {
     // nb of possibilities = pow(dict.len(), nb of '?')
     let nb_of_passwd = dict.len().pow(mask_indexes.len() as u32);
     println!("Nb of passwd : \t{}", nb_of_passwd);
-    let num_cpus = num_cpus::get();
+    let num_cpus = num_cpus::get_physical();
     let dict_indexes: Vec<usize> = vec![0; mask_indexes.len()];
 
     if num_cpus >= 2 && num_cpus < nb_of_passwd {
