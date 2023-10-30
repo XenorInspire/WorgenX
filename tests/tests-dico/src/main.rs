@@ -15,8 +15,8 @@ fn read_file_lines(file_path: &str) -> io::Result<Vec<String>> {
 }
 
 fn main() -> io::Result<()> {
-    let file_path_mono_threaded = "../with_threads/passwords.txt";
-    let file_path_multi_threaded = "../without_threads/passwords.txt";
+    let file_path_multi_threaded = "../with_threads2/passwords.txt";
+    let file_path_mono_threaded = "../without_threads/passwords.txt";
 
     let lines_mono_threaded = read_file_lines(file_path_mono_threaded)?;
     let lines_multi_threaded = read_file_lines(file_path_multi_threaded)?;
@@ -26,9 +26,7 @@ fn main() -> io::Result<()> {
     sorted_lines_mono_threaded.sort();
     sorted_lines_multi_threaded.sort();
 
-    let equal = sorted_lines_mono_threaded == sorted_lines_multi_threaded;
-
-    if equal {
+    if sorted_lines_mono_threaded == sorted_lines_multi_threaded {
         println!("Same lines in both files.");
     } else {
         println!("Different lines in both files.");
