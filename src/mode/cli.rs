@@ -21,6 +21,7 @@ struct WordlistGenerationParameters {
     json: bool,
     output_file: String,
     no_loading_bar: bool,
+    threads: u64,
 }
 
 /// This function is charged to schedule in CLI mode the execution of the different features of the program
@@ -362,6 +363,7 @@ fn allocate_wordlist_config_cli(
     let mut no_loading_bar = false;
     let mut skip = false;
     let mut one_path = false;
+    let mut threads = num_cpus::get_physical() as u64;
     let mut wordlist_config = WordlistConfig {
         numbers: false,
         special_characters: false,
@@ -437,8 +439,33 @@ fn allocate_wordlist_config_cli(
                 skip = true;
                 continue;
             }
-            "-j" | "--json" => {
-                json = true;
+            "-t" | "--threads" => {
+                if i + 1 < args.len() {
+                    match args[i + 1].parse::<u64>() {
+                        Ok(value) => {
+                            if value == 0 {
+                                return Err(WorgenXError::ArgError(
+                                    ArgError::InvalidNumericalValue(
+                                        args[i + 1].clone(),
+                                        args[i].clone(),
+                                    ),
+                                ));
+                            }
+                            threads = value;
+                        }
+                        Err(_) => {
+                            return Err(WorgenXError::ArgError(ArgError::InvalidNumericalValue(
+                                args[i + 1].clone(),
+                                args[i].clone(),
+                            )));
+                        }
+                    }
+                } else {
+                    return Err(WorgenXError::ArgError(ArgError::MissingValue(
+                        args[i].clone(),
+                    )));
+                }
+                skip = true;
                 continue;
             }
             "-d" | "--disable-loading-bar" => {
@@ -480,6 +507,7 @@ fn allocate_wordlist_config_cli(
         json,
         output_file,
         no_loading_bar,
+        threads,
     })
 }
 
@@ -511,7 +539,7 @@ fn display_help() {
     println!("    -o <path>, --output <path>\t\tSave the wordlist in a file");
     println!("\n  The following options are optional:");
     println!("    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist");
-    println!("    -j, --json\t\t\t\tSave the wordlist in JSON format");
+    println!("    -t <threads>, --threads <threads>\tNumber of threads to use to generate the passwords\n\t\t\t\t\tBy default, the number of threads is based on the number of physical cores of the CPU");
 
     println!("\n  --- Password generation ---");
     println!("  You must specify at least one of the following options: -l, -u, -n, -s");
