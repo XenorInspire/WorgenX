@@ -12,5 +12,5 @@ gui = []
 
 [dependencies]
 rand = "0.8.5"
-thiserror = "1.0.48"
-serde_json = { version = "1.0.107", optional = true }
+thiserror = "1.0.50"
+serde_json = { version = "1.0.108", optional = true }
