@@ -6,5 +6,5 @@ pub struct WordlistConfig {
     pub special_characters: bool,
     pub uppercase: bool,
     pub lowercase: bool,
-    pub length: u64,
+    pub mask: String,
 }

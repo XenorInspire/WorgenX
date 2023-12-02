@@ -250,6 +250,11 @@ fn allocate_passwd_config_cli(
                     if one_path {
                         return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
                     }
+                    if args[i + 1].starts_with("-") {
+                        return Err(WorgenXError::ArgError(ArgError::MissingValue(
+                            args[i].clone(),
+                        )));
+                    }
                     output_file = match system::is_valid_path(args[i + 1].clone()) {
                         Ok(full_path) => full_path,
                         Err(e) => {
@@ -273,6 +278,11 @@ fn allocate_passwd_config_cli(
                 if i + 1 < args.len() {
                     if one_path {
                         return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
+                    }
+                    if args[i + 1].starts_with("-") {
+                        return Err(WorgenXError::ArgError(ArgError::MissingValue(
+                            args[i].clone(),
+                        )));
                     }
                     output_file = match system::is_valid_path(args[i + 1].clone()) {
                         Ok(full_path) => full_path,
@@ -340,7 +350,12 @@ fn allocate_passwd_config_cli(
 /// Ok if the wordlist has been generated, WorgenXError otherwise
 ///
 fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
-    Ok(())
+    match allocate_wordlist_config_cli(args) {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            return Err(e);
+        }
+    }
 }
 
 /// This function is charged to check the syntax of the arguments passed to the program
@@ -362,14 +377,13 @@ fn allocate_wordlist_config_cli(
     let mut json = false;
     let mut no_loading_bar = false;
     let mut skip = false;
-    let mut one_path = false;
     let mut threads = num_cpus::get_physical() as u64;
     let mut wordlist_config = WordlistConfig {
         numbers: false,
         special_characters: false,
         uppercase: false,
         lowercase: false,
-        length: 0,
+        mask: String::new(),
     };
 
     for i in 2..args.len() {
@@ -390,27 +404,9 @@ fn allocate_wordlist_config_cli(
             "-x" | "--special-characters" => {
                 wordlist_config.special_characters = true;
             }
-            "-s" | "--size" => {
+            "-m" | "--mask" => {
                 if i + 1 < args.len() {
-                    match args[i + 1].parse::<u64>() {
-                        Ok(value) => {
-                            if value == 0 {
-                                return Err(WorgenXError::ArgError(
-                                    ArgError::InvalidNumericalValue(
-                                        args[i + 1].clone(),
-                                        args[i].clone(),
-                                    ),
-                                ));
-                            }
-                            wordlist_config.length = value;
-                        }
-                        Err(_) => {
-                            return Err(WorgenXError::ArgError(ArgError::InvalidNumericalValue(
-                                args[i + 1].clone(),
-                                args[i].clone(),
-                            )));
-                        }
-                    }
+                    wordlist_config.mask = args[i + 1].clone();
                 } else {
                     return Err(WorgenXError::ArgError(ArgError::MissingValue(
                         args[i].clone(),
@@ -421,21 +417,23 @@ fn allocate_wordlist_config_cli(
             }
             "-o" | "--output" => {
                 if i + 1 < args.len() {
-                    if one_path {
-                        return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
+                    if args[i + 1].starts_with("-") {
+                        return Err(WorgenXError::ArgError(ArgError::MissingValue(
+                            args[i].clone(),
+                        )));
                     }
                     output_file = match system::is_valid_path(args[i + 1].clone()) {
                         Ok(full_path) => full_path,
                         Err(e) => {
                             return Err(WorgenXError::SystemError(e));
                         }
-                    }
+                    };
+                    println!("{}", output_file);
                 } else {
                     return Err(WorgenXError::ArgError(ArgError::MissingValue(
                         args[i].clone(),
                     )));
                 }
-                one_path = true;
                 skip = true;
                 continue;
             }
@@ -490,9 +488,9 @@ fn allocate_wordlist_config_cli(
         )));
     }
 
-    if wordlist_config.length == 0 {
+    if wordlist_config.mask == "" {
         return Err(WorgenXError::ArgError(ArgError::MissingArgument(
-            "-s or --size".to_string(),
+            "-m or --mask".to_string(),
         )));
     }
 
@@ -535,8 +533,8 @@ fn display_help() {
     println!("    -n, --numbers\t\t\tAdd numbers to the words");
     println!("    -x, --special-characters\t\tAdd special characters to the words");
     println!("\n  This parameter is mandatory:");
-    println!("    -s <size>, --size <size>\t\tSize of the words in characters");
-    println!("    -o <path>, --output <path>\t\tSave the wordlist in a file");
+    println!("    -m <mask>, --mask <mask>\t\tMask used to generate the words");
+    println!("    -o <path>, --output <path>\t\tSave the wordlist in a text file");
     println!("\n  The following options are optional:");
     println!("    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist");
     println!("    -t <threads>, --threads <threads>\tNumber of threads to use to generate the passwords\n\t\t\t\t\tBy default, the number of threads is based on the number of physical cores of the CPU");
