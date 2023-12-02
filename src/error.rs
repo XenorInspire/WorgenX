@@ -27,8 +27,8 @@ pub enum ArgError {
     /// This error is raised if the user specified and invalid numerical value for an argument
     #[error("Error: invalid value `{0}` for argument `{1}`\nPlease specify a valid numerical value between 1 and {}\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.", u64::MAX)]
     InvalidNumericalValue(String, String),
-    /// This error is raised if there isn't any configuration given by the user (for example just -d or --dict without any values after)
-    #[error("Error: no configuration given for argument {0}\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
+    /// This error is raised if there isn't any configuration given by the user (for example just -d or --dict without any values after, or none of the -n, -s, -u, -l arguments)
+    #[error("Error: no configuration given for argument. Please specify the mandatory parameters and at least one type of characters.\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
     MissingConfiguration(String),
     /// This error is raised if the user has specified both -o and -O arguments
     #[error("Error: cannot specify both -o and -O arguments\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
@@ -38,7 +38,7 @@ pub enum ArgError {
 #[derive(Debug, Error)]
 pub enum SystemError {
     /// This error is raised if the user hasn't specified a valid path for the -o or --output argument
-    #[error("Error: invalid path `{0}` for output file.\nPlease specify a valid path")]
+    #[error("Error: invalid path `{0}`.\nPlease specify a valid path for the output file")]
     InvalidPath(String),
     /// This error is raised if parent folder doesn't exist
     #[error("Error: the folder `{0}` doesn't exist.\nPlease specify a valid path")]
