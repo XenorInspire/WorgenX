@@ -89,7 +89,6 @@ pub fn get_user_choice_int() -> u64 {
 /// # Arguments
 ///
 /// * `path` - A string slice that holds the path/filename to check
-/// * `mode` - A string slice that holds the mode of the path/filename to check (FILE or DIRECTORY)
 ///
 /// # Returns
 ///
@@ -156,6 +155,7 @@ pub fn check_if_folder_exists(folder: &str) -> bool {
 ///
 /// # Arguments
 ///
+/// * `file_path` - A string slice that holds the path of the file to create, containing all the passwords
 /// * `passwords` - A vector of String that holds the passwords to save
 ///
 /// # Returns
@@ -241,7 +241,6 @@ pub fn save_json_to_file(file_path: String, json_content: &str) -> Result<(), Sy
 ///
 /// # Returns
 ///
-/// A boolean value that indicates if the folder has been created or not
 /// Ok if the folder has been created, SystemError otherwise
 ///
 #[cfg(feature = "gui")]

@@ -18,6 +18,10 @@ pub struct PasswordConfig {
 /// This function is charged to create the content of the password
 /// It returns a vector of u8 containing the characters that will be used to generate the password
 ///
+/// # Arguments
+/// 
+/// * `password_config` - The struct containing the user's choices
+/// 
 /// # Returns
 ///
 /// The vector of u8 containing the characters that will be used to generate the password
@@ -58,6 +62,10 @@ fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
 
 /// This function is charged to shuffle a vector of u8 from the dict module
 ///
+/// # Arguments
+/// 
+/// * `dict` - The dictionary of u8 to shuffle
+/// 
 /// # Returns
 ///
 /// The shuffled vector of u8 sent in parameter
@@ -76,6 +84,10 @@ fn shuffle_dict(dict: &[u8]) -> Vec<u8> {
 /// * `password_config` - The password config structure
 /// * `number_of_passwords` - The number of passwords to generate
 ///
+/// # Returns
+/// 
+/// A vector of String containing the random passwords
+/// 
 pub fn generate_random_passwords(password_config: &PasswordConfig) -> Vec<String> {
     let mut passwords: Vec<String> = Vec::new();
     let password_content: Vec<u8> = create_passwd_content(password_config);

@@ -9,6 +9,7 @@ use serde_json::json;
 /// # Arguments
 ///
 /// * `password_config` - The password config structure
+/// * `passwords` - The vector of passwords
 ///
 /// # Returns
 ///

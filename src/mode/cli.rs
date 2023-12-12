@@ -26,6 +26,10 @@ struct WordlistGenerationParameters {
 /// This function is charged to schedule in CLI mode the execution of the different features of the program
 /// according to the user's choices
 ///
+/// # Returns
+/// 
+/// Ok if the program has been executed, WorgenXError otherwise
+/// 
 pub fn run() -> Result<(), WorgenXError> {
     let args = std::env::args().collect::<Vec<String>>();
     if args.len() < 2 {
@@ -147,7 +151,7 @@ fn run_passwd(args: &[String]) -> Result<(), WorgenXError> {
 ///
 /// * `args` - A vector of String containing the arguments passed to the program
 ///
-/// # Return
+/// # Returns
 ///
 /// PasswordGenerationParameters containing the password configuration and optional arguments or WorgenXError if an error occurs
 ///
@@ -365,7 +369,7 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
 ///
 /// * `args` - A vector of String containing the arguments passed to the program
 ///
-/// # Return
+/// # Returns
 ///
 /// WordlistGenerationParameters containing the wordlist configuration and optional arguments or WorgenXError if an error occurs
 ///
@@ -506,12 +510,7 @@ fn allocate_wordlist_config_cli(
     })
 }
 
-/// This function is charged to display the help message with all the features of the program
-///
-/// # Example
-/// ```
-/// display_help();
-/// ```
+/// This function is charged to display the help menu with all the features of the program
 ///
 fn display_help() {
     println!("Usage: worgenx_cli <command> [options]");
