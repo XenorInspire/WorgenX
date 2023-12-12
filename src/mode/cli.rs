@@ -18,7 +18,6 @@ struct PasswordGenerationParameters {
 ///
 struct WordlistGenerationParameters {
     wordlist_config: WordlistConfig,
-    json: bool,
     output_file: String,
     no_loading_bar: bool,
     threads: u64,
@@ -374,7 +373,6 @@ fn allocate_wordlist_config_cli(
     args: &[String],
 ) -> Result<WordlistGenerationParameters, WorgenXError> {
     let mut output_file = String::new();
-    let mut json = false;
     let mut no_loading_bar = false;
     let mut skip = false;
     let mut threads = num_cpus::get_physical() as u64;
@@ -502,7 +500,6 @@ fn allocate_wordlist_config_cli(
 
     Ok(WordlistGenerationParameters {
         wordlist_config,
-        json,
         output_file,
         no_loading_bar,
         threads,
