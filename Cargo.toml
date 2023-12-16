@@ -11,6 +11,6 @@ gui = []
 
 [dependencies]
 rand = "0.8.5"
-thiserror = "1.0.50"
+thiserror = "1.0.51"
 num_cpus = "1.16.0"
 serde_json = { version = "1.0.108", optional = true }
