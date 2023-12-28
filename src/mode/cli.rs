@@ -3,21 +3,21 @@ use crate::error::{ArgError, WorgenXError};
 use crate::json;
 use crate::password::{self, PasswordConfig};
 use crate::system;
-use crate::wordlist::{self, WordlistConfig};
+use crate::wordlist::{self, WordlistValues};
 
 /// This struct built from PasswordConfig and optional arguments will be used to generate the random password
 ///
-struct PasswordGenerationParameters {
+struct PasswordGenerationOptions {
     password_config: PasswordConfig,
     json: bool,
     output_file: String,
     no_display: bool,
 }
 
-/// This struct built from WordlistConfig and optional arguments will be used to generate the wordlist
+/// This struct built from WordlistValues and optional arguments will be used to generate the wordlist
 ///
-struct WordlistGenerationParameters {
-    wordlist_config: WordlistConfig,
+struct WordlistGenerationOptions {
+    wordlist_values: WordlistValues,
     output_file: String,
     no_loading_bar: bool,
     threads: u64,
@@ -27,9 +27,9 @@ struct WordlistGenerationParameters {
 /// according to the user's choices
 ///
 /// # Returns
-/// 
+///
 /// Ok if the program has been executed, WorgenXError otherwise
-/// 
+///
 pub fn run() -> Result<(), WorgenXError> {
     let args = std::env::args().collect::<Vec<String>>();
     if args.len() < 2 {
@@ -153,11 +153,9 @@ fn run_passwd(args: &[String]) -> Result<(), WorgenXError> {
 ///
 /// # Returns
 ///
-/// PasswordGenerationParameters containing the password configuration and optional arguments or WorgenXError if an error occurs
+/// PasswordGenerationOptions containing the password configuration and optional arguments or WorgenXError if an error occurs
 ///
-fn allocate_passwd_config_cli(
-    args: &[String],
-) -> Result<PasswordGenerationParameters, WorgenXError> {
+fn allocate_passwd_config_cli(args: &[String]) -> Result<PasswordGenerationOptions, WorgenXError> {
     let mut output_file = String::new();
     let mut json = false;
     let mut no_display = false;
@@ -334,7 +332,7 @@ fn allocate_passwd_config_cli(
         )));
     }
 
-    Ok(PasswordGenerationParameters {
+    Ok(PasswordGenerationOptions {
         password_config,
         json,
         output_file,
@@ -354,7 +352,11 @@ fn allocate_passwd_config_cli(
 ///
 fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
     match allocate_wordlist_config_cli(args) {
-        Ok(_) => Ok(()),
+        Ok(wordlist_generation_parameters) => {
+            let wordlist_config =
+                wordlist::build_wordlist_config(&wordlist_generation_parameters.wordlist_values);
+            Ok(())
+        }
         Err(e) => {
             return Err(e);
         }
@@ -371,16 +373,16 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
 ///
 /// # Returns
 ///
-/// WordlistGenerationParameters containing the wordlist configuration and optional arguments or WorgenXError if an error occurs
+/// WordlistGenerationOptions containing the wordlist configuration and optional arguments or WorgenXError if an error occurs
 ///
 fn allocate_wordlist_config_cli(
     args: &[String],
-) -> Result<WordlistGenerationParameters, WorgenXError> {
+) -> Result<WordlistGenerationOptions, WorgenXError> {
     let mut output_file = String::new();
     let mut no_loading_bar = false;
     let mut skip = false;
     let mut threads = num_cpus::get_physical() as u64;
-    let mut wordlist_config = WordlistConfig {
+    let mut wordlist_values = WordlistValues {
         numbers: false,
         special_characters: false,
         uppercase: false,
@@ -395,20 +397,20 @@ fn allocate_wordlist_config_cli(
         }
         match args[i].as_str() {
             "-l" | "--lowercase" => {
-                wordlist_config.lowercase = true;
+                wordlist_values.lowercase = true;
             }
             "-u" | "--uppercase" => {
-                wordlist_config.uppercase = true;
+                wordlist_values.uppercase = true;
             }
             "-n" | "--numbers" => {
-                wordlist_config.numbers = true;
+                wordlist_values.numbers = true;
             }
             "-x" | "--special-characters" => {
-                wordlist_config.special_characters = true;
+                wordlist_values.special_characters = true;
             }
             "-m" | "--mask" => {
                 if i + 1 < args.len() {
-                    wordlist_config.mask = args[i + 1].clone();
+                    wordlist_values.mask = args[i + 1].clone();
                 } else {
                     return Err(WorgenXError::ArgError(ArgError::MissingValue(
                         args[i].clone(),
@@ -480,17 +482,17 @@ fn allocate_wordlist_config_cli(
         }
     }
 
-    if !wordlist_config.lowercase
-        && !wordlist_config.uppercase
-        && !wordlist_config.numbers
-        && !wordlist_config.special_characters
+    if !wordlist_values.lowercase
+        && !wordlist_values.uppercase
+        && !wordlist_values.numbers
+        && !wordlist_values.special_characters
     {
         return Err(WorgenXError::ArgError(ArgError::MissingConfiguration(
             args[1].clone(),
         )));
     }
 
-    if wordlist_config.mask == "" {
+    if wordlist_values.mask == "" {
         return Err(WorgenXError::ArgError(ArgError::MissingArgument(
             "-m or --mask".to_string(),
         )));
@@ -502,8 +504,8 @@ fn allocate_wordlist_config_cli(
         )));
     }
 
-    Ok(WordlistGenerationParameters {
-        wordlist_config,
+    Ok(WordlistGenerationOptions {
+        wordlist_values,
         output_file,
         no_loading_bar,
         threads,
