@@ -10,7 +10,7 @@ pub struct WordlistValues {
     pub mask: String,
 }
 
-// This struct is built from the WordlistConfig struct and will be used to generate the wordlist
+// This struct is built from the WordlistValues struct and will be used to generate the wordlist
 pub struct WordlistConfig {
     pub dict: Vec<u8>,
     pub mask_indexes: Vec<usize>,
@@ -22,7 +22,7 @@ pub struct WordlistConfig {
 ///
 /// # Arguments
 ///
-/// * `wordlist_config` - The struct containing the user's choices
+/// * `wordlist_values` - The struct containing the user's values
 ///
 /// # Returns
 ///
@@ -96,11 +96,11 @@ fn format_mask_to_indexes(mask: &str) -> (Vec<char>, Vec<usize>) {
     (final_mask, mask_indexes)
 }
 
-/// This function is charged to build the WordlistConfig with the settings of the wordlist
+/// This function is charged to build the WordlistValues struct from the user's values
 ///
 /// # Arguments
 ///
-/// * `wordlist_values` - The struct containing the user's choices
+/// * `wordlist_values` - The struct containing the user's values
 ///
 /// # Returns
 ///
