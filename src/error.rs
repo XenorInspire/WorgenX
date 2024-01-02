@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Clone)]
 pub enum WorgenXError {
     #[cfg(feature = "cli")]
     #[error("{0}")]
@@ -10,7 +10,7 @@ pub enum WorgenXError {
 }
 
 #[cfg(feature = "cli")]
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Clone)]
 pub enum ArgError {
     /// This error is raised if the user doesn't specify any argument
     #[error("Error: no argument specified\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
@@ -35,7 +35,7 @@ pub enum ArgError {
     BothOutputArguments,
 }
 
-#[derive(Debug, Error)]
+#[derive(Debug, Error, Clone)]
 pub enum SystemError {
     /// This error is raised if the user hasn't specified a valid path for the -o or --output argument
     #[error("Error: invalid path `{0}`.\nPlease specify a valid path for the output file")]
@@ -60,4 +60,7 @@ pub enum SystemError {
     /// This error is raised when the file name contains invalid characters
     #[error("Error: The file name `{0}` is invalid")]
     InvalidFilename(String),
+    /// This error is raised if there is a thread error
+    #[error("Error: thread error\n{0}")]
+    ThreadError(String),
 }

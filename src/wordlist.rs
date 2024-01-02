@@ -1,7 +1,11 @@
 // Internal crates
-use crate::dict;
+use crate::{dict, error::WorgenXError};
 
-// This struct is built from the user's choices will be used to generate the wordlist
+// External crates
+use std::sync::mpsc::Sender;
+
+/// This struct is built from the user's choices will be used to generate the wordlist
+/// 
 pub struct WordlistValues {
     pub numbers: bool,
     pub special_characters: bool,
@@ -10,7 +14,8 @@ pub struct WordlistValues {
     pub mask: String,
 }
 
-// This struct is built from the WordlistValues struct and will be used to generate the wordlist
+/// This struct is built from the WordlistValues struct and will be used to generate the wordlist
+/// 
 pub struct WordlistConfig {
     pub dict: Vec<u8>,
     pub mask_indexes: Vec<usize>,
@@ -114,4 +119,29 @@ pub fn build_wordlist_config(wordlist_values: &WordlistValues) -> WordlistConfig
         mask_indexes,
         formated_mask,
     }
+}
+
+/// This function is charged to schedule the wordlist generation (WIP)
+///
+/// # Arguments
+///
+/// * `wordlist_config` - The WordlistConfig struct containing the settings of the wordlist
+/// * `wordlist_values` - The WordlistValues struct containing the user's values
+/// * `nb_of_passwords` - The number of passwords to generate
+/// * `nb_of_threads` - The number of threads to use
+/// * `tx` - The channel sender for the progress bar and/or errors
+///
+/// # Returns
+///
+/// On success, it returns the time elapsed to generate the wordlist
+/// On error, it returns a WordlistError
+///
+pub fn wordlist_generation_scheduler(
+    wordlist_config: &WordlistConfig,
+    wordlist_values: &WordlistValues,
+    nb_of_passwords: u64,
+    nb_of_threads: u64,
+    tx: &Sender<Result<u64, WorgenXError>>,
+) -> Result<u64, WorgenXError> {
+    Ok(0)
 }

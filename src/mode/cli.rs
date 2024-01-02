@@ -1,9 +1,12 @@
 // Internal crates
-use crate::error::{ArgError, WorgenXError};
+use crate::error::{ArgError, SystemError, WorgenXError};
 use crate::json;
 use crate::password::{self, PasswordConfig};
 use crate::system;
 use crate::wordlist::{self, WordlistValues};
+
+// External crates
+use std::{sync::mpsc, thread};
 
 /// This struct built from PasswordConfig and optional arguments will be used to generate the random password
 ///
@@ -355,7 +358,47 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
         Ok(wordlist_generation_parameters) => {
             let wordlist_config =
                 wordlist::build_wordlist_config(&wordlist_generation_parameters.wordlist_values);
+            // nb of passwd = pow(dict.len(), nb of '?')
+            let nb_of_passwd = wordlist_config.dict.len().pow(wordlist_config.mask_indexes.len() as u32) as u64;
+            let (tx, rx) = mpsc::channel::<Result<u64, WorgenXError>>();
+            let main_thread = thread::spawn(move || {
+                for received in rx {
+                    match received {
+                        Ok(value) => {
+                            if !wordlist_generation_parameters.no_loading_bar {
+                                println!("test");
+                            }
+                            return Ok(());
+                        }
+                        Err(e) => {
+                            return Err(e);
+                        }
+                    }
+                }
+                Ok(())
+            });
+            // WIP
+            let duration = wordlist::wordlist_generation_scheduler(
+                &wordlist_config,
+                &wordlist_generation_parameters.wordlist_values,
+                nb_of_passwd,
+                wordlist_generation_parameters.threads,
+                &tx,
+            );
+            match main_thread.join() {
+                Ok(_) => (),
+                Err(e) => {
+                    if let Some(err) = e.downcast_ref::<WorgenXError>() {
+                        return Err(err.clone());
+                    } else {
+                        return Err(WorgenXError::SystemError(SystemError::ThreadError(
+                            format!("{:?}", e),
+                        )));
+                    }
+                }
+            }
             Ok(())
+            //
         }
         Err(e) => {
             return Err(e);
