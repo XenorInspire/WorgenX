@@ -561,12 +561,12 @@ fn allocate_wordlist_config_cli(
 fn display_help() {
     println!("Usage: worgenx_cli <command> [options]");
     println!("Commands:");
-    println!("  -w, --wordlist\t\tGenerate a wordlist");
+    println!("  -w, --wordlist\tGenerate a wordlist");
     println!("  -p, --passwd\t\tGenerate random password(s)");
     println!("  -b, --benchmark\tBenchmark CPU");
     println!("  -v, --version\t\tDisplay the version of WorgenX");
     println!("  -h, --help\t\tDisplay this help message\n\n");
-    println!("Below are the options for the main features:\n");
+    println!("You can find below the options for the main features of WorgenX:\n");
 
     println!("  --- Dictionary generation ---");
     println!("  You must specify at least one of the following options: -l, -u, -n, -s");
@@ -593,5 +593,5 @@ fn display_help() {
     println!("\n  The following options are optional:");
     println!("    -o <path>, --output <path>\t\tSave the passwords in a file");
     println!("    -O <path>, --output-only <path>\tSave the passwords only in a file, not in stdout");
-    println!("    -j, --json\t\t\t\tOutput in JSON format\n\t\t\t\t\tCombine with -o to save the json output in a file");
+    println!("    -j, --json\t\t\t\tOutput in JSON format\n\t\t\t\t\tCombine with -o to save the json output in a file\n");
 }
