@@ -1,11 +1,20 @@
 // Internal crates
-use crate::{dict, error::WorgenXError};
+use crate::{
+    dict,
+    error::{SystemError, WorgenXError},
+};
 
 // External crates
-use std::sync::mpsc::Sender;
+use std::{
+    fs::{File, OpenOptions},
+    io::Write,
+    sync::{mpsc::Sender, Arc, Mutex},
+    thread::{self, JoinHandle},
+    time::Instant,
+};
 
 /// This struct is built from the user's choices will be used to generate the wordlist
-/// 
+///
 pub struct WordlistValues {
     pub numbers: bool,
     pub special_characters: bool,
@@ -15,7 +24,7 @@ pub struct WordlistValues {
 }
 
 /// This struct is built from the WordlistValues struct and will be used to generate the wordlist
-/// 
+///
 pub struct WordlistConfig {
     pub dict: Vec<u8>,
     pub mask_indexes: Vec<usize>,
@@ -64,19 +73,19 @@ fn create_wordlist_content(wordlist_values: &WordlistValues) -> Vec<u8> {
 ///
 /// # Returns
 ///
-/// A tuple containing the vector of char (final_mask) and the vector of indexes (mask_indexes)
+/// A tuple containing the vector of char (formated_mask) and the vector of indexes (mask_indexes)
 ///
 fn format_mask_to_indexes(mask: &str) -> (Vec<char>, Vec<usize>) {
     let mut mask_indexes: Vec<usize> = Vec::new();
-    let mut final_mask: Vec<char> = Vec::new();
+    let mut formated_mask: Vec<char> = Vec::new();
     let mut escaped = false;
-    let mut idx_final_mask: usize = 0;
+    let mut idx_formated_mask: usize = 0;
     for (_, c) in mask.chars().enumerate() {
         match c {
             '\\' => {
                 if escaped {
                     escaped = false;
-                    final_mask.push(c);
+                    formated_mask.push(c);
                 } else {
                     escaped = true;
                     continue;
@@ -85,20 +94,20 @@ fn format_mask_to_indexes(mask: &str) -> (Vec<char>, Vec<usize>) {
             '?' => {
                 if escaped {
                     escaped = false;
-                    final_mask.push(c);
+                    formated_mask.push(c);
                 } else {
-                    mask_indexes.push(idx_final_mask);
-                    final_mask.push(0 as char);
+                    mask_indexes.push(idx_formated_mask);
+                    formated_mask.push(0 as char);
                 }
             }
             _ => {
-                final_mask.push(c);
+                formated_mask.push(c);
             }
         }
-        idx_final_mask += 1;
+        idx_formated_mask += 1;
     }
 
-    (final_mask, mask_indexes)
+    (formated_mask, mask_indexes)
 }
 
 /// This function is charged to build the WordlistValues struct from the user's values
@@ -141,7 +150,184 @@ pub fn wordlist_generation_scheduler(
     wordlist_values: &WordlistValues,
     nb_of_passwords: u64,
     nb_of_threads: u64,
+    file_path: &str,
     tx: &Sender<Result<u64, WorgenXError>>,
 ) -> Result<u64, WorgenXError> {
-    Ok(0)
+    let start = Instant::now();
+    let shared_formated_mask = Arc::new(wordlist_config.formated_mask.clone());
+    let shared_mask_indexes = Arc::new(wordlist_config.mask_indexes.clone());
+    let dict_size = wordlist_config.dict.len();
+    let shared_dict = Arc::new(wordlist_config.dict.clone());
+
+    let file = match OpenOptions::new()
+        .write(true)
+        .append(true)
+        .create(true)
+        .open(file_path.to_string())
+    {
+        Ok(file) => file,
+        Err(_) => {
+            return Err(WorgenXError::SystemError(SystemError::UnableToCreateFile(
+                file_path.to_string(),
+                "Please check the path and try again".to_string(),
+            )))
+        }
+    };
+    let shared_file = Arc::new(Mutex::new(file));
+
+    let mut threads: Vec<JoinHandle<()>> = Vec::new();
+    let dict_indexes: Vec<usize> = vec![0; wordlist_config.mask_indexes.len()];
+    let mut nb_of_passwd_per_thread = nb_of_passwords / nb_of_threads;
+    let nb_of_passwd_last_thread = nb_of_passwd_per_thread + nb_of_passwords % nb_of_threads;
+    let mut temp = dict_indexes.clone();
+
+    for i in 0..nb_of_threads {
+        if i == nb_of_threads - 1 {
+            nb_of_passwd_per_thread = nb_of_passwd_last_thread;
+        }
+
+        let shared_formated_mask = Arc::clone(&shared_formated_mask);
+        let shared_mask_indexes = Arc::clone(&shared_mask_indexes);
+        let shared_dict = Arc::clone(&shared_dict);
+        let file = Arc::clone(&shared_file);
+        let temp_clone = temp.clone();
+        let tx_clone = tx.clone();
+        let thread = thread::spawn(move || {
+            generate_wordlist_part(
+                nb_of_passwd_per_thread,
+                temp_clone,
+                shared_formated_mask,
+                shared_mask_indexes,
+                shared_dict,
+                file,
+                &tx_clone,
+            );
+        });
+        threads.push(thread);
+
+        for _ in 0..nb_of_passwd_per_thread {
+            for idx in (0..temp.len()).rev() {
+                if temp[idx] < dict_size - 1 {
+                    temp[idx] += 1;
+                    break;
+                } else {
+                    temp[idx] = 0;
+                }
+            }
+        }
+    }
+
+    for thread in threads {
+        match thread.join() {
+            Ok(_) => {}
+            Err(_) => {
+                return Err(WorgenXError::SystemError(SystemError::ThreadError(
+                    "wordlist generation".to_string(),
+                )))
+            }
+        }
+    }
+
+    Ok(start.elapsed().as_secs())
+}
+
+/// This function is charged to generate a part of the wordlist or the whole wordlist if there is only one thread
+/// It can send possible errors through the channel
+///
+/// # Arguments
+///
+/// * `nb_of_passwd` - The number of passwords to generate
+/// * `dict_indexes` - The indexes of the dictionary
+/// * `formated_mask` - The final mask
+/// * `mask_indexes` - The indexes of the mask
+/// * `dict` - The dictionary
+/// * `file` - The file to write to, wrapped in an Arc<Mutex<File>>
+/// * `tx` - The channel sender for the progress bar and/or errors
+///
+fn generate_wordlist_part(
+    nb_of_passwords: u64,
+    mut dict_indexes: Vec<usize>,
+    formated_mask: Arc<Vec<char>>,
+    mask_indexes: Arc<Vec<usize>>,
+    dict: Arc<Vec<u8>>,
+    file: Arc<Mutex<File>>,
+    tx: &Sender<Result<u64, WorgenXError>>,
+) {
+    let mut buffer: Vec<String> = Vec::new();
+    for _ in 0..nb_of_passwords {
+        let mut line = String::new();
+        (0..formated_mask.len()).for_each(|i| {
+            let mut found = false;
+            for idx in 0..mask_indexes.len() {
+                if i == mask_indexes[idx] {
+                    found = true;
+                    line.push(dict[dict_indexes[idx]] as char);
+                    break;
+                }
+            }
+
+            if !found {
+                line.push(formated_mask[i])
+            }
+        });
+        for idx in (0..dict_indexes.len()).rev() {
+            if dict_indexes[idx] < dict.len() - 1 {
+                dict_indexes[idx] += 1;
+                break;
+            } else {
+                dict_indexes[idx] = 0;
+            }
+        }
+
+        buffer.push(line);
+        if buffer.len() == 1000 {
+            save_passwords(Arc::clone(&file), buffer.join("\n"), tx);
+            buffer.clear();
+        }
+    }
+
+    if !buffer.is_empty() {
+        save_passwords(Arc::clone(&file), buffer.join("\n"), tx);
+    }
+}
+
+/// This function is charged to save the generated passwords in a file and send the progress/possible errors to the channel
+///
+/// # Arguments
+///
+/// * `file` - The file to write to, wrapped in an Arc<Mutex<File>>
+/// * `password` - The password to write
+///
+fn save_passwords(
+    file: Arc<Mutex<File>>,
+    password: String,
+    tx: &Sender<Result<u64, WorgenXError>>,
+) {
+    let mut file = match file.lock() {
+        Ok(file) => file,
+        Err(_) => {
+            tx.send(Err(WorgenXError::SystemError(
+                SystemError::UnableToWriteToFile(
+                    "output file".to_string(),
+                    "Please check the path, the permissions and try again".to_string(),
+                ),
+            )))
+            .unwrap_or(());
+            return;
+        }
+    };
+    match file.write_all(format!("{}\n", password).as_bytes()) {
+        Ok(_) => {
+            tx.send(Ok(1)).unwrap_or(());
+        }
+        Err(_) => {
+            tx.send(Err(WorgenXError::SystemError(
+                SystemError::UnableToWriteToFile(
+                    "output file".to_string(),
+                    "Please check the path, the permissions and try again".to_string(),
+                ),
+            )))
+            .unwrap_or(());
+        }
+    }
 }

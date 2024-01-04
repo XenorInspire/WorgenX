@@ -383,6 +383,7 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
                 &wordlist_generation_parameters.wordlist_values,
                 nb_of_passwd,
                 wordlist_generation_parameters.threads,
+                &wordlist_generation_parameters.output_file,
                 &tx,
             );
             match main_thread.join() {
