@@ -359,14 +359,20 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
             let wordlist_config =
                 wordlist::build_wordlist_config(&wordlist_generation_parameters.wordlist_values);
             // nb of passwd = pow(dict.len(), nb of '?')
-            let nb_of_passwd = wordlist_config.dict.len().pow(wordlist_config.mask_indexes.len() as u32) as u64;
+            let nb_of_passwd = wordlist_config
+                .dict
+                .len()
+                .pow(wordlist_config.mask_indexes.len() as u32)
+                as u64;
             let (tx, rx) = mpsc::channel::<Result<u64, WorgenXError>>();
             let main_thread = thread::spawn(move || {
+                let mut current_value = 0;
                 for received in rx {
                     match received {
                         Ok(value) => {
+                            current_value += value;
                             if !wordlist_generation_parameters.no_loading_bar {
-                                println!("test");
+                                wordlist::build_wordlist_progress_bar(current_value, nb_of_passwd)
                             }
                             return Ok(());
                         }
@@ -377,15 +383,19 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
                 }
                 Ok(())
             });
-            // WIP
-            let duration = wordlist::wordlist_generation_scheduler(
+
+            let duration = match wordlist::wordlist_generation_scheduler(
                 &wordlist_config,
-                &wordlist_generation_parameters.wordlist_values,
                 nb_of_passwd,
                 wordlist_generation_parameters.threads,
                 &wordlist_generation_parameters.output_file,
                 &tx,
-            );
+            ) {
+                Ok(duration) => duration,
+                Err(e) => {
+                    return Err(e);
+                }
+            };
             match main_thread.join() {
                 Ok(_) => (),
                 Err(e) => {
@@ -398,8 +408,8 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
                     }
                 }
             }
+            println!("\nWordlist generated in {} seconds", duration);
             Ok(())
-            //
         }
         Err(e) => {
             return Err(e);

@@ -5,6 +5,7 @@ use crate::{
 };
 
 // External crates
+use indicatif::{ProgressBar, ProgressStyle};
 use std::{
     fs::{File, OpenOptions},
     io::Write,
@@ -147,7 +148,6 @@ pub fn build_wordlist_config(wordlist_values: &WordlistValues) -> WordlistConfig
 ///
 pub fn wordlist_generation_scheduler(
     wordlist_config: &WordlistConfig,
-    wordlist_values: &WordlistValues,
     nb_of_passwords: u64,
     nb_of_threads: u64,
     file_path: &str,
@@ -280,7 +280,8 @@ fn generate_wordlist_part(
         }
 
         buffer.push(line);
-        if buffer.len() == 1000 {
+        tx.send(Ok(1)).unwrap_or(());
+        if buffer.len() == 1000 { // TODO: Replace 1000 by a constant
             save_passwords(Arc::clone(&file), buffer.join("\n"), tx);
             buffer.clear();
         }
@@ -329,5 +330,29 @@ fn save_passwords(
             )))
             .unwrap_or(());
         }
+    }
+}
+
+/// This function is charged to build the progress bar during the wordlist generation
+///
+/// # Arguments
+///
+/// * `nb_of_passwd_generated` - The number of passwords generated
+/// * `total_nb_of_passwd` - The total number of passwords to generate
+///
+pub fn build_wordlist_progress_bar(nb_of_passwd_generated: u64, total_nb_of_passwd: u64) {
+    println!("Wordlist generation in progress...");
+    let pb = ProgressBar::new(100);
+    if nb_of_passwd_generated < total_nb_of_passwd {
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template("[{bar:40.green}] {pos:>7}/{len:7} | {msg}")
+                .unwrap()
+                .progress_chars("##-"),
+        );
+        pb.set_position(nb_of_passwd_generated + 1);
+        pb.set_message("Loading...");
+    } else {
+        pb.finish_with_message(String::from("Wordlist generated"));
     }
 }
