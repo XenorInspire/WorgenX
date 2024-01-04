@@ -298,6 +298,7 @@ fn generate_wordlist_part(
 ///
 /// * `file` - The file to write to, wrapped in an Arc<Mutex<File>>
 /// * `password` - The password to write
+/// * `tx` - The channel sender for the progress bar and/or errors
 ///
 fn save_passwords(
     file: Arc<Mutex<File>>,
