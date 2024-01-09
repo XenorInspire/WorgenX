@@ -6,7 +6,12 @@ use crate::system;
 use crate::wordlist::{self, WordlistValues};
 
 // External crates
-use std::{sync::mpsc, thread};
+use indicatif::ProgressBar;
+use std::{
+    sync::{mpsc, Arc, Mutex},
+    thread,
+    time::Instant,
+};
 
 /// This struct built from PasswordConfig and optional arguments will be used to generate the random password
 ///
@@ -254,7 +259,7 @@ fn allocate_passwd_config_cli(args: &[String]) -> Result<PasswordGenerationOptio
                     if one_path {
                         return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
                     }
-                    if args[i + 1].starts_with("-") {
+                    if args[i + 1].starts_with('-') {
                         return Err(WorgenXError::ArgError(ArgError::MissingValue(
                             args[i].clone(),
                         )));
@@ -283,7 +288,7 @@ fn allocate_passwd_config_cli(args: &[String]) -> Result<PasswordGenerationOptio
                     if one_path {
                         return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
                     }
-                    if args[i + 1].starts_with("-") {
+                    if args[i + 1].starts_with('-') {
                         return Err(WorgenXError::ArgError(ArgError::MissingValue(
                             args[i].clone(),
                         )));
@@ -365,33 +370,43 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
                 .pow(wordlist_config.mask_indexes.len() as u32)
                 as u64;
             let (tx, rx) = mpsc::channel::<Result<u64, WorgenXError>>();
+            let pb = Arc::new(Mutex::new(ProgressBar::new(100)));
+            let pb_clone = Arc::clone(&pb);
             let main_thread = thread::spawn(move || {
                 let mut current_value = 0;
+                println!("Wordlist generation in progress...");
                 for received in rx {
                     match received {
                         Ok(value) => {
                             current_value += value;
                             if !wordlist_generation_parameters.no_loading_bar {
-                                wordlist::build_wordlist_progress_bar(current_value, nb_of_passwd)
+                                wordlist::build_wordlist_progress_bar(
+                                    current_value,
+                                    nb_of_passwd,
+                                    &pb_clone,
+                                )
                             }
-                            return Ok(());
                         }
                         Err(e) => {
                             return Err(e);
                         }
                     }
+                    if current_value == nb_of_passwd {
+                        break;
+                    }
                 }
                 Ok(())
             });
 
-            let duration = match wordlist::wordlist_generation_scheduler(
+            let start = Instant::now();
+            match wordlist::wordlist_generation_scheduler(
                 &wordlist_config,
                 nb_of_passwd,
                 wordlist_generation_parameters.threads,
                 &wordlist_generation_parameters.output_file,
                 &tx,
             ) {
-                Ok(duration) => duration,
+                Ok(_) => (),
                 Err(e) => {
                     return Err(e);
                 }
@@ -408,12 +423,14 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
                     }
                 }
             }
-            println!("\nWordlist generated in {} seconds", duration);
+            // TODO: Adjust the time in hours, minutes and seconds instead of just seconds
+            println!(
+                "\nWordlist generated in {} seconds",
+                start.elapsed().as_secs()
+            );
             Ok(())
         }
-        Err(e) => {
-            return Err(e);
-        }
+        Err(e) => Err(e),
     }
 }
 
@@ -464,7 +481,15 @@ fn allocate_wordlist_config_cli(
             }
             "-m" | "--mask" => {
                 if i + 1 < args.len() {
-                    wordlist_values.mask = args[i + 1].clone();
+                    if args[i + 1].starts_with('-') {
+                        return Err(WorgenXError::ArgError(ArgError::MissingValue(
+                            args[i].clone(),
+                        )));
+                    } else if !args[i + 1].contains('?') {
+                        return Err(WorgenXError::ArgError(ArgError::InvalidMask()));
+                    } else {
+                        wordlist_values.mask = args[i + 1].clone();
+                    }
                 } else {
                     return Err(WorgenXError::ArgError(ArgError::MissingValue(
                         args[i].clone(),
@@ -475,7 +500,7 @@ fn allocate_wordlist_config_cli(
             }
             "-o" | "--output" => {
                 if i + 1 < args.len() {
-                    if args[i + 1].starts_with("-") {
+                    if args[i + 1].starts_with('-') {
                         return Err(WorgenXError::ArgError(ArgError::MissingValue(
                             args[i].clone(),
                         )));
@@ -497,6 +522,11 @@ fn allocate_wordlist_config_cli(
             }
             "-t" | "--threads" => {
                 if i + 1 < args.len() {
+                    if args[i + 1].starts_with('-') {
+                        return Err(WorgenXError::ArgError(ArgError::MissingValue(
+                            args[i].clone(),
+                        )));
+                    }
                     match args[i + 1].parse::<u64>() {
                         Ok(value) => {
                             if value == 0 {
@@ -546,7 +576,7 @@ fn allocate_wordlist_config_cli(
         )));
     }
 
-    if wordlist_values.mask == "" {
+    if wordlist_values.mask.is_empty() {
         return Err(WorgenXError::ArgError(ArgError::MissingArgument(
             "-m or --mask".to_string(),
         )));

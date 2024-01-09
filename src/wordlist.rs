@@ -11,7 +11,6 @@ use std::{
     io::Write,
     sync::{mpsc::Sender, Arc, Mutex},
     thread::{self, JoinHandle},
-    time::Instant,
 };
 
 /// This struct is built from the user's choices will be used to generate the wordlist
@@ -81,7 +80,7 @@ fn format_mask_to_indexes(mask: &str) -> (Vec<char>, Vec<usize>) {
     let mut formated_mask: Vec<char> = Vec::new();
     let mut escaped = false;
     let mut idx_formated_mask: usize = 0;
-    for (_, c) in mask.chars().enumerate() {
+    for c in mask.chars() {
         match c {
             '\\' => {
                 if escaped {
@@ -152,8 +151,7 @@ pub fn wordlist_generation_scheduler(
     nb_of_threads: u64,
     file_path: &str,
     tx: &Sender<Result<u64, WorgenXError>>,
-) -> Result<u64, WorgenXError> {
-    let start = Instant::now();
+) -> Result<(), WorgenXError> {
     let shared_formated_mask = Arc::new(wordlist_config.formated_mask.clone());
     let shared_mask_indexes = Arc::new(wordlist_config.mask_indexes.clone());
     let dict_size = wordlist_config.dict.len();
@@ -163,7 +161,7 @@ pub fn wordlist_generation_scheduler(
         .write(true)
         .append(true)
         .create(true)
-        .open(file_path.to_string())
+        .open(file_path)
     {
         Ok(file) => file,
         Err(_) => {
@@ -228,7 +226,7 @@ pub fn wordlist_generation_scheduler(
         }
     }
 
-    Ok(start.elapsed().as_secs())
+    Ok(())
 }
 
 /// This function is charged to generate a part of the wordlist or the whole wordlist if there is only one thread
@@ -281,7 +279,8 @@ fn generate_wordlist_part(
 
         buffer.push(line);
         tx.send(Ok(1)).unwrap_or(());
-        if buffer.len() == 1000 { // TODO: Replace 1000 by a constant
+        if buffer.len() == 1000 {
+            // TODO: Replace 1000 by a constant
             save_passwords(Arc::clone(&file), buffer.join("\n"), tx);
             buffer.clear();
         }
@@ -340,20 +339,32 @@ fn save_passwords(
 ///
 /// * `nb_of_passwd_generated` - The number of passwords generated
 /// * `total_nb_of_passwd` - The total number of passwords to generate
+/// * `pb` - The progress bar instance (from the indicatif crate)
 ///
-pub fn build_wordlist_progress_bar(nb_of_passwd_generated: u64, total_nb_of_passwd: u64) {
-    println!("Wordlist generation in progress...");
-    let pb = ProgressBar::new(100);
-    if nb_of_passwd_generated < total_nb_of_passwd {
-        pb.set_style(
-            ProgressStyle::default_bar()
-                .template("[{bar:40.green}] {pos:>7}/{len:7} | {msg}")
-                .unwrap()
-                .progress_chars("##-"),
-        );
-        pb.set_position(nb_of_passwd_generated + 1);
-        pb.set_message("Loading...");
-    } else {
-        pb.finish_with_message(String::from("Wordlist generated"));
+pub fn build_wordlist_progress_bar(
+    nb_of_passwd_generated: u64,
+    total_nb_of_passwd: u64,
+    pb: &Arc<Mutex<ProgressBar>>,
+) {
+    let mut pourcentage: u64 = (nb_of_passwd_generated * 100) / total_nb_of_passwd;
+    if pourcentage == 0 {
+        pourcentage += 1;
+    }
+    if let Ok(pb) = pb.try_lock() {
+        if nb_of_passwd_generated < total_nb_of_passwd {
+            pb.set_style(
+                ProgressStyle::default_bar()
+                    .template("[{bar:40.green}] {pos:>7}% | {msg}")
+                    .unwrap_or(ProgressStyle::default_bar()) // Provide the default argument
+                    .progress_chars("##-"),
+            );
+
+            pb.set_position(pourcentage);
+            pb.set_message("Loading...");
+        } else {
+            pb.set_position(100);
+
+            pb.finish_with_message(String::from("Wordlist generated"));
+        }
     }
 }
