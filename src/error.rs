@@ -33,6 +33,9 @@ pub enum ArgError {
     /// This error is raised if the user has specified both -o and -O arguments
     #[error("Error: cannot specify both -o and -O arguments\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
     BothOutputArguments,
+    /// This error is raised if the mask given by the user is invalid (for wordlist generation)
+    #[error("Error: invalid mask\nPlease specify a valid mask with \" or \'\nUsage: worgenx_cli <command> [options]\nTry 'worgenx_cli --help' for more information.")]
+    InvalidMask(),
 }
 
 #[derive(Debug, Error, Clone)]
