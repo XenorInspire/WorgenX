@@ -13,6 +13,11 @@ use std::{
     thread::{self, JoinHandle},
 };
 
+/// This constant is used to set the size of the buffer used to write the passwords in the file
+/// It specifies the maximum number of passwords that will be written in the file at once per thread
+///
+const BUFFER_SIZE: usize = 100000;
+
 /// This struct is built from the user's choices will be used to generate the wordlist
 ///
 pub struct WordlistValues {
@@ -279,8 +284,7 @@ fn generate_wordlist_part(
 
         buffer.push(line);
         tx.send(Ok(1)).unwrap_or(());
-        if buffer.len() == 1000 {
-            // TODO: Replace 1000 by a constant
+        if buffer.len() == BUFFER_SIZE {
             save_passwords(Arc::clone(&file), buffer.join("\n"), tx);
             buffer.clear();
         }
