@@ -423,10 +423,9 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
                     }
                 }
             }
-            // TODO: Adjust the time in hours, minutes and seconds instead of just seconds
             println!(
-                "\nWordlist generated in {} seconds",
-                start.elapsed().as_secs()
+                "\nWordlist generated in {}",
+                system::get_elapsed_time(start)
             );
             Ok(())
         }

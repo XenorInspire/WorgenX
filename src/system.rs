@@ -1,11 +1,10 @@
+// Internal crates
+use crate::error::SystemError;
+
 // Extern crates
-use std::fs::File;
 #[cfg(feature = "gui")]
 use std::io::stdin;
-use std::io::Write;
-use std::path::Path;
-
-use crate::error::SystemError;
+use std::{fs::File, io::Write, path::Path, time::Instant};
 
 /// OS specific constants for GUI mode
 #[cfg(all(target_family = "unix", feature = "gui"))]
@@ -283,4 +282,38 @@ fn get_invalid_chars() -> &'static [char] {
 #[cfg(target_family = "unix")]
 fn get_invalid_chars() -> &'static [char] {
     &['/', '\0', '\r', '\n']
+}
+
+/// This function is charged to calculate the elapsed time between two timestamps
+/// The result is returned in human readable format (hours, minutes, seconds depending on the elapsed time)
+///
+/// # Arguments
+///
+/// * `start_time` - The start timestamp
+///
+/// # Returns
+///
+/// A string slice containing the elapsed time in human readable format
+///
+pub fn get_elapsed_time(start_time: Instant) -> String {
+    let elapsed_time = start_time.elapsed();
+    let mut elapsed_time = elapsed_time.as_secs();
+    let mut elapsed_time_str = String::new();
+
+    if elapsed_time >= 3600 {
+        let hours = elapsed_time / 3600;
+        elapsed_time -= hours * 3600;
+        elapsed_time_str.push_str(&hours.to_string());
+        elapsed_time_str.push_str(" hours and ");
+    }
+    if elapsed_time >= 60 {
+        let minutes = elapsed_time / 60;
+        elapsed_time -= minutes * 60;
+        elapsed_time_str.push_str(&minutes.to_string());
+        elapsed_time_str.push_str("minutes and ");
+    }
+    elapsed_time_str.push_str(&elapsed_time.to_string());
+    elapsed_time_str.push_str(" seconds");
+
+    elapsed_time_str
 }
