@@ -1,6 +1,8 @@
 // Internal crates
-use crate::password::{self, PasswordConfig};
-use crate::system;
+use crate::{
+    password::{self, PasswordConfig},
+    system,
+};
 
 // External crates
 use std::{env, fs::OpenOptions, sync::Arc, sync::Mutex};

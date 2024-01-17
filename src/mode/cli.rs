@@ -1,9 +1,11 @@
 // Internal crates
-use crate::error::{ArgError, SystemError, WorgenXError};
-use crate::json;
-use crate::password::{self, PasswordConfig};
-use crate::system;
-use crate::wordlist::{self, WordlistValues};
+use crate::{
+    error::{ArgError, SystemError, WorgenXError},
+    json,
+    password::{self, PasswordConfig},
+    system,
+    wordlist::{self, WordlistValues},
+};
 
 // External crates
 use indicatif::ProgressBar;
