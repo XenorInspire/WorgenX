@@ -1,9 +1,9 @@
-// External crates
-use std::env;
-
 // Internal crates
 use crate::password::{self, PasswordConfig};
 use crate::system;
+
+// External crates
+use std::{env, fs::OpenOptions, sync::Arc, sync::Mutex};
 
 #[cfg(target_family = "unix")]
 use system::unix as target;
@@ -146,7 +146,7 @@ fn allocate_passwd_config_gui() -> PasswordConfig {
 ///
 /// * `passwords` - A vector of String that holds the passwords to save
 ///
-pub fn password_saving_procedure(passwords: &Vec<String>) {
+pub fn password_saving_procedure(passwords: &[String]) {
     println!("Please enter the file name");
     let mut filename = system::get_user_choice();
     let mut result = system::is_valid_path(filename.clone());
@@ -176,7 +176,34 @@ pub fn password_saving_procedure(passwords: &Vec<String>) {
         }
     };
 
-    while let Err(e) = system::save_passwords(filename.clone(), passwords) {
+    let file = match OpenOptions::new()
+        .write(true)
+        .append(true)
+        .create(true)
+        .open(filename.clone())
+    {
+        Ok(file) => file,
+        Err(_) => {
+            println!(
+                "Unable to open the file, the passwords will be saved in the current directory\n"
+            );
+            match OpenOptions::new()
+                .write(true)
+                .append(true)
+                .create(true)
+                .open(filename.clone())
+            {
+                Ok(file) => file,
+                Err(e) => {
+                    println!("{}", e);
+                    return;
+                }
+            }
+        }
+    };
+    let shared_file = Arc::new(Mutex::new(file));
+
+    while let Err(e) = system::save_passwd_to_file(shared_file.clone(), passwords.join("\n")) {
         println!("\n{}", e);
         println!("Do you want to try again ? (y/n)");
         let choice = system::get_user_choice_yn();

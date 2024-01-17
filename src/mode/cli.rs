@@ -8,6 +8,7 @@ use crate::wordlist::{self, WordlistValues};
 // External crates
 use indicatif::ProgressBar;
 use std::{
+    fs::OpenOptions,
     sync::{mpsc, Arc, Mutex},
     thread,
     time::Instant,
@@ -105,50 +106,48 @@ fn run_passwd(args: &[String]) -> Result<(), WorgenXError> {
             let passwords = password::generate_random_passwords(
                 &password_generation_parameters.password_config,
             );
-
-            if password_generation_parameters.json {
-                let json_content = json::password_config_to_json(
+            let all_passwords: String = if password_generation_parameters.json {
+                json::password_config_to_json(
                     &password_generation_parameters.password_config,
                     &passwords,
-                );
-                if !password_generation_parameters.no_display {
-                    println!("{}", json_content);
-                }
-                if !password_generation_parameters.output_file.is_empty() {
-                    match system::save_json_to_file(
-                        password_generation_parameters.output_file,
-                        &json_content,
-                    ) {
-                        Ok(_) => (),
-                        Err(e) => {
-                            return Err(WorgenXError::SystemError(e));
-                        }
-                    }
-                }
+                )
             } else {
-                if !password_generation_parameters.no_display {
-                    for password in &passwords {
-                        println!("{}", password);
+                passwords.join("\n")
+            };
+
+            if !password_generation_parameters.no_display {
+                println!("{}", all_passwords);
+            }
+
+            if !password_generation_parameters.output_file.is_empty() {
+                let file = match OpenOptions::new()
+                    .write(true)
+                    .append(true)
+                    .create(true)
+                    .open(password_generation_parameters.output_file.clone())
+                {
+                    Ok(file) => file,
+                    Err(_) => {
+                        return Err(WorgenXError::SystemError(SystemError::UnableToCreateFile(
+                            password_generation_parameters.output_file.to_string(),
+                            "Please check the path and try again".to_string(),
+                        )))
                     }
-                }
-                if !password_generation_parameters.output_file.is_empty() {
-                    match system::save_passwords(
-                        password_generation_parameters.output_file,
-                        &passwords,
-                    ) {
-                        Ok(_) => (),
-                        Err(e) => {
-                            return Err(WorgenXError::SystemError(e));
-                        }
+                };
+                let shared_file = Arc::new(Mutex::new(file));
+                match system::save_passwd_to_file(shared_file, all_passwords) {
+                    Ok(_) => (),
+                    Err(e) => {
+                        return Err(e);
                     }
                 }
             }
+
+            Ok(())
         }
-        Err(e) => {
-            return Err(e);
-        }
+
+        Err(e) => Err(e),
     }
-    Ok(())
 }
 
 /// This function is charged to check the syntax of the arguments passed to the program
@@ -510,7 +509,6 @@ fn allocate_wordlist_config_cli(
                             return Err(WorgenXError::SystemError(e));
                         }
                     };
-                    println!("{}", output_file);
                 } else {
                     return Err(WorgenXError::ArgError(ArgError::MissingValue(
                         args[i].clone(),

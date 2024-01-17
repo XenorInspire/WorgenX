@@ -2,13 +2,13 @@
 use crate::{
     dict,
     error::{SystemError, WorgenXError},
+    system,
 };
 
 // External crates
 use indicatif::{ProgressBar, ProgressStyle};
 use std::{
     fs::{File, OpenOptions},
-    io::Write,
     sync::{mpsc::Sender, Arc, Mutex},
     thread::{self, JoinHandle},
 };
@@ -285,54 +285,22 @@ fn generate_wordlist_part(
         buffer.push(line);
         tx.send(Ok(1)).unwrap_or(());
         if buffer.len() == BUFFER_SIZE {
-            save_passwords(Arc::clone(&file), buffer.join("\n"), tx);
+            match system::save_passwd_to_file(Arc::clone(&file), buffer.join("\n")) {
+                Ok(_) => {}
+                Err(e) => {
+                    tx.send(Err(e)).unwrap_or(());
+                }
+            }
             buffer.clear();
         }
     }
 
     if !buffer.is_empty() {
-        save_passwords(Arc::clone(&file), buffer.join("\n"), tx);
-    }
-}
-
-/// This function is charged to save the generated passwords in a file and send the progress/possible errors to the channel
-///
-/// # Arguments
-///
-/// * `file` - The file to write to, wrapped in an Arc<Mutex<File>>
-/// * `password` - The password to write
-/// * `tx` - The channel sender for the progress bar and/or errors
-///
-fn save_passwords(
-    file: Arc<Mutex<File>>,
-    password: String,
-    tx: &Sender<Result<u64, WorgenXError>>,
-) {
-    let mut file = match file.lock() {
-        Ok(file) => file,
-        Err(_) => {
-            tx.send(Err(WorgenXError::SystemError(
-                SystemError::UnableToWriteToFile(
-                    "output file".to_string(),
-                    "Please check the path, the permissions and try again".to_string(),
-                ),
-            )))
-            .unwrap_or(());
-            return;
-        }
-    };
-    match file.write_all(format!("{}\n", password).as_bytes()) {
-        Ok(_) => {
-            tx.send(Ok(1)).unwrap_or(());
-        }
-        Err(_) => {
-            tx.send(Err(WorgenXError::SystemError(
-                SystemError::UnableToWriteToFile(
-                    "output file".to_string(),
-                    "Please check the path, the permissions and try again".to_string(),
-                ),
-            )))
-            .unwrap_or(());
+        match system::save_passwd_to_file(Arc::clone(&file), buffer.join("\n")) {
+            Ok(_) => {}
+            Err(e) => {
+                tx.send(Err(e)).unwrap_or(());
+            }
         }
     }
 }

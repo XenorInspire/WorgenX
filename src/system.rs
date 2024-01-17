@@ -1,10 +1,16 @@
 // Internal crates
-use crate::error::SystemError;
+use crate::error::{SystemError, WorgenXError};
 
 // Extern crates
 #[cfg(feature = "gui")]
 use std::io::stdin;
-use std::{fs::File, io::Write, path::Path, time::Instant};
+use std::{
+    fs::File,
+    io::Write,
+    path::Path,
+    sync::{Arc, Mutex},
+    time::Instant,
+};
 
 /// OS specific constants for GUI mode
 #[cfg(all(target_family = "unix", feature = "gui"))]
@@ -150,88 +156,6 @@ pub fn check_if_folder_exists(folder: &str) -> bool {
     Path::new(folder).parent().is_some()
 }
 
-/// Save the password in a file
-///
-/// # Arguments
-///
-/// * `file_path` - A string slice that holds the path of the file to create, containing all the passwords
-/// * `passwords` - A vector of String that holds the passwords to save
-///
-/// # Returns
-///
-/// Ok if the password has been saved, SystemError otherwise
-///
-pub fn save_passwords(file_path: String, passwords: &Vec<String>) -> Result<(), SystemError> {
-    let mut file = match File::create(&file_path) {
-        Ok(f) => f,
-        Err(e) => {
-            return Err(SystemError::UnableToCreateFile(
-                file_path.clone(),
-                e.to_string(),
-            ))
-        }
-    };
-
-    for password in passwords {
-        match file.write_all(password.as_bytes()) {
-            Ok(_) => (),
-            Err(e) => {
-                return Err(SystemError::UnableToWriteToFile(
-                    file_path.clone(),
-                    e.to_string(),
-                ))
-            }
-        }
-        match file.write_all(b"\n") {
-            Ok(_) => (),
-            Err(e) => {
-                return Err(SystemError::UnableToWriteToFile(
-                    file_path.clone(),
-                    e.to_string(),
-                ))
-            }
-        }
-    }
-
-    Ok(())
-}
-
-/// This function is charged to save the JSON string given in parameter in a file
-///
-/// # Arguments
-///
-/// * `file_path` - A string slice that holds the path of the file to create
-/// * `json_content` - A string slice that holds the JSON string to save
-///
-/// # Returns
-///
-/// Ok if the password has been saved, SystemError otherwise
-///
-#[cfg(feature = "cli")]
-pub fn save_json_to_file(file_path: String, json_content: &str) -> Result<(), SystemError> {
-    let mut file = match File::create(&file_path) {
-        Ok(f) => f,
-        Err(e) => {
-            return Err(SystemError::UnableToCreateFile(
-                file_path.clone(),
-                e.to_string(),
-            ))
-        }
-    };
-
-    match file.write_all(json_content.as_bytes()) {
-        Ok(_) => (),
-        Err(e) => {
-            return Err(SystemError::UnableToWriteToFile(
-                file_path.clone(),
-                e.to_string(),
-            ))
-        }
-    }
-
-    Ok(())
-}
-
 /// This function is charged to create the passwords or wordlists folder if it doesn't exist
 ///
 /// # Arguments
@@ -316,4 +240,30 @@ pub fn get_elapsed_time(start_time: Instant) -> String {
     elapsed_time_str.push_str(" seconds");
 
     elapsed_time_str
+}
+
+/// This function is charged to save the generated passwords in a file and send the progress/possible errors to the channel
+///
+/// # Arguments
+///
+/// * `file` - The file to write to, wrapped in an Arc<Mutex<File>>
+/// * `passwords` - The passwords to write
+///
+pub fn save_passwd_to_file(file: Arc<Mutex<File>>, passwords: String) -> Result<(), WorgenXError> {
+    let mut file = match file.lock() {
+        Ok(file) => file,
+        Err(_) => {
+            return Err(WorgenXError::SystemError(SystemError::UnableToWriteToFile(
+                "output file".to_string(),
+                "Please check the path, the permissions and try again".to_string(),
+            )))
+        }
+    };
+    match file.write_all(format!("{}\n", passwords).as_bytes()) {
+        Ok(_) => Ok(()),
+        Err(_) => Err(WorgenXError::SystemError(SystemError::UnableToWriteToFile(
+            "output file".to_string(),
+            "Please check the path, the permissions and try again".to_string(),
+        ))),
+    }
 }
