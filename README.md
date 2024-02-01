@@ -9,7 +9,7 @@ WorgenX-2.0 is a powerful Rust wordlist generator with many functionalities.<br>
 ## Features
 
 - [x] Generate a relevant wordlist with a custom mask and charset
-- [x] Generate a list of random words
+- [x] Generate a list of random paswords with a strong entropy
 - [x] Benchmark the performance of your CPU
 - [ ] Benchmark the performance of your GPU (not available yet)
 
