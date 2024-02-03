@@ -13,15 +13,22 @@ use std::{
 };
 
 /// OS specific constants for GUI mode
+/// 
+/// * `HOME_ENV_VAR` - The environment variable that holds the user's home directory
+/// * `PASSWORDS_FOLDER` - The folder where the passwords will be saved
+/// * `WORDLISTS_FOLDER` - The folder where the wordlists will be saved
+/// 
 #[cfg(all(target_family = "unix", feature = "gui"))]
 pub mod unix {
     pub const HOME_ENV_VAR: &str = "HOME";
     pub const PASSWORDS_FOLDER: &str = "/worgenx/passwords/";
+    pub const WORDLISTS_FOLDER: &str = "/worgenx/wordlists/";
 }
 #[cfg(all(target_family = "windows", feature = "gui"))]
 pub mod windows {
     pub const HOME_ENV_VAR: &str = "USERPROFILE";
     pub const PASSWORDS_FOLDER: &str = "\\worgenx\\passwords\\";
+    pub const WORDLISTS_FOLDER: &str = "\\worgenx\\wordlists\\";
 }
 
 /// This function is charged to get user String input y/n
