@@ -6,6 +6,12 @@ use crate::{
     wordlist::{self, WordlistValues},
 };
 
+#[cfg(target_family = "unix")]
+use system::unix as target;
+
+#[cfg(target_family = "windows")]
+use system::windows as target;
+
 // External crates
 use std::{
     env,
@@ -13,12 +19,6 @@ use std::{
     sync::Arc,
     sync::Mutex,
 };
-
-#[cfg(target_family = "unix")]
-use system::unix as target;
-
-#[cfg(target_family = "windows")]
-use system::windows as target;
 
 /// This function is charged to schedule in GUI mode the execution of the different features of the program
 /// according to the user's choices
@@ -181,33 +181,26 @@ pub fn password_saving_procedure(passwords: &[String]) {
         }
     };
 
-    let file = match OpenOptions::new()
+    let mut file = OpenOptions::new()
         .write(true)
         .append(true)
         .create(true)
-        .open(filename.clone())
-    {
-        Ok(file) => file,
-        Err(_) => {
-            println!(
-                "Unable to open the file, the passwords will be saved in the current directory\n"
-            );
-            // TODO: check if it's necessary to handle the error
-            match OpenOptions::new()
-                .write(true)
-                .append(true)
-                .create(true)
-                .open(filename.clone())
-            {
-                Ok(file) => file,
-                Err(e) => {
-                    println!("{}", e);
-                    return;
-                }
-            }
+        .open(filename.clone());
+
+    while file.is_err() {
+        println!("Unable to create the file : {}", file.unwrap_err());
+        println!("Do you want to try again ? (y/n)");
+        if system::get_user_choice_yn().eq("n") {
+            return;
         }
-    };
-    let shared_file = Arc::new(Mutex::new(file));
+        file = OpenOptions::new()
+            .write(true)
+            .append(true)
+            .create(true)
+            .open(filename.clone());
+    }
+
+    let shared_file = Arc::new(Mutex::new(file.unwrap()));
 
     while let Err(e) = system::save_passwd_to_file(shared_file.clone(), passwords.join("\n")) {
         println!("\n{}", e);
@@ -303,9 +296,7 @@ fn allocate_wordlist_config_gui() -> WordlistValues {
     println!("Enter the mask of the wordlist :");
     println!("For every character you want to be fixed, enter the character itself.");
     println!("For every character you want to be variable, enter a ?.");
-    println!(
-        "If you want to specify the character '?' in the mask as a fixed character, enter '\\?'"
-    );
+    println!("If you want to specify the character '?' in the mask as a fixed character, enter '\\?'");
 
     let mut is_valid_mask = false;
     while !is_valid_mask {
@@ -366,6 +357,7 @@ pub fn wordlist_saving_procedure() -> Result<File, SystemError> {
         }
     };
 
+    // TODO: while loop to handle file creation
     let file = match OpenOptions::new()
         .write(true)
         .append(true)
