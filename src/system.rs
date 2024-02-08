@@ -256,6 +256,10 @@ pub fn get_elapsed_time(start_time: Instant) -> String {
 /// * `file` - The file to write to, wrapped in an Arc<Mutex<File>>
 /// * `passwords` - The passwords to write
 ///
+/// # Returns
+///
+/// Ok if the passwords have been written to the file, WorgenXError otherwise
+///
 pub fn save_passwd_to_file(file: Arc<Mutex<File>>, passwords: String) -> Result<(), WorgenXError> {
     let mut file = match file.lock() {
         Ok(file) => file,
