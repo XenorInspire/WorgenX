@@ -78,7 +78,30 @@ fn main_passwd_generation() {
         println!("\nDo you want to save the passwords in a file ? (y/n)");
         let choice = system::get_user_choice_yn();
         if choice.eq("y") {
-            password_saving_procedure(&passwords)
+            let mut password_file = saving_procedure(target::PASSWORDS_FOLDER);
+
+            while password_file.is_err() {
+                println!("{}", password_file.unwrap_err());
+                println!("Do you want to try again ? (y/n)");
+                if system::get_user_choice_yn().eq("n") {
+                    return;
+                }
+                password_file = saving_procedure(target::PASSWORDS_FOLDER);
+            }
+
+            let shared_file = Arc::new(Mutex::new(password_file.unwrap()));
+            while let Err(e) =
+                system::save_passwd_to_file(shared_file.clone(), passwords.join("\n"))
+            {
+                println!("\n{}", e);
+                println!("Do you want to try again ? (y/n)");
+                let choice = system::get_user_choice_yn();
+                if choice.eq("n") {
+                    println!("The passwords have not been saved");
+                    return;
+                }
+            }
+            println!("The passwords have been saved");
         }
 
         println!("\nDo you want to generate another password(s) ? (y/n)");
@@ -145,73 +168,6 @@ fn allocate_passwd_config_gui() -> PasswordConfig {
     password_config
 }
 
-/// This function is charged to save the random password in a file
-///
-/// # Arguments
-///
-/// * `passwords` - A vector of String that holds the passwords to save
-///
-pub fn password_saving_procedure(passwords: &[String]) {
-    println!("Please enter the file name");
-    let mut filename = system::get_user_choice();
-    let mut result = system::is_valid_path(filename.clone());
-    while result.is_err() {
-        println!("{}", result.unwrap_err());
-        println!("Please enter a new file name:");
-        filename = system::get_user_choice();
-        result = system::is_valid_path(filename.clone());
-    }
-
-    let filename = match env::var(target::HOME_ENV_VAR) {
-        Ok(home_path) => {
-            let parent_folder = format!("{}{}", home_path, target::PASSWORDS_FOLDER);
-            let parent_folder_created = match system::create_folder_if_not_exists(&parent_folder) {
-                Ok(_) => format!("{}{}", home_path, target::PASSWORDS_FOLDER),
-                Err(e) => {
-                    println!("{}", e);
-                    println!("Unable to create the folder, the passwords will be saved in the current directory");
-                    format!("./{}", filename)
-                }
-            };
-            format!("{}{}", parent_folder_created, filename)
-        }
-        Err(_) => {
-            println!("Unable to get the home directory, the passwords will be saved in the current directory\n");
-            format!("./{}", filename)
-        }
-    };
-
-    let mut file = OpenOptions::new()
-        .write(true)
-        .create(true)
-        .open(filename.clone());
-
-    while file.is_err() {
-        println!("Unable to create the file : {}", file.unwrap_err());
-        println!("Do you want to try again ? (y/n)");
-        if system::get_user_choice_yn().eq("n") {
-            return;
-        }
-        file = OpenOptions::new()
-            .write(true)
-            .create(true)
-            .open(filename.clone());
-    }
-
-    let shared_file = Arc::new(Mutex::new(file.unwrap()));
-
-    while let Err(e) = system::save_passwd_to_file(shared_file.clone(), passwords.join("\n")) {
-        println!("\n{}", e);
-        println!("Do you want to try again ? (y/n)");
-        let choice = system::get_user_choice_yn();
-        if choice.eq("n") {
-            return;
-        }
-    }
-
-    println!("The passwords have been saved in {}", filename);
-}
-
 /// This is the main function of the wordlist generation feature
 ///
 fn main_wordlist_generation() {
@@ -225,14 +181,14 @@ fn main_wordlist_generation() {
             .len()
             .pow(wordlist_config.mask_indexes.len() as u32) as u64;
 
-        let mut wordlist_file = wordlist_saving_procedure();
+        let mut wordlist_file = saving_procedure(target::WORDLISTS_FOLDER);
         while wordlist_file.is_err() {
             println!("{}", wordlist_file.unwrap_err());
             println!("Do you want to try again ? (y/n)");
             if system::get_user_choice_yn().eq("n") {
                 return;
             }
-            wordlist_file = wordlist_saving_procedure();
+            wordlist_file = saving_procedure(target::WORDLISTS_FOLDER);
         }
 
         // TODO: processing + threads management + progress bar
@@ -323,9 +279,9 @@ fn allocate_wordlist_config_gui() -> WordlistValues {
 ///
 /// # Returns
 ///
-/// The file where the wordlist will be saved : Result<File, SystemError>
+/// The file where the wordlist or passwords will be saved : Result<File, SystemError>
 ///
-pub fn wordlist_saving_procedure() -> Result<File, SystemError> {
+pub fn saving_procedure(target: &str) -> Result<File, SystemError> {
     println!("Please enter the file name");
     let mut filename = system::get_user_choice();
     let mut result = system::is_valid_path(filename.clone());
@@ -338,24 +294,23 @@ pub fn wordlist_saving_procedure() -> Result<File, SystemError> {
 
     let filename = match env::var(target::HOME_ENV_VAR) {
         Ok(home_path) => {
-            let parent_folder = format!("{}{}", home_path, target::WORDLISTS_FOLDER);
+            let parent_folder = format!("{}{}", home_path, target);
             let parent_folder_created = match system::create_folder_if_not_exists(&parent_folder) {
-                Ok(_) => format!("{}{}", home_path, target::WORDLISTS_FOLDER),
+                Ok(_) => format!("{}{}", home_path, target),
                 Err(e) => {
                     println!("{}", e);
-                    println!("Unable to create the folder, the wordlist will be saved in the current directory");
+                    println!("Unable to create the folder, the file will be saved in the current directory");
                     format!("./{}", filename)
                 }
             };
             format!("{}{}", parent_folder_created, filename)
         }
         Err(_) => {
-            println!("Unable to get the home directory, the wordlist will be saved in the current directory\n");
+            println!("Unable to get the home directory, the file will be saved in the current directory\n");
             format!("./{}", filename)
         }
     };
 
-    // TODO: while loop to handle file creation
     let file = match OpenOptions::new()
         .write(true)
         .create(true)
