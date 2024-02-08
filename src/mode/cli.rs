@@ -124,7 +124,6 @@ fn run_passwd(args: &[String]) -> Result<(), WorgenXError> {
             if !password_generation_parameters.output_file.is_empty() {
                 let file = match OpenOptions::new()
                     .write(true)
-                    .append(true)
                     .create(true)
                     .open(password_generation_parameters.output_file.clone())
                 {

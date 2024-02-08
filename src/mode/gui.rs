@@ -183,7 +183,6 @@ pub fn password_saving_procedure(passwords: &[String]) {
 
     let mut file = OpenOptions::new()
         .write(true)
-        .append(true)
         .create(true)
         .open(filename.clone());
 
@@ -195,7 +194,6 @@ pub fn password_saving_procedure(passwords: &[String]) {
         }
         file = OpenOptions::new()
             .write(true)
-            .append(true)
             .create(true)
             .open(filename.clone());
     }
@@ -360,7 +358,6 @@ pub fn wordlist_saving_procedure() -> Result<File, SystemError> {
     // TODO: while loop to handle file creation
     let file = match OpenOptions::new()
         .write(true)
-        .append(true)
         .create(true)
         .open(filename.clone())
     {

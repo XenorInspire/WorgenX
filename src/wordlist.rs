@@ -164,7 +164,6 @@ pub fn wordlist_generation_scheduler(
 
     let file = match OpenOptions::new()
         .write(true)
-        .append(true)
         .create(true)
         .open(file_path)
     {
