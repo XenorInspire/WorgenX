@@ -598,7 +598,7 @@ fn allocate_wordlist_config_cli(
 /// This function is charged to display the help menu with all the features of the program
 ///
 fn display_help() {
-    println!("Usage: worgenx_cli <command> [options]");
+    println!("Usage: worgenX <command> [options]");
     println!("Commands:");
     println!("  -w, --wordlist\tGenerate a wordlist");
     println!("  -p, --passwd\t\tGenerate random password(s)");
