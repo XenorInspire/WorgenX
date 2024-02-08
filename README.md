@@ -24,22 +24,22 @@ WorgenX-2.0 is a powerful Rust wordlist generator with many functionalities.<br>
 ### Install from the source code
 
 #### In a directory of your choice, clone the repository :  
-```bash
+```
 git clone https://github.com/XenorInspire/WorgenX-2.0.git
 ```
 Move in the directory :  
-```bash
+```
 cd WorgenX-2.0/
 ```
-#### Compile the project.
+#### Compile the project :
 
 For CLI version : 
-```bash
+```
 cargo build --features cli
 ```
 
 For GUI version : 
-```bash
+```
 cargo build --features gui
 ```
 
@@ -47,13 +47,13 @@ cargo build --features gui
 
 ### In CLI mode :
 
-```bash
+```
 worgenX <command> [options]
 ```
 
 Use the '-h' or '--help' argument to display the help menu :
 
-```bash
+```
 $ worgenX --help
 
 Usage: worgenx <command> [options]
