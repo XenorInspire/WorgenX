@@ -24,11 +24,8 @@ WorgenX-2.0 is a powerful Rust wordlist generator with many functionalities.<br>
 ### Install from the source code
 
 #### In a directory of your choice, clone the repository :  
-```git
+```bash
 git clone https://github.com/XenorInspire/WorgenX-2.0.git
-```
-```git
-git clone https://gitlab.com/XenorInspire/WorgenX-2.0.git
 ```
 Move in the directory :  
 ```bash
@@ -37,30 +34,84 @@ cd WorgenX-2.0/
 #### Compile the project.
 
 For CLI version : 
-```rust
+```bash
 cargo build --features cli
 ```
 
 For GUI version : 
-```rust
+```bash
 cargo build --features gui
 ```
 
-# Start WorgenX
+## Use WorgenX
 
-#### For Windows :
+### In CLI mode :
 
-Exit the compilator folder and start *WorgenX.exe*.
+```bash
+worgenX <command> [options]
+```
 
-#### For Linux/MacOS :
+Use the '-h' or '--help' argument to display the help menu :
 
-Exit the compilator folder and execute WorgenX :
-`cd .. && ./WorgenX`
+```bash
+$ worgenX --help
+
+Usage: worgenx <command> [options]
+Commands:
+  -w, --wordlist        Generate a wordlist
+  -p, --passwd          Generate random password(s)
+  -b, --benchmark       Benchmark CPU
+  -v, --version         Display the version of WorgenX
+  -h, --help            Display this help message
+
+
+You can find below the options for the main features of WorgenX:
+
+  --- Dictionary generation ---
+  You must specify at least one of the following options: -l, -u, -n, -s
+    -l, --lowercase                     Add lowercase characters to the words
+    -u, --uppercase                     Add uppercase characters to the words
+    -n, --numbers                       Add numbers to the words
+    -x, --special-characters            Add special characters to the words
+
+  This parameter is mandatory:
+    -m <mask>, --mask <mask>            Mask used to generate the words
+    -o <path>, --output <path>          Save the wordlist in a text file
+
+  The following options are optional:
+    -d, --disable-loading-bar           Disable the loading bar when generating the wordlist
+    -t <threads>, --threads <threads>   Number of threads to use to generate the passwords
+                                        By default, the number of threads is based on the number of physical cores of the CPU
+
+  --- Password generation ---
+  You must specify at least one of the following options: -l, -u, -n, -s
+    -l, --lowercase                     Add lowercase characters to the words
+    -u, --uppercase                     Add uppercase characters to the words
+    -n, --numbers                       Add numbers to the words
+    -x, --special-characters            Add special characters to the words
+
+  These parameters are mandatory:
+    -s <size>, --size <size>            Size of the passwords in characters
+    -c <count>, --count <count>         Number of passwords to generate
+
+  The following options are optional:
+    -o <path>, --output <path>          Save the passwords in a file
+    -O <path>, --output-only <path>     Save the passwords only in a file, not in stdout
+    -j, --json                          Output in JSON format
+                                        Combine with -o to save the json output in a file
+
+```
+
+### In GUI mode :
+
+Just start worgenX_gui :
+```bash
+$ worgenX_gui
+```
 
 # Mirrors
 
 - <a href="https://github.com/XenorInspire/WorgenX-2.0">Github</a>
-- <a href="https://gitlab.com/XenorInspire/WorgenX-2.0">Gitlab</a>
 
 # Licence
 
