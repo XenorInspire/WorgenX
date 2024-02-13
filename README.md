@@ -12,6 +12,7 @@ WorgenX-2.0 is a powerful Rust wordlist generator with many functionalities.<br>
 - [x] Generate a list of random passwords with a strong entropy
 - [x] Benchmark the performance of your CPU
 - [ ] Benchmark the performance of your GPU (not available yet)
+- [ ] Generate a relevant wordlist with a custom mask and charset, using a hash algorithms like MD5, SHA1, SHA256, SHA512, etc. (not available yet)
 
 
 ## Installation
