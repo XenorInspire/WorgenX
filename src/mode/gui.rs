@@ -1,6 +1,6 @@
 // Internal crates
 use crate::{
-    error::SystemError,
+    error::{SystemError, WorgenXError},
     password::{self, PasswordConfig},
     system,
     wordlist::{self, WordlistValues},
@@ -13,11 +13,13 @@ use system::unix as target;
 use system::windows as target;
 
 // External crates
+use indicatif::ProgressBar;
 use std::{
     env,
     fs::{File, OpenOptions},
-    sync::Arc,
-    sync::Mutex,
+    sync::{mpsc, Arc, Mutex},
+    thread,
+    time::Instant,
 };
 
 /// This function is charged to schedule in GUI mode the execution of the different features of the program
@@ -78,18 +80,19 @@ fn main_passwd_generation() {
         println!("\nDo you want to save the passwords in a file ? (y/n)");
         let choice = system::get_user_choice_yn();
         if choice.eq("y") {
-            let mut password_file = saving_procedure(target::PASSWORDS_FOLDER);
+            let mut file_result = saving_procedure(target::PASSWORDS_FOLDER);
 
-            while password_file.is_err() {
-                println!("{}", password_file.unwrap_err());
+            while file_result.is_err() {
+                println!("{}", file_result.unwrap_err());
                 println!("Do you want to try again ? (y/n)");
                 if system::get_user_choice_yn().eq("n") {
                     return;
                 }
-                password_file = saving_procedure(target::PASSWORDS_FOLDER);
+                file_result = saving_procedure(target::PASSWORDS_FOLDER);
             }
 
-            let shared_file = Arc::new(Mutex::new(password_file.unwrap()));
+            let (password_file, _) = file_result.unwrap();
+            let shared_file = Arc::new(Mutex::new(password_file));
             while let Err(e) =
                 system::save_passwd_to_file(shared_file.clone(), passwords.join("\n"))
             {
@@ -181,17 +184,78 @@ fn main_wordlist_generation() {
             .len()
             .pow(wordlist_config.mask_indexes.len() as u32) as u64;
 
-        let mut wordlist_file = saving_procedure(target::WORDLISTS_FOLDER);
-        while wordlist_file.is_err() {
-            println!("{}", wordlist_file.unwrap_err());
+        let mut file_result = saving_procedure(target::WORDLISTS_FOLDER);
+        while file_result.is_err() {
+            println!("{}", file_result.unwrap_err());
             println!("Do you want to try again ? (y/n)");
             if system::get_user_choice_yn().eq("n") {
                 return;
             }
-            wordlist_file = saving_procedure(target::WORDLISTS_FOLDER);
+            file_result = saving_procedure(target::WORDLISTS_FOLDER);
         }
 
-        // TODO: processing + threads management + progress bar
+        let (_, filename) = file_result.unwrap();
+
+        let (tx, rx) = mpsc::channel::<Result<u64, WorgenXError>>();
+        let pb = Arc::new(Mutex::new(ProgressBar::new(100)));
+        let pb_clone = Arc::clone(&pb);
+        let main_thread = thread::spawn(move || {
+            let mut current_value = 0;
+            println!("Wordlist generation in progress...");
+            for received in rx {
+                match received {
+                    Ok(value) => {
+                        current_value += value;
+                        wordlist::build_wordlist_progress_bar(
+                            current_value,
+                            nb_of_passwd,
+                            &pb_clone,
+                        )
+                    }
+                    Err(e) => {
+                        return Err(e);
+                    }
+                }
+                if current_value == nb_of_passwd {
+                    break;
+                }
+            }
+            Ok(())
+        });
+
+        let start = Instant::now();
+        match wordlist::wordlist_generation_scheduler(
+            &wordlist_config,
+            nb_of_passwd,
+            num_cpus::get_physical() as u64,
+            filename.as_str(),
+            &tx,
+        ) {
+            Ok(_) => (),
+            Err(e) => {
+                println!("{}", e);
+                return;
+            }
+        };
+        match main_thread.join() {
+            Ok(_) => (),
+            Err(e) => {
+                if let Some(err) = e.downcast_ref::<WorgenXError>() {
+                    println!("{}", err);
+                    return;
+                } else {
+                    println!(
+                        "{:?}",
+                        WorgenXError::SystemError(SystemError::ThreadError(format!("{:?}", e)))
+                    );
+                    return;
+                }
+            }
+        }
+        println!(
+            "\nWordlist generated in {}",
+            system::get_elapsed_time(start)
+        );
 
         println!("\nDo you want to generate another wordlist ? (y/n)");
         again = system::get_user_choice_yn();
@@ -263,7 +327,7 @@ fn allocate_wordlist_config_gui() -> WordlistValues {
             continue;
         } else {
             println!(
-                "Do you want to validate the following mask : {} ? (y/n)",
+                "Do you want to validate the following mask : '{}' ? (y/n)",
                 wordlist_config.mask
             );
             if system::get_user_choice_yn().eq("y") {
@@ -279,9 +343,10 @@ fn allocate_wordlist_config_gui() -> WordlistValues {
 ///
 /// # Returns
 ///
-/// The file where the wordlist or passwords will be saved : Result<File, SystemError>
+/// A tuple containing the file and the filename as a string if the file has been created successfully
+/// Otherwise, it returns a SystemError
 ///
-pub fn saving_procedure(target: &str) -> Result<File, SystemError> {
+pub fn saving_procedure(target: &str) -> Result<(File, String), SystemError> {
     println!("Please enter the file name");
     let mut filename = system::get_user_choice();
     let mut result = system::is_valid_path(filename.clone());
@@ -323,5 +388,5 @@ pub fn saving_procedure(target: &str) -> Result<File, SystemError> {
         }
     };
 
-    Ok(file)
+    Ok((file, filename))
 }
