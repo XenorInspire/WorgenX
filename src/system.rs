@@ -2,6 +2,7 @@
 use crate::error::{SystemError, WorgenXError};
 
 // Extern crates
+use indicatif::{ProgressBar, ProgressStyle};
 #[cfg(feature = "gui")]
 use std::io::stdin;
 use std::{
@@ -13,11 +14,11 @@ use std::{
 };
 
 /// OS specific constants for GUI mode
-/// 
+///
 /// * `HOME_ENV_VAR` - The environment variable that holds the user's home directory
 /// * `PASSWORDS_FOLDER` - The folder where the passwords will be saved
 /// * `WORDLISTS_FOLDER` - The folder where the wordlists will be saved
-/// 
+///
 #[cfg(all(target_family = "unix", feature = "gui"))]
 pub mod unix {
     pub const HOME_ENV_VAR: &str = "HOME";
@@ -277,4 +278,21 @@ pub fn save_passwd_to_file(file: Arc<Mutex<File>>, passwords: String) -> Result<
             "Please check the path, the permissions and try again".to_string(),
         ))),
     }
+}
+
+/// This function is charged to return the progress used by the program
+///
+/// # Returns
+///
+/// A ProgressBar from the indicatif crate
+///
+pub fn get_progress_bar() -> indicatif::ProgressBar {
+    let pb: ProgressBar = indicatif::ProgressBar::new(100);
+    pb.set_style(
+        ProgressStyle::default_bar()
+            .template("[{bar:40.green}] {pos:>7}% | {msg}")
+            .unwrap_or(ProgressStyle::default_bar()) // Provide the default argument
+            .progress_chars("##-"),
+    );
+    pb
 }

@@ -8,7 +8,6 @@ use crate::{
 };
 
 // External crates
-use indicatif::ProgressBar;
 use std::{
     fs::OpenOptions,
     sync::{mpsc, Arc, Mutex},
@@ -370,7 +369,7 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
                 .pow(wordlist_config.mask_indexes.len() as u32)
                 as u64;
             let (tx, rx) = mpsc::channel::<Result<u64, WorgenXError>>();
-            let pb = Arc::new(Mutex::new(ProgressBar::new(100)));
+            let pb = Arc::new(Mutex::new(system::get_progress_bar()));
             let pb_clone = Arc::clone(&pb);
             let main_thread = thread::spawn(move || {
                 let mut current_value = 0;

@@ -13,7 +13,6 @@ use system::unix as target;
 use system::windows as target;
 
 // External crates
-use indicatif::ProgressBar;
 use std::{
     env,
     fs::{File, OpenOptions},
@@ -197,7 +196,7 @@ fn main_wordlist_generation() {
         let (_, filename) = file_result.unwrap();
 
         let (tx, rx) = mpsc::channel::<Result<u64, WorgenXError>>();
-        let pb = Arc::new(Mutex::new(ProgressBar::new(100)));
+        let pb = Arc::new(Mutex::new(system::get_progress_bar()));
         let pb_clone = Arc::clone(&pb);
         let main_thread = thread::spawn(move || {
             let mut current_value = 0;

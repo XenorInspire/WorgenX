@@ -6,7 +6,7 @@ use crate::{
 };
 
 // External crates
-use indicatif::{ProgressBar, ProgressStyle};
+use indicatif::ProgressBar;
 use std::{
     fs::{File, OpenOptions},
     sync::{mpsc::Sender, Arc, Mutex},
@@ -162,11 +162,7 @@ pub fn wordlist_generation_scheduler(
     let dict_size = wordlist_config.dict.len();
     let shared_dict = Arc::new(wordlist_config.dict.clone());
 
-    let file = match OpenOptions::new()
-        .write(true)
-        .create(true)
-        .open(file_path)
-    {
+    let file = match OpenOptions::new().write(true).create(true).open(file_path) {
         Ok(file) => file,
         Err(_) => {
             return Err(WorgenXError::SystemError(SystemError::UnableToCreateFile(
@@ -323,18 +319,10 @@ pub fn build_wordlist_progress_bar(
     }
     if let Ok(pb) = pb.try_lock() {
         if nb_of_passwd_generated < total_nb_of_passwd {
-            pb.set_style(
-                ProgressStyle::default_bar()
-                    .template("[{bar:40.green}] {pos:>7}% | {msg}")
-                    .unwrap_or(ProgressStyle::default_bar()) // Provide the default argument
-                    .progress_chars("##-"),
-            );
-
             pb.set_position(pourcentage);
             pb.set_message("Loading...");
         } else {
             pb.set_position(100);
-
             pb.finish_with_message(String::from("Wordlist generated"));
         }
     }
