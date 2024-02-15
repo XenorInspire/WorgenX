@@ -197,23 +197,12 @@ fn allocate_passwd_config_cli(args: &[String]) -> Result<PasswordGenerationOptio
             }
             "-s" | "--size" => {
                 if i + 1 < args.len() {
-                    match args[i + 1].parse::<u64>() {
+                    match check_numerical_value(&args[i + 1], "-s or --size") {
                         Ok(value) => {
-                            if value == 0 {
-                                return Err(WorgenXError::ArgError(
-                                    ArgError::InvalidNumericalValue(
-                                        args[i + 1].clone(),
-                                        args[i].clone(),
-                                    ),
-                                ));
-                            }
                             password_config.length = value;
                         }
-                        Err(_) => {
-                            return Err(WorgenXError::ArgError(ArgError::InvalidNumericalValue(
-                                args[i + 1].clone(),
-                                args[i].clone(),
-                            )));
+                        Err(e) => {
+                            return Err(e);
                         }
                     }
                 } else {
@@ -226,23 +215,12 @@ fn allocate_passwd_config_cli(args: &[String]) -> Result<PasswordGenerationOptio
             }
             "-c" | "--count" => {
                 if i + 1 < args.len() {
-                    match args[i + 1].parse::<u64>() {
+                    match check_numerical_value(&args[i + 1], "-c or --count") {
                         Ok(value) => {
-                            if value == 0 {
-                                return Err(WorgenXError::ArgError(
-                                    ArgError::InvalidNumericalValue(
-                                        args[i + 1].clone(),
-                                        args[i].clone(),
-                                    ),
-                                ));
-                            }
                             password_config.number_of_passwords = value;
                         }
-                        Err(_) => {
-                            return Err(WorgenXError::ArgError(ArgError::InvalidNumericalValue(
-                                args[i + 1].clone(),
-                                args[i].clone(),
-                            )));
+                        Err(e) => {
+                            return Err(e);
                         }
                     }
                 } else {
@@ -258,15 +236,12 @@ fn allocate_passwd_config_cli(args: &[String]) -> Result<PasswordGenerationOptio
                     if one_path {
                         return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
                     }
-                    if args[i + 1].starts_with('-') {
-                        return Err(WorgenXError::ArgError(ArgError::MissingValue(
-                            args[i].clone(),
-                        )));
-                    }
-                    output_file = match system::is_valid_path(args[i + 1].clone()) {
-                        Ok(full_path) => full_path,
+                    match check_output_arg(&args[i + 1], "-o or --output") {
+                        Ok(full_path) => {
+                            output_file = full_path;
+                        }
                         Err(e) => {
-                            return Err(WorgenXError::SystemError(e));
+                            return Err(e);
                         }
                     }
                 } else {
@@ -287,15 +262,12 @@ fn allocate_passwd_config_cli(args: &[String]) -> Result<PasswordGenerationOptio
                     if one_path {
                         return Err(WorgenXError::ArgError(ArgError::BothOutputArguments));
                     }
-                    if args[i + 1].starts_with('-') {
-                        return Err(WorgenXError::ArgError(ArgError::MissingValue(
-                            args[i].clone(),
-                        )));
-                    }
-                    output_file = match system::is_valid_path(args[i + 1].clone()) {
-                        Ok(full_path) => full_path,
+                    match check_output_arg(&args[i + 1], "-O or --output-only") {
+                        Ok(full_path) => {
+                            output_file = full_path;
+                        }
                         Err(e) => {
-                            return Err(WorgenXError::SystemError(e));
+                            return Err(e);
                         }
                     }
                 } else {
@@ -498,17 +470,14 @@ fn allocate_wordlist_config_cli(
             }
             "-o" | "--output" => {
                 if i + 1 < args.len() {
-                    if args[i + 1].starts_with('-') {
-                        return Err(WorgenXError::ArgError(ArgError::MissingValue(
-                            args[i].clone(),
-                        )));
-                    }
-                    output_file = match system::is_valid_path(args[i + 1].clone()) {
-                        Ok(full_path) => full_path,
-                        Err(e) => {
-                            return Err(WorgenXError::SystemError(e));
+                    match check_output_arg(&args[i + 1], "-o or --output") {
+                        Ok(full_path) => {
+                            output_file = full_path;
                         }
-                    };
+                        Err(e) => {
+                            return Err(e);
+                        }
+                    }
                 } else {
                     return Err(WorgenXError::ArgError(ArgError::MissingValue(
                         args[i].clone(),
@@ -519,28 +488,12 @@ fn allocate_wordlist_config_cli(
             }
             "-t" | "--threads" => {
                 if i + 1 < args.len() {
-                    if args[i + 1].starts_with('-') {
-                        return Err(WorgenXError::ArgError(ArgError::MissingValue(
-                            args[i].clone(),
-                        )));
-                    }
-                    match args[i + 1].parse::<u64>() {
+                    match check_numerical_value(&args[i + 1], "-t or --threads") {
                         Ok(value) => {
-                            if value == 0 {
-                                return Err(WorgenXError::ArgError(
-                                    ArgError::InvalidNumericalValue(
-                                        args[i + 1].clone(),
-                                        args[i].clone(),
-                                    ),
-                                ));
-                            }
                             threads = value;
                         }
-                        Err(_) => {
-                            return Err(WorgenXError::ArgError(ArgError::InvalidNumericalValue(
-                                args[i + 1].clone(),
-                                args[i].clone(),
-                            )));
+                        Err(e) => {
+                            return Err(e);
                         }
                     }
                 } else {
@@ -591,6 +544,63 @@ fn allocate_wordlist_config_cli(
         no_loading_bar,
         threads,
     })
+}
+
+/// This function is charged to check path for the 'output' arguments
+///
+/// # Arguments
+///
+/// * `path` - The path to check
+/// * `arg` - The argument name
+///
+/// # Returns
+///
+/// Ok if the path is valid, WorgenXError otherwise
+///
+fn check_output_arg(path: &str, arg: &str) -> Result<String, WorgenXError> {
+    if path.starts_with('-') {
+        return Err(WorgenXError::ArgError(ArgError::MissingValue(
+            arg.to_string(),
+        )));
+    }
+    match system::is_valid_path(path.to_string()) {
+        Ok(full_path) => Ok(full_path),
+        Err(e) => Err(WorgenXError::SystemError(e)),
+    }
+}
+
+/// This function is charged to check a numerical value for the 'size' and 'count' arguments
+///
+/// # Arguments
+///
+/// * `value` - The value to check
+/// * `arg` - The argument name
+///
+/// # Returns
+///
+/// Ok if the value is valid, WorgenXError otherwise
+///
+fn check_numerical_value(value: &str, arg: &str) -> Result<u64, WorgenXError> {
+    if value.starts_with('-') {
+        return Err(WorgenXError::ArgError(ArgError::MissingValue(
+            arg.to_string(),
+        )));
+    }
+    match value.parse::<u64>() {
+        Ok(value) => {
+            if value == 0 {
+                return Err(WorgenXError::ArgError(ArgError::InvalidNumericalValue(
+                    value.to_string(),
+                    arg.to_string(),
+                )));
+            }
+            Ok(value)
+        }
+        Err(_) => Err(WorgenXError::ArgError(ArgError::InvalidNumericalValue(
+            value.to_string(),
+            arg.to_string(),
+        ))),
+    }
 }
 
 /// This function is charged to display the help menu with all the features of the program
