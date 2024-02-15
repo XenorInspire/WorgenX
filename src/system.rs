@@ -134,7 +134,7 @@ pub fn is_valid_path(path: String) -> Result<String, SystemError> {
                 ))
             }
         };
-        current_dir + "/" + &filename
+        current_dir + "/" + &path
     } else {
         path.clone()
     };
