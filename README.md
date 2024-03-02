@@ -5,7 +5,6 @@ WorgenX-2.0 is a powerful Rust wordlist generator with many functionalities.<br>
 > This project is a fully rewritten Rust version of <a href="https://github.com/XenorInspire/WorgenX">WorgenX</a>, initially developed in C code.
 
 
-
 ## Features
 
 - [x] Generate a relevant wordlist with a custom mask and charset
@@ -20,11 +19,29 @@ WorgenX-2.0 is a powerful Rust wordlist generator with many functionalities.<br>
 
 ### Install the packaged versions
 
-//WIP
+Download the latest version of WorgenX from the [releases page](github.com/XenorInspire/WorgenX-2.0/releases) corresponding to your operating system and your CPU architecture.
+
+#### For Debian-based systems (like Ubuntu) :
+
+```
+sudo apt install ./worgenx_<version>_<arch>.deb
+```
+
+#### For RedHat-based systems (like Fedora) :
+
+```
+sudo dnf install ./worgenx_<version>_<arch>.rpm
+```
+
+#### For Windows :
+
+Just download the .exe file and execute it. You can also add the path to the environment variables to use it in the command line.
 
 ### Install from the source code
 
-#### In a directory of your choice, clone the repository :  
+First, if you don't have rustup installed, you can install it by following the instructions on the official website : [rustup.rs](https://rustup.rs/)
+
+#### Choose a directory and clone the repository :  
 ```
 git clone https://github.com/XenorInspire/WorgenX-2.0.git
 ```
@@ -36,13 +53,15 @@ cd WorgenX-2.0/
 
 For CLI version : 
 ```
-cargo build --features cli
+cargo build --release --features cli
 ```
 
 For GUI version : 
 ```
-cargo build --features gui
+cargo build --release --features gui
 ```
+
+The binary will be in the 'target/release/' directory.
 
 ## Use WorgenX
 
