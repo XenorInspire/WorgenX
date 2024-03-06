@@ -236,16 +236,21 @@ pub fn get_elapsed_time(start_time: Instant) -> String {
         let hours = elapsed_time / 3600;
         elapsed_time -= hours * 3600;
         elapsed_time_str.push_str(&hours.to_string());
-        elapsed_time_str.push_str(" hours and ");
+        elapsed_time_str.push_str(" hour(s) and ");
     }
     if elapsed_time >= 60 {
         let minutes = elapsed_time / 60;
         elapsed_time -= minutes * 60;
         elapsed_time_str.push_str(&minutes.to_string());
-        elapsed_time_str.push_str("minutes and ");
+        elapsed_time_str.push_str("minute(s) and ");
     }
-    elapsed_time_str.push_str(&elapsed_time.to_string());
-    elapsed_time_str.push_str(" seconds");
+
+    if elapsed_time == 0 {
+        elapsed_time_str.push_str("less than a second");
+    } else {
+        elapsed_time_str.push_str(&elapsed_time.to_string());
+        elapsed_time_str.push_str(" seconds");
+    }
 
     elapsed_time_str
 }
