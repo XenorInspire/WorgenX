@@ -6,12 +6,13 @@ compile_error!("You must specify a mode: 'gui' or 'cli'.");
 // compile_error!("You must specify only one mode: 'gui' or 'cli'.");
 
 // Internal modules
+mod benchmark;
 mod dict;
 mod error;
-mod wordlist;
 mod mode;
 mod password;
 mod system;
+mod wordlist;
 
 #[cfg(feature = "cli")]
 mod json;

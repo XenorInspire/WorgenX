@@ -1,5 +1,6 @@
 // Internal crates
 use crate::{
+    benchmark,
     error::{ArgError, SystemError, WorgenXError},
     json,
     password::{self, PasswordConfig},
@@ -73,9 +74,12 @@ pub fn run() -> Result<(), WorgenXError> {
                 }
             }
         }
-        "-b" | "--benchmark" => {
-            println!("Not implemented yet");
-        }
+        "-b" | "--benchmark" => match run_benchmark() {
+            Ok(_) => (),
+            Err(e) => {
+                return Err(e);
+            }
+        },
         "-v" | "--version" => {
             println!("WorgenX v{}", env!("CARGO_PKG_VERSION"));
         }
@@ -544,6 +548,24 @@ fn allocate_wordlist_config_cli(
         no_loading_bar,
         threads,
     })
+}
+
+/// This function is charged to schedule the execution of the benchmark feature of the program
+/// It will display the number of passwords generated in 1 minute
+/// The benchmark is based on the generation of random passwords
+///
+/// # Returns
+///
+/// Ok if the benchmark has been executed, WorgenXError otherwise
+///
+fn run_benchmark() -> Result<(), WorgenXError> {
+    match benchmark::load_cpu_benchmark() {
+        Ok(results) => Ok(println!(
+            "Your CPU has generated {} passwords in 1 minute",
+            results
+        )),
+        Err(e) => Err(e),
+    }
 }
 
 /// This function is charged to check path for the 'output' arguments
