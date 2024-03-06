@@ -19,7 +19,7 @@ WorgenX-2.0 is a powerful Rust wordlist generator with many functionalities.<br>
 
 ### Install the packaged versions
 
-Download the latest version of WorgenX from the [releases page](github.com/XenorInspire/WorgenX-2.0/releases) corresponding to your operating system and your CPU architecture.
+Download the latest version of WorgenX from the [releases page](https://github.com/XenorInspire/WorgenX-2.0/releases) corresponding to your operating system and your CPU architecture.
 
 #### For Debian-based systems (like Ubuntu) :
 
