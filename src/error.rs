@@ -62,7 +62,7 @@ pub enum SystemError {
     #[error("Error: unable to create folder `{0}`.\n{1}")]
     UnableToCreateFolder(String, String),
     /// This error is raised when the file name contains invalid characters
-    #[error("Error: The file name `{0}` is invalid")]
+    #[error("Error: the file name `{0}` is invalid")]
     InvalidFilename(String),
     /// This error is raised if there is a thread error
     #[error("Error: thread error\n{0}")]
