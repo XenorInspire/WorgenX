@@ -76,18 +76,18 @@ Use the '-h' or '--help' argument to display the help menu :
 ```
 $ worgenX --help
 
-Usage: worgenx <command> [options]
+Usage: worgenX <command> [options]
 Commands:
   -w, --wordlist        Generate a wordlist
   -p, --passwd          Generate random password(s)
-  -b, --benchmark       Benchmark CPU
+  -b, --benchmark       CPU Benchmark
   -v, --version         Display the version of WorgenX
   -h, --help            Display this help message
 
 
 You can find below the options for the main features of WorgenX:
 
-  --- Dictionary generation ---
+  --- Wordlist generation ---
   You must specify at least one of the following options: -l, -u, -n, -s
     -l, --lowercase                     Add lowercase characters to the words
     -u, --uppercase                     Add uppercase characters to the words
@@ -119,6 +119,11 @@ You can find below the options for the main features of WorgenX:
     -O <path>, --output-only <path>     Save the passwords only in a file, not in stdout
     -j, --json                          Output in JSON format
                                         Combine with -o to save the json output in a file
+
+  --- CPU Benchmark ---
+  The following option is optional:
+    -t <threads>, --threads <threads>   Number of threads to use for the CPU benchmark
+                                        By default, the number of threads is based on the number of physical cores of the CPU
 
 ```
 
