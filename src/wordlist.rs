@@ -208,9 +208,8 @@ pub fn wordlist_generation_scheduler(
                 if temp[idx] < dict_size - 1 {
                     temp[idx] += 1;
                     break;
-                } else {
-                    temp[idx] = 0;
                 }
+                temp[idx] = 0;
             }
         }
     }
@@ -272,9 +271,8 @@ fn generate_wordlist_part(
             if dict_indexes[idx] < dict.len() - 1 {
                 dict_indexes[idx] += 1;
                 break;
-            } else {
-                dict_indexes[idx] = 0;
             }
+            dict_indexes[idx] = 0;
         }
 
         buffer.push(line);
