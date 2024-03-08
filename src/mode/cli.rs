@@ -16,7 +16,7 @@ use std::{
     time::Instant,
 };
 
-/// This struct built from PasswordConfig and optional arguments will be used to generate the random password
+/// This struct is built from PasswordConfig and optional arguments will be used to generate the random password
 ///
 struct PasswordGenerationOptions {
     password_config: PasswordConfig,
@@ -25,12 +25,18 @@ struct PasswordGenerationOptions {
     no_display: bool,
 }
 
-/// This struct built from WordlistValues and optional arguments will be used to generate the wordlist
+/// This struct is built from WordlistValues and optional arguments will be used to generate the wordlist
 ///
 struct WordlistGenerationOptions {
     wordlist_values: WordlistValues,
     output_file: String,
     no_loading_bar: bool,
+    threads: u64,
+}
+
+/// This struct is built from the arguments for the benchmark feature
+///
+struct BenchmarkOptions {
     threads: u64,
 }
 
@@ -74,7 +80,7 @@ pub fn run() -> Result<(), WorgenXError> {
                 }
             }
         }
-        "-b" | "--benchmark" => match run_benchmark() {
+        "-b" | "--benchmark" => match run_benchmark(&args) {
             Ok(_) => (),
             Err(e) => {
                 return Err(e);
@@ -154,8 +160,7 @@ fn run_passwd(args: &[String]) -> Result<(), WorgenXError> {
     }
 }
 
-/// This function is charged to check the syntax of the arguments passed to the program
-/// It does not check the values of the arguments
+/// This function is charged to check the syntax of the arguments passed to the program for the random password generation feature
 /// This function is called only if the user specifies the -p or --passwd argument
 ///
 /// # Arguments
@@ -554,18 +559,77 @@ fn allocate_wordlist_config_cli(
 /// It will display the number of passwords generated in 1 minute
 /// The benchmark is based on the generation of random passwords
 ///
+/// # Arguments
+///
+/// * `args` - A vector of String containing the arguments passed to the program
+///
 /// # Returns
 ///
 /// Ok if the benchmark has been executed, WorgenXError otherwise
 ///
-fn run_benchmark() -> Result<(), WorgenXError> {
-    match benchmark::load_cpu_benchmark() {
-        Ok(results) => Ok(println!(
-            "Your CPU has generated {} passwords in 1 minute",
-            results
-        )),
+fn run_benchmark(args: &[String]) -> Result<(), WorgenXError> {
+    match allocate_benchmark_config_cli(args) {
+        Ok(benchmark_parameters) => {
+            match benchmark::load_cpu_benchmark(benchmark_parameters.threads) {
+                Ok(results) => Ok(println!(
+                    "Your CPU has generated {} passwords in 1 minute",
+                    results
+                )),
+                Err(e) => Err(e),
+            }
+        }
         Err(e) => Err(e),
     }
+}
+
+/// This function is charged to check the syntax of the arguments passed to the program for the benchmark feature
+/// This function is called only if the user specifies the -b or --benchmark argument
+///
+/// # Arguments
+///
+/// * `args` - A vector of String containing the arguments passed to the program
+///
+/// # Returns
+///
+/// BenchmarkOptions containing the benchmark configuration or WorgenXError if an error occurs
+///
+fn allocate_benchmark_config_cli(args: &[String]) -> Result<BenchmarkOptions, WorgenXError> {
+    let mut threads = num_cpus::get_physical() as u64;
+    let mut skip = false;
+
+    for i in 2..args.len() {
+        if skip {
+            skip = false;
+            continue;
+        }
+        match args[i].as_str() {
+            "-t" | "--threads" => {
+                if i + 1 < args.len() {
+                    match check_numerical_value(&args[i + 1], "-t or --threads") {
+                        Ok(value) => {
+                            threads = value;
+                        }
+                        Err(e) => {
+                            return Err(e);
+                        }
+                    }
+                } else {
+                    return Err(WorgenXError::ArgError(ArgError::MissingValue(
+                        args[i].clone(),
+                    )));
+                }
+                skip = true;
+                continue;
+            }
+            _ => {
+                return Err(WorgenXError::ArgError(ArgError::UnknownArgument(
+                    args[i].clone(),
+                )));
+            }
+        }
+    }
+
+    Ok(BenchmarkOptions { threads })
 }
 
 /// This function is charged to check path for the 'output' arguments
@@ -625,19 +689,19 @@ fn check_numerical_value(value: &str, arg: &str) -> Result<u64, WorgenXError> {
     }
 }
 
-/// This function is charged to display the help menu with all the features of the program
+/// This function is charged to display the help menu with all the features of WorgenX
 ///
 fn display_help() {
     println!("Usage: worgenX <command> [options]");
     println!("Commands:");
     println!("  -w, --wordlist\tGenerate a wordlist");
     println!("  -p, --passwd\t\tGenerate random password(s)");
-    println!("  -b, --benchmark\tBenchmark CPU");
+    println!("  -b, --benchmark\tCPU Benchmark");
     println!("  -v, --version\t\tDisplay the version of WorgenX");
     println!("  -h, --help\t\tDisplay this help message\n\n");
     println!("You can find below the options for the main features of WorgenX:\n");
 
-    println!("  --- Dictionary generation ---");
+    println!("  --- Wordlist generation ---");
     println!("  You must specify at least one of the following options: -l, -u, -n, -s");
     println!("    -l, --lowercase\t\t\tAdd lowercase characters to the words");
     println!("    -u, --uppercase\t\t\tAdd uppercase characters to the words");
@@ -662,5 +726,9 @@ fn display_help() {
     println!("\n  The following options are optional:");
     println!("    -o <path>, --output <path>\t\tSave the passwords in a file");
     println!("    -O <path>, --output-only <path>\tSave the passwords only in a file, not in stdout");
-    println!("    -j, --json\t\t\t\tOutput in JSON format\n\t\t\t\t\tCombine with -o to save the json output in a file\n");
+    println!("    -j, --json\t\t\t\tOutput in JSON format\n\t\t\t\t\tCombine with -o to save the json output in a file");
+
+    println!("\n  --- CPU Benchmark ---");
+    println!("  The following option is optional:");
+    println!("    -t <threads>, --threads <threads>\tNumber of threads to use for the CPU benchmark\n\t\t\t\t\tBy default, the number of threads is based on the number of physical cores of the CPU\n");
 }
