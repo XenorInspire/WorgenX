@@ -1,5 +1,6 @@
 // Internal crates
 use crate::{
+    benchmark,
     error::{SystemError, WorgenXError},
     password::{self, PasswordConfig},
     system,
@@ -32,7 +33,7 @@ pub fn run() {
             "0" => break,
             "1" => main_wordlist_generation(),
             "2" => main_passwd_generation(),
-            // "3" => benchmark_cpu(),
+            "3" => main_benchmark(),
             _ => (),
         }
     }
@@ -259,7 +260,6 @@ fn main_wordlist_generation() {
         println!("\nDo you want to generate another wordlist ? (y/n)");
         again = system::get_user_choice_yn();
     }
-
     println!("\n");
 }
 
@@ -338,15 +338,43 @@ fn allocate_wordlist_config_gui() -> WordlistValues {
     wordlist_config
 }
 
-/// This function is charged to save the wordlist in a file with \n as separator
+/// This is the main function of the CPU benchmark feature
+/// It will start the benchmark after 5 seconds to let the user the time to read the message
+///
+fn main_benchmark() {
+    let mut again = String::from("y");
+
+    while again.eq("y") {
+        println!("The benchmark will start in 5 seconds...");
+        thread::sleep(std::time::Duration::from_secs(5));
+        let result = benchmark::load_cpu_benchmark(num_cpus::get_physical() as u64);
+        match result {
+            Ok(nb_of_passwords) => {
+                println!(
+                    "The number of passwords generated in 60 seconds is : {}",
+                    nb_of_passwords
+                );
+            }
+            Err(e) => {
+                println!("{}", e);
+            }
+        }
+        println!("\nDo you want to run a new benchmark ? (y/n)");
+        again = system::get_user_choice_yn();
+    }
+    println!("\n");
+}
+
+/// This function is charged to save the wordlist in a file with \n as separator between each word
+/// This function is also charged to handle the creation of a backup file for the random passwords
 ///
 /// # Returns
 ///
-/// A tuple containing the file and the filename as a string if the file has been created successfully
+/// A tuple containing the file and the file name as a string if the file has been created successfully
 /// Otherwise, it returns a SystemError
 ///
 pub fn saving_procedure(target: &str) -> Result<(File, String), SystemError> {
-    println!("Please enter the file name");
+    println!("Please enter the file name to backup the wordlist :");
     let mut filename = system::get_user_choice();
     let mut result = system::is_valid_path(filename.clone());
     while result.is_err() {
