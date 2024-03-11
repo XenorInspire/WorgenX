@@ -13,7 +13,7 @@ use std::{
         mpsc, Arc, Mutex,
     },
     thread::{self, JoinHandle},
-    time::Instant,
+    time::{Duration, Instant},
 };
 
 /// This constant structure is used to define the password configuration for the benchmark
@@ -40,8 +40,11 @@ const PASSWORD_CONFIG: password::PasswordConfig = PasswordConfig {
 ///
 pub fn load_cpu_benchmark(nb_of_threads: u64) -> Result<u64, WorgenXError> {
     let (tx_progress_bar, rx_progress_bar) = mpsc::channel::<Result<u64, WorgenXError>>();
-    let pb = Arc::new(Mutex::new(system::get_progress_bar()));
-    let pb_clone = Arc::clone(&pb);
+    let pb: Arc<Mutex<ProgressBar>> = Arc::new(Mutex::new(system::get_progress_bar()));
+    let pb_clone: Arc<Mutex<ProgressBar>> = Arc::clone(&pb);
+    let mut threads: Vec<JoinHandle<()>> = Vec::new();
+    let shared_signal: Arc<AtomicBool> = Arc::new(AtomicBool::new(true));
+    let shared_passwd_counter: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
 
     let progress_bar_thread = thread::spawn(move || {
         println!("WorgenX CPU Benchmark is in progress...");
@@ -49,30 +52,24 @@ pub fn load_cpu_benchmark(nb_of_threads: u64) -> Result<u64, WorgenXError> {
             match received {
                 Ok(value) => {
                     build_wordlist_progress_bar(value, &pb_clone);
-                    if value == 60 {
-                        break;
-                    }
                 }
                 Err(e) => {
                     return Err(e);
                 }
             }
         }
+
+        build_wordlist_progress_bar(60, &pb_clone);
         Ok(())
     });
 
-    let mut threads: Vec<JoinHandle<()>> = Vec::new();
-    let shared_signal: Arc<AtomicBool> = Arc::new(AtomicBool::new(true));
-    let shared_passwd_counter: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
-
     let start = Instant::now();
-
     for _ in 0..nb_of_threads {
-        let shared_signal: Arc<AtomicBool> = Arc::clone(&shared_signal);
+        let shared_signal_rst = Arc::clone(&shared_signal);
         let shared_passwd_counter: Arc<Mutex<u64>> = Arc::clone(&shared_passwd_counter);
         threads.push(thread::spawn(move || {
             let shared_passwd_counter = Arc::clone(&shared_passwd_counter);
-            match run_stress_test(shared_signal, shared_passwd_counter) {
+            match run_stress_test(shared_signal_rst, shared_passwd_counter) {
                 Ok(_) => {}
                 Err(e) => {
                     println!("{}", e);
@@ -81,12 +78,23 @@ pub fn load_cpu_benchmark(nb_of_threads: u64) -> Result<u64, WorgenXError> {
         }));
     }
 
-    while start.elapsed().as_secs() < 60 {
+    while start.elapsed().as_secs() <= 60 {
         tx_progress_bar
             .send(Ok(start.elapsed().as_secs()))
             .unwrap_or(());
+        thread::sleep(Duration::from_millis(500));
     }
     shared_signal.store(false, Ordering::SeqCst); // Stop the stress test
+    drop(tx_progress_bar); // Drop the channel to stop the progress bar thread
+
+    match progress_bar_thread.join() {
+        Ok(_) => {}
+        Err(_) => {
+            return Err(WorgenXError::SystemError(SystemError::ThreadError(
+                "Something went wrong with the progress bar thread".to_string(),
+            )))
+        }
+    }
 
     for thread in threads {
         match thread.join() {
@@ -96,22 +104,6 @@ pub fn load_cpu_benchmark(nb_of_threads: u64) -> Result<u64, WorgenXError> {
                     "CPU Benchmark feature".to_string(),
                 )))
             }
-        }
-    }
-
-    match tx_progress_bar.send(Ok(0)) {
-        Ok(_) => match progress_bar_thread.join() {
-            Ok(_) => {}
-            Err(_) => {
-                return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                    "Something went wrong with the progress bar thread".to_string(),
-                )))
-            }
-        },
-        Err(e) => {
-            return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                e.to_string(),
-            )))
         }
     }
 
@@ -137,19 +129,19 @@ pub fn load_cpu_benchmark(nb_of_threads: u64) -> Result<u64, WorgenXError> {
 ///
 /// # Returns
 ///
-/// * `Result<(), WorgenXError>` - WorgenXError otherwise
+/// Ok(()) if the stress test is done, WorgenXError otherwise
 ///
 fn run_stress_test(
     stop_signal: Arc<AtomicBool>,
     shared_passwd_counter: Arc<Mutex<u64>>,
 ) -> Result<(), WorgenXError> {
     let mut nb_of_passwd: u64 = 0;
-
     loop {
         if !stop_signal.load(Ordering::SeqCst) {
             match shared_passwd_counter.lock() {
                 Ok(mut counter) => {
                     *counter += nb_of_passwd;
+                    return Ok(());
                 }
                 Err(_) => {
                     return Err(WorgenXError::SystemError(SystemError::ThreadError(
@@ -157,7 +149,6 @@ fn run_stress_test(
                     )))
                 }
             }
-            return Ok(());
         }
 
         password::generate_random_passwords(&PASSWORD_CONFIG);
