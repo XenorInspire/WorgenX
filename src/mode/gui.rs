@@ -347,11 +347,10 @@ fn main_benchmark() {
     while again.eq("y") {
         println!("The benchmark will start in 5 seconds...");
         thread::sleep(std::time::Duration::from_secs(5));
-        let result = benchmark::load_cpu_benchmark(num_cpus::get_physical() as u64);
-        match result {
+        match benchmark::load_cpu_benchmark(num_cpus::get_physical() as u64) {
             Ok(nb_of_passwords) => {
                 println!(
-                    "The number of passwords generated in 60 seconds is : {}",
+                    "Your CPU has generated {} passwords in 1 minute",
                     nb_of_passwords
                 );
             }
