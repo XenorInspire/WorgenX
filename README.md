@@ -7,7 +7,7 @@ You can generate efficient wordlists with a custom mask and charset, generate ra
 
 
 > [!NOTE]  
->This projects starts from a fork of <a href="https://github.com/XenorInspire/WorgenX">the original project</a>, but the code has been completely rewritten in Rust, and the functionalities have been seriously improved.
+>This projects starts from a fork of <a href="https://github.com/XenorInspire/WorgenX-old">the original project</a>, but the code has been completely rewritten in Rust, and the functionalities have been seriously improved.
 
 ## Features
 
