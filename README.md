@@ -1,46 +1,146 @@
 # WorgenX
 
-WorgenX is a powerful Rust wordlist generator with many functionalities. You can use it in CLI or GUI mode.<br> 
-This is a fully rewritten Rust version of <a href="https://github.com/XenorInspire/WorgenX">WorgenX</a>, initially developed in C code.
+WorgenX is a powerful Rust wordlist generator with many functionalities.<br>
+You can generate efficient wordlists with a custom mask and charset, generate random passwords with a strong entropy, and benchmark the performance of your CPU.
 
-# Installation
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-In a directory of your choice copy the repository :  
-`git clone https://github.com/XenorInspire/WorgenX-2.0.git`<br> 
-`git clone https://gitlab.com/XenorInspire/WorgenX-2.0.git`<br> 
-<br> 
-Move in the directory :  
-`cd WorgenX-2.0/`
 
-### Compile WorgenX :
-  
+> [!NOTE]  
+>This projects starts from a fork of <a href="https://github.com/XenorInspire/WorgenX">the original project</a>, but the code has been completely rewritten in Rust, and the functionalities have been seriously improved.
 
-# Start WorgenX
+## Features
+
+- [x] Generate a relevant wordlist with a custom mask and charset
+- [x] Generate a list of random passwords with a strong entropy
+- [x] Benchmark the performance of your CPU
+- [ ] Benchmark the performance of your GPU (not available yet)
+- [ ] Generate a relevant wordlist with a custom mask and charset, using hash algorithms like MD5, SHA1, SHA256, SHA512, etc. (not available yet)
+
+
+## Installation
+
+
+### Install the packaged versions
+
+Download the latest version of WorgenX from the [releases page](https://github.com/XenorInspire/WorgenX-2.0/releases) corresponding to your operating system and your CPU architecture.
+
+#### For Debian-based systems (like Ubuntu) :
+
+```
+sudo apt install ./worgenx_<version>_<arch>.deb
+```
+
+#### For RedHat-based systems (like Fedora) :
+
+```
+sudo dnf install ./worgenx_<version>_<arch>.rpm
+```
 
 #### For Windows :
 
-Exit the compilator folder and start *WorgenX.exe*.
+Just download the .exe file and execute it. You can also add the path to the environment variables to use it in the command line.
 
-#### For Linux/MacOS :
+### Install from the source code
 
-Exit the compilator folder and execute WorgenX :
-`cd .. && ./WorgenX`
+First, if you don't have rustup installed, you can install it by following the instructions on the official website : [rustup.rs](https://rustup.rs/)
+
+#### Choose a directory and clone the repository :  
+```
+git clone https://github.com/XenorInspire/WorgenX-2.0.git
+```
+Move in the directory :  
+```
+cd WorgenX-2.0/
+```
+#### Compile the project :
+
+For CLI version : 
+```
+cargo build --release --features cli
+```
+
+For GUI version : 
+```
+cargo build --release --features gui
+```
+
+The binary will be in the 'target/release/' directory.
+
+## Use WorgenX
+
+### In CLI mode :
+
+```
+worgenX <command> [options]
+```
+
+Use the '-h' or '--help' argument to display the help menu :
+
+```
+$ worgenX --help
+
+Usage: worgenX <command> [options]
+Commands:
+  -w, --wordlist        Generate a wordlist
+  -p, --passwd          Generate random password(s)
+  -b, --benchmark       CPU Benchmark
+  -v, --version         Display the version of WorgenX
+  -h, --help            Display this help message
 
 
-# Configuration
+You can find below the options for the main features of WorgenX:
 
-There is several parameters in the configuration file of WorgenX : 
+  --- Wordlist generation ---
+  You must specify at least one of the following options: -l, -u, -n, -s
+    -l, --lowercase                     Add lowercase characters to the words
+    -u, --uppercase                     Add uppercase characters to the words
+    -n, --numbers                       Add numbers to the words
+    -x, --special-characters            Add special characters to the words
 
-Parameter | Description |
---- | --- |
-MODE | There are 3 performance levels for WorgenX : 1 (LOW), 2 (MEDIUM) and 3 (HIGH). <br>More the value is high, more WorgenX use CPU performances.
+  This parameter is mandatory:
+    -m <mask>, --mask <mask>            Mask used to generate the words
+    -o <path>, --output <path>          Save the wordlist in a text file
 
+  The following options are optional:
+    -d, --disable-loading-bar           Disable the loading bar when generating the wordlist
+    -t <threads>, --threads <threads>   Number of threads to use to generate the passwords
+                                        By default, the number of threads is based on the number of physical cores of the CPU
 
+  --- Password generation ---
+  You must specify at least one of the following options: -l, -u, -n, -s
+    -l, --lowercase                     Add lowercase characters to the words
+    -u, --uppercase                     Add uppercase characters to the words
+    -n, --numbers                       Add numbers to the words
+    -x, --special-characters            Add special characters to the words
+
+  These parameters are mandatory:
+    -s <size>, --size <size>            Size of the passwords in characters
+    -c <count>, --count <count>         Number of passwords to generate
+
+  The following options are optional:
+    -o <path>, --output <path>          Save the passwords in a file
+    -O <path>, --output-only <path>     Save the passwords only in a file, not in stdout
+    -j, --json                          Output in JSON format
+                                        Combine with -o to save the json output in a file
+
+  --- CPU Benchmark ---
+  The following option is optional:
+    -t <threads>, --threads <threads>   Number of threads to use for the CPU benchmark
+                                        By default, the number of threads is based on the number of physical cores of the CPU
+
+```
+
+### In GUI mode :
+
+Just start worgenX_gui :
+```bash
+$ worgenX_gui
+```
 
 # Mirrors
 
 - <a href="https://github.com/XenorInspire/WorgenX-2.0">Github</a>
-- <a href="https://gitlab.com/XenorInspire/WorgenX-2.0">Gitlab</a>
 
 # Licence
 

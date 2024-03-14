@@ -1,0 +1,17 @@
+[package]
+name = "worgen_x"
+version = "1.0.0"
+edition = "2021"
+authors = ["Xen0rInspire"]
+license = "GNU General Public License v3.0"
+
+[features]
+cli = ["serde_json"]
+gui = []
+
+[dependencies]
+rand = "0.8.5"
+thiserror = "1.0.58"
+num_cpus = "1.16.0"
+serde_json = { version = "1.0.114", optional = true }
+indicatif = "0.17.8"
