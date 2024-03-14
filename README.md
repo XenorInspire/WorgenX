@@ -7,7 +7,7 @@ You can generate efficient wordlists with a custom mask and charset, generate ra
 
 
 > [!NOTE]  
->This projects starts from a fork of <a href="https://github.com/XenorInspire/WorgenX-old">the original project</a>, but the code has been completely rewritten in Rust, and the functionalities have been seriously improved.
+> This projects starts from a fork of <a href="https://github.com/XenorInspire/WorgenX-old">the original project</a>, but the code has been completely rewritten in Rust, and the functionalities have been seriously improved.
 
 ## Features
 
@@ -47,11 +47,11 @@ First, if you don't have rustup installed, you can install it by following the i
 
 #### Choose a directory and clone the repository :  
 ```
-git clone https://github.com/XenorInspire/WorgenX-2.0.git
+git clone https://github.com/XenorInspire/WorgenX.git
 ```
 Move in the directory :  
 ```
-cd WorgenX-2.0/
+cd WorgenX/
 ```
 #### Compile the project :
 
