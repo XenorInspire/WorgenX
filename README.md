@@ -140,7 +140,8 @@ $ worgenX_gui
 
 # Mirrors
 
-- <a href="https://github.com/XenorInspire/WorgenX-2.0">Github</a>
+- <a href="https://github.com/XenorInspire/WorgenX">Github</a>
+- <a href="https://gitlab.com/XenorInspire/WorgenX">Gitlab</a>
 
 # Licence
 
