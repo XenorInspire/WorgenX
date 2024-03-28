@@ -21,7 +21,7 @@ You can generate efficient wordlists with a custom mask and charset, generate ra
 ## Installation
 
 
-### Install the packaged versions
+### Install the packaged version
 
 Download the latest version of WorgenX from [the release page](https://github.com/XenorInspire/WorgenX/releases) corresponding to your operating system and your CPU architecture.
 
