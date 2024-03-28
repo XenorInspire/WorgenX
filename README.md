@@ -1,9 +1,13 @@
-# WorgenX-2.0
+# WorgenX
 
-WorgenX-2.0 is a powerful Rust wordlist generator with many functionalities.<br>
+WorgenX is a powerful Rust wordlist generator with many functionalities.<br>
+You can generate efficient wordlists with a custom mask and charset, generate random passwords with a strong entropy, and benchmark the performance of your CPU.
+
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+
+
 > [!NOTE]  
-> This project is a fully rewritten Rust version of <a href="https://github.com/XenorInspire/WorgenX">WorgenX</a>, initially developed in C code.
-
+> This project starts from a fork of <a href="https://github.com/XenorInspire/WorgenX-old">the original project</a>, but the code has been completely rewritten in Rust, and the functionalities have been seriously improved.
 
 ## Features
 
@@ -17,9 +21,9 @@ WorgenX-2.0 is a powerful Rust wordlist generator with many functionalities.<br>
 ## Installation
 
 
-### Install the packaged versions
+### Install the packaged version
 
-Download the latest version of WorgenX from the [releases page](https://github.com/XenorInspire/WorgenX-2.0/releases) corresponding to your operating system and your CPU architecture.
+Download the latest version of WorgenX from [the release page](https://github.com/XenorInspire/WorgenX/releases) corresponding to your operating system and your CPU architecture.
 
 #### For Debian-based systems (like Ubuntu) :
 
@@ -43,11 +47,11 @@ First, if you don't have rustup installed, you can install it by following the i
 
 #### Choose a directory and clone the repository :  
 ```
-git clone https://github.com/XenorInspire/WorgenX-2.0.git
+git clone https://github.com/XenorInspire/WorgenX.git
 ```
 Move in the directory :  
 ```
-cd WorgenX-2.0/
+cd WorgenX/
 ```
 #### Compile the project :
 
@@ -94,7 +98,7 @@ You can find below the options for the main features of WorgenX:
     -n, --numbers                       Add numbers to the words
     -x, --special-characters            Add special characters to the words
 
-  This parameter is mandatory:
+  These parameters are mandatory:
     -m <mask>, --mask <mask>            Mask used to generate the words
     -o <path>, --output <path>          Save the wordlist in a text file
 
@@ -136,7 +140,8 @@ $ worgenX_gui
 
 # Mirrors
 
-- <a href="https://github.com/XenorInspire/WorgenX-2.0">Github</a>
+- <a href="https://github.com/XenorInspire/WorgenX">Github</a>
+- <a href="https://gitlab.com/XenorInspire/WorgenX">Gitlab</a>
 
 # Licence
 
