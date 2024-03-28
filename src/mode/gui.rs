@@ -405,6 +405,7 @@ pub fn saving_procedure(target: &str) -> Result<(File, String), SystemError> {
     let file = match OpenOptions::new()
         .write(true)
         .create(true)
+        .truncate(true)
         .open(filename.clone())
     {
         Ok(file) => file,
