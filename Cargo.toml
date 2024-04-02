@@ -1,6 +1,6 @@
 [package]
 name = "worgen_x"
-version = "1.0.0"
+version = "1.0.1"
 edition = "2021"
 authors = ["Xen0rInspire"]
 license = "GNU General Public License v3.0"
