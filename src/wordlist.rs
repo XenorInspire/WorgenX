@@ -162,7 +162,12 @@ pub fn wordlist_generation_scheduler(
     let dict_size = wordlist_config.dict.len();
     let shared_dict = Arc::new(wordlist_config.dict.clone());
 
-    let file = match OpenOptions::new().write(true).create(true).open(file_path) {
+    let file = match OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .open(file_path)
+    {
         Ok(file) => file,
         Err(_) => {
             return Err(WorgenXError::SystemError(SystemError::UnableToCreateFile(

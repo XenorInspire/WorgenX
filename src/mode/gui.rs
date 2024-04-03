@@ -256,6 +256,7 @@ fn main_wordlist_generation() {
             "\nWordlist generated in {}",
             system::get_elapsed_time(start)
         );
+        println!("The wordlist has been saved in the file : {}", filename);
 
         println!("\nDo you want to generate another wordlist ? (y/n)");
         again = system::get_user_choice_yn();
@@ -310,7 +311,7 @@ fn allocate_wordlist_config_gui() -> WordlistValues {
         }
     }
 
-    println!("Enter the mask of the wordlist :");
+    println!("\nEnter the mask of the wordlist :");
     println!("For every character you want to be fixed, enter the character itself.");
     println!("For every character you want to be variable, enter a ?.");
     println!("If you want to specify the character '?' in the mask as a fixed character, enter '\\?'");
@@ -405,6 +406,7 @@ pub fn saving_procedure(target: &str) -> Result<(File, String), SystemError> {
     let file = match OpenOptions::new()
         .write(true)
         .create(true)
+        .truncate(true)
         .open(filename.clone())
     {
         Ok(file) => file,

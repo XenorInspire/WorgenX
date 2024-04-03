@@ -134,6 +134,7 @@ fn run_passwd(args: &[String]) -> Result<(), WorgenXError> {
                 let file = match OpenOptions::new()
                     .write(true)
                     .create(true)
+                    .truncate(true)
                     .open(password_generation_parameters.output_file.clone())
                 {
                     Ok(file) => file,
@@ -707,7 +708,7 @@ fn display_help() {
     println!("    -u, --uppercase\t\t\tAdd uppercase characters to the words");
     println!("    -n, --numbers\t\t\tAdd numbers to the words");
     println!("    -x, --special-characters\t\tAdd special characters to the words");
-    println!("\n  This parameter is mandatory:");
+    println!("\n  These parameters are mandatory:");
     println!("    -m <mask>, --mask <mask>\t\tMask used to generate the words");
     println!("    -o <path>, --output <path>\t\tSave the wordlist in a text file");
     println!("\n  The following options are optional:");
