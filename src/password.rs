@@ -11,7 +11,7 @@ pub struct PasswordConfig {
     pub special_characters: bool,
     pub uppercase: bool,
     pub lowercase: bool,
-    pub length: u64,
+    pub length: u32,
     pub number_of_passwords: u64,
 }
 

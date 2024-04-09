@@ -10,7 +10,11 @@ use crate::{
 
 // External crates
 use std::{
+    cmp::PartialEq,
+    default::Default,
+    fmt::Display,
     fs::OpenOptions,
+    str::FromStr,
     sync::{mpsc, Arc, Mutex},
     thread,
     time::Instant,
@@ -31,13 +35,13 @@ struct WordlistGenerationOptions {
     wordlist_values: WordlistValues,
     output_file: String,
     no_loading_bar: bool,
-    threads: u64,
+    threads: u8,
 }
 
 /// This struct is built from the arguments for the benchmark feature
 ///
 struct BenchmarkOptions {
-    threads: u64,
+    threads: u8,
 }
 
 /// This function is charged to schedule in CLI mode the execution of the different features of the program
@@ -207,7 +211,7 @@ fn allocate_passwd_config_cli(args: &[String]) -> Result<PasswordGenerationOptio
             }
             "-s" | "--size" => {
                 if i + 1 < args.len() {
-                    match check_numerical_value(&args[i + 1], "-s or --size") {
+                    match check_numerical_value(&args[i + 1], "-s or --size", u32::MAX) {
                         Ok(value) => {
                             password_config.length = value;
                         }
@@ -225,7 +229,7 @@ fn allocate_passwd_config_cli(args: &[String]) -> Result<PasswordGenerationOptio
             }
             "-c" | "--count" => {
                 if i + 1 < args.len() {
-                    match check_numerical_value(&args[i + 1], "-c or --count") {
+                    match check_numerical_value(&args[i + 1], "-c or --count", u64::MAX) {
                         Ok(value) => {
                             password_config.number_of_passwords = value;
                         }
@@ -432,7 +436,7 @@ fn allocate_wordlist_config_cli(
     let mut output_file = String::new();
     let mut no_loading_bar = false;
     let mut skip = false;
-    let mut threads = num_cpus::get_physical() as u64;
+    let mut threads = num_cpus::get_physical() as u8;
     let mut wordlist_values = WordlistValues {
         numbers: false,
         special_characters: false,
@@ -498,7 +502,7 @@ fn allocate_wordlist_config_cli(
             }
             "-t" | "--threads" => {
                 if i + 1 < args.len() {
-                    match check_numerical_value(&args[i + 1], "-t or --threads") {
+                    match check_numerical_value(&args[i + 1], "-t or --threads", u8::MAX) {
                         Ok(value) => {
                             threads = value;
                         }
@@ -595,7 +599,7 @@ fn run_benchmark(args: &[String]) -> Result<(), WorgenXError> {
 /// BenchmarkOptions containing the benchmark configuration or WorgenXError if an error occurs
 ///
 fn allocate_benchmark_config_cli(args: &[String]) -> Result<BenchmarkOptions, WorgenXError> {
-    let mut threads = num_cpus::get_physical() as u64;
+    let mut threads = num_cpus::get_physical() as u8;
     let mut skip = false;
 
     for i in 2..args.len() {
@@ -606,7 +610,7 @@ fn allocate_benchmark_config_cli(args: &[String]) -> Result<BenchmarkOptions, Wo
         match args[i].as_str() {
             "-t" | "--threads" => {
                 if i + 1 < args.len() {
-                    match check_numerical_value(&args[i + 1], "-t or --threads") {
+                    match check_numerical_value(&args[i + 1], "-t or --threads", u8::MAX) {
                         Ok(value) => {
                             threads = value;
                         }
@@ -656,36 +660,43 @@ fn check_output_arg(path: &str, arg: &str) -> Result<String, WorgenXError> {
     }
 }
 
-/// This function is charged to check a numerical value for the 'size' and 'count' arguments
+/// This function is charged to check a value for the numerical arguments
 ///
 /// # Arguments
 ///
 /// * `value` - The value to check
 /// * `arg` - The argument name
+/// * `max` - The maximum value for the argument
 ///
 /// # Returns
 ///
 /// Ok if the value is valid, WorgenXError otherwise
 ///
-fn check_numerical_value(value: &str, arg: &str) -> Result<u64, WorgenXError> {
+fn check_numerical_value<T>(value: &str, arg: &str, max: T) -> Result<T, WorgenXError>
+where
+    T: FromStr + Display + Default + PartialEq,
+{
     if value.starts_with('-') {
         return Err(WorgenXError::ArgError(ArgError::MissingValue(
             arg.to_string(),
         )));
     }
-    match value.parse::<u64>() {
-        Ok(value) => {
-            if value == 0 {
+    match value.parse::<T>() {
+        Ok(n) => {
+            if n == T::default() {
                 return Err(WorgenXError::ArgError(ArgError::InvalidNumericalValue(
                     value.to_string(),
                     arg.to_string(),
+                    max.to_string(),
                 )));
             }
-            Ok(value)
+
+            Ok(n)
         }
         Err(_) => Err(WorgenXError::ArgError(ArgError::InvalidNumericalValue(
             value.to_string(),
             arg.to_string(),
+            max.to_string(),
         ))),
     }
 }

@@ -4,7 +4,7 @@ use crate::error::{SystemError, WorgenXError};
 // Extern crates
 use indicatif::{ProgressBar, ProgressStyle};
 #[cfg(feature = "gui")]
-use std::io::stdin;
+use std::{cmp::PartialOrd, default::Default, fmt::Display, io::stdin, marker::Copy, str::FromStr};
 use std::{
     fs::File,
     io::Write,
@@ -71,9 +71,13 @@ pub fn get_user_choice() -> String {
 /// The value entered by the user. If an error occurs, the function returns 0
 ///
 #[cfg(feature = "gui")]
-pub fn get_user_choice_int() -> u64 {
+pub fn get_user_choice_int<T>() -> T
+where
+    T: FromStr + Display + PartialOrd + Copy + Default,
+    <T as FromStr>::Err: Display,
+{
     let mut is_good_number = false;
-    let mut number: u64 = 0;
+    let mut number: T = T::default();
 
     while !is_good_number {
         let choice = get_user_choice();
@@ -81,16 +85,16 @@ pub fn get_user_choice_int() -> u64 {
             println!("Please enter a valid number greater than 0");
             continue;
         }
-        match choice.trim().parse::<u64>() {
+        match choice.trim().parse::<T>() {
             Ok(n) => {
-                if n > 0 {
+                if n > T::default() {
                     is_good_number = true;
                     number = n;
                 } else {
                     println!("Please enter a valid number greater than 0");
                 }
             }
-            Err(_e) => println!("Please enter a valid number greater than 0, {}", _e),
+            Err(e) => println!("Please enter a valid number greater than 0, {}", e),
         }
     }
 

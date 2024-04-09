@@ -227,7 +227,7 @@ fn main_wordlist_generation() {
         match wordlist::wordlist_generation_scheduler(
             &wordlist_config,
             nb_of_passwd,
-            num_cpus::get_physical() as u64,
+            num_cpus::get_physical() as u8,
             filename.as_str(),
             &tx,
         ) {
@@ -348,7 +348,7 @@ fn main_benchmark() {
     while again.eq("y") {
         println!("The benchmark will start in 5 seconds...");
         thread::sleep(std::time::Duration::from_secs(5));
-        match benchmark::load_cpu_benchmark(num_cpus::get_physical() as u64) {
+        match benchmark::load_cpu_benchmark(num_cpus::get_physical() as u8) {
             Ok(nb_of_passwords) => {
                 println!(
                     "Your CPU has generated {} passwords in 1 minute",

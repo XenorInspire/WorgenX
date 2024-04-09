@@ -135,7 +135,7 @@ pub fn build_wordlist_config(wordlist_values: &WordlistValues) -> WordlistConfig
     }
 }
 
-/// This function is charged to schedule the wordlist generation (WIP)
+/// This function is charged to schedule the wordlist generation
 ///
 /// # Arguments
 ///
@@ -153,7 +153,7 @@ pub fn build_wordlist_config(wordlist_values: &WordlistValues) -> WordlistConfig
 pub fn wordlist_generation_scheduler(
     wordlist_config: &WordlistConfig,
     nb_of_passwords: u64,
-    nb_of_threads: u64,
+    nb_of_threads: u8,
     file_path: &str,
     tx: &Sender<Result<u64, WorgenXError>>,
 ) -> Result<(), WorgenXError> {
@@ -180,9 +180,9 @@ pub fn wordlist_generation_scheduler(
 
     let mut threads: Vec<JoinHandle<()>> = Vec::new();
     let dict_indexes: Vec<usize> = vec![0; wordlist_config.mask_indexes.len()];
-    let mut nb_of_passwd_per_thread = nb_of_passwords / nb_of_threads;
-    let nb_of_passwd_last_thread = nb_of_passwd_per_thread + nb_of_passwords % nb_of_threads;
-    let mut temp = dict_indexes.clone();
+    let mut nb_of_passwd_per_thread: u64 = nb_of_passwords / nb_of_threads as u64;
+    let nb_of_passwd_last_thread: u64 = nb_of_passwd_per_thread + nb_of_passwords % nb_of_threads as u64;
+    let mut temp: Vec<usize> = dict_indexes.clone();
 
     for i in 0..nb_of_threads {
         if i == nb_of_threads - 1 {
