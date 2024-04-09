@@ -259,7 +259,7 @@ pub fn get_elapsed_time(start_time: Instant) -> String {
 ///
 /// # Arguments
 ///
-/// * `file` - The file to write to, wrapped in an Arc<Mutex<File>>
+/// * `file` - The file to write to, wrapped in an `Arc<Mutex<File>>`
 /// * `passwords` - The passwords to write
 ///
 /// # Returns

@@ -243,7 +243,7 @@ pub fn wordlist_generation_scheduler(
 /// * `formated_mask` - The final mask
 /// * `mask_indexes` - The indexes of the mask
 /// * `dict` - The dictionary
-/// * `file` - The file to write to, wrapped in an Arc<Mutex<File>>
+/// * `file` - The file to write to, wrapped in an `Arc<Mutex<File>>`
 /// * `tx` - The channel sender for the progress bar and/or errors
 ///
 fn generate_wordlist_part(
