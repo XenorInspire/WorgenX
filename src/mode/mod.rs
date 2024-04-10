@@ -1,6 +1,6 @@
-// ADD cli.rs and gui.rs imports
+/// ADD CLI and GUI modules here
 #[cfg(feature = "cli")]
-pub(crate) mod cli;
+pub mod cli;
 
 #[cfg(feature = "gui")]
-pub(crate) mod gui;
+pub mod gui;

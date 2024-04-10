@@ -13,14 +13,14 @@ use std::{
     cmp::PartialEq,
     default::Default,
     fmt::Display,
-    fs::OpenOptions,
+    fs::{File, OpenOptions},
     str::FromStr,
     sync::{mpsc, Arc, Mutex},
-    thread,
+    thread::{self, JoinHandle},
     time::Instant,
 };
 
-/// This struct is built from PasswordConfig and optional arguments will be used to generate the random password
+/// This struct is built from PasswordConfig and optional arguments will be used to generate the random password.
 ///
 struct PasswordGenerationOptions {
     password_config: PasswordConfig,
@@ -29,7 +29,7 @@ struct PasswordGenerationOptions {
     no_display: bool,
 }
 
-/// This struct is built from WordlistValues and optional arguments will be used to generate the wordlist
+/// This struct is built from WordlistValues and optional arguments will be used to generate the wordlist.
 ///
 struct WordlistGenerationOptions {
     wordlist_values: WordlistValues,
@@ -38,21 +38,20 @@ struct WordlistGenerationOptions {
     threads: u8,
 }
 
-/// This struct is built from the arguments for the benchmark feature
+/// This struct is built from the arguments for the benchmark feature.
 ///
 struct BenchmarkOptions {
     threads: u8,
 }
 
-/// This function is charged to schedule in CLI mode the execution of the different features of the program
-/// according to the user's choices
+/// This function is charged to schedule in CLI mode the execution of the different features of the program according to the user's choices.
 ///
 /// # Returns
 ///
-/// Ok if the program has been executed, WorgenXError otherwise
+/// Ok if the program has been executed, WorgenXError otherwise.
 ///
 pub fn run() -> Result<(), WorgenXError> {
-    let args = std::env::args().collect::<Vec<String>>();
+    let args: Vec<String> = std::env::args().collect::<Vec<String>>();
     if args.len() < 2 {
         return Err(WorgenXError::ArgError(ArgError::NoArgument));
     }
@@ -105,20 +104,20 @@ pub fn run() -> Result<(), WorgenXError> {
     Ok(())
 }
 
-/// This function is charged to schedule the execution of the random password generation feature of the program
+/// This function is charged to schedule the execution of the random password generation feature of the program.
 ///
 /// # Arguments
 ///
-/// * `args` - A vector of String containing the arguments passed to the program
+/// * `args` - A vector of String containing the arguments passed to the program.
 ///
 /// # Returns
 ///
-/// Ok if the password has been generated, WorgenXError otherwise
+/// Ok if the password has been generated, WorgenXError otherwise.
 ///
 fn run_passwd(args: &[String]) -> Result<(), WorgenXError> {
     match allocate_passwd_config_cli(args) {
         Ok(password_generation_parameters) => {
-            let passwords = password::generate_random_passwords(
+            let passwords: Vec<String> = password::generate_random_passwords(
                 &password_generation_parameters.password_config,
             );
             let all_passwords: String = if password_generation_parameters.json {
@@ -135,7 +134,7 @@ fn run_passwd(args: &[String]) -> Result<(), WorgenXError> {
             }
 
             if !password_generation_parameters.output_file.is_empty() {
-                let file = match OpenOptions::new()
+                let file: File = match OpenOptions::new()
                     .write(true)
                     .create(true)
                     .truncate(true)
@@ -149,7 +148,7 @@ fn run_passwd(args: &[String]) -> Result<(), WorgenXError> {
                         )))
                     }
                 };
-                let shared_file = Arc::new(Mutex::new(file));
+                let shared_file: Arc<Mutex<File>> = Arc::new(Mutex::new(file));
                 match system::save_passwd_to_file(shared_file, all_passwords) {
                     Ok(_) => (),
                     Err(e) => {
@@ -165,24 +164,24 @@ fn run_passwd(args: &[String]) -> Result<(), WorgenXError> {
     }
 }
 
-/// This function is charged to check the syntax of the arguments passed to the program for the random password generation feature
-/// This function is called only if the user specifies the -p or --passwd argument
+/// This function is charged to check the syntax of the arguments passed to the program for the random password generation feature.
+/// This function is called only if the user specifies the -p or --passwd argument.
 ///
 /// # Arguments
 ///
-/// * `args` - A vector of String containing the arguments passed to the program
+/// * `args` - A vector of String containing the arguments passed to the program.
 ///
 /// # Returns
 ///
-/// PasswordGenerationOptions containing the password configuration and optional arguments or WorgenXError if an error occurs
+/// PasswordGenerationOptions containing the password configuration and optional arguments, WorgenXError otherwise.
 ///
 fn allocate_passwd_config_cli(args: &[String]) -> Result<PasswordGenerationOptions, WorgenXError> {
-    let mut output_file = String::new();
-    let mut json = false;
-    let mut no_display = false;
-    let mut skip = false;
-    let mut one_path = false;
-    let mut password_config = PasswordConfig {
+    let mut output_file: String = String::new();
+    let mut json: bool = false;
+    let mut no_display: bool = false;
+    let mut skip: bool = false;
+    let mut one_path: bool = false;
+    let mut password_config: PasswordConfig = PasswordConfig {
         numbers: false,
         special_characters: false,
         uppercase: false,
@@ -333,15 +332,15 @@ fn allocate_passwd_config_cli(args: &[String]) -> Result<PasswordGenerationOptio
     })
 }
 
-/// This function is charged to schedule the execution of the wordlist generation feature of the program
+/// This function is charged to schedule the execution of the wordlist generation feature of the program.
 ///
 /// # Arguments
 ///
-/// * `args` - A vector of String containing the arguments passed to the program
+/// * `args` - A vector of String containing the arguments passed to the program.
 ///
 /// # Returns
 ///
-/// Ok if the wordlist has been generated, WorgenXError otherwise
+/// Ok if the wordlist has been generated, WorgenXError otherwise.
 ///
 fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
     match allocate_wordlist_config_cli(args) {
@@ -349,16 +348,17 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
             let wordlist_config =
                 wordlist::build_wordlist_config(&wordlist_generation_parameters.wordlist_values);
             // nb of passwd = pow(dict.len(), nb of '?')
-            let nb_of_passwd = wordlist_config
+            let nb_of_passwd: u64 = wordlist_config
                 .dict
                 .len()
                 .pow(wordlist_config.mask_indexes.len() as u32)
                 as u64;
             let (tx, rx) = mpsc::channel::<Result<u64, WorgenXError>>();
-            let pb = Arc::new(Mutex::new(system::get_progress_bar()));
-            let pb_clone = Arc::clone(&pb);
-            let main_thread = thread::spawn(move || {
-                let mut current_value = 0;
+            let pb: Arc<Mutex<indicatif::ProgressBar>> =
+                Arc::new(Mutex::new(system::get_progress_bar()));
+            let pb_clone: Arc<Mutex<indicatif::ProgressBar>> = Arc::clone(&pb);
+            let main_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
+                let mut current_value: u64 = 0;
                 println!("Wordlist generation in progress...");
                 for received in rx {
                     match received {
@@ -383,7 +383,7 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
                 Ok(())
             });
 
-            let start = Instant::now();
+            let start: Instant = Instant::now();
             match wordlist::wordlist_generation_scheduler(
                 &wordlist_config,
                 nb_of_passwd,
@@ -418,26 +418,25 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
     }
 }
 
-/// This function is charged to check the syntax of the arguments passed to the program
-/// It does not check the values of the arguments
-/// This function is called only if the user specifies the -w or --wordlist argument
+/// This function is charged to check the syntax of the arguments passed to the program.
+/// This function is called only if the user specifies the -w or --wordlist argument.
 ///
 /// # Arguments
 ///
-/// * `args` - A vector of String containing the arguments passed to the program
+/// * `args` - A vector of String containing the arguments passed to the program.
 ///
 /// # Returns
 ///
-/// WordlistGenerationOptions containing the wordlist configuration and optional arguments or WorgenXError if an error occurs
+/// WordlistGenerationOptions containing the wordlist configuration and optional arguments, WorgenXError otherwise.
 ///
 fn allocate_wordlist_config_cli(
     args: &[String],
 ) -> Result<WordlistGenerationOptions, WorgenXError> {
-    let mut output_file = String::new();
-    let mut no_loading_bar = false;
-    let mut skip = false;
-    let mut threads = num_cpus::get_physical() as u8;
-    let mut wordlist_values = WordlistValues {
+    let mut output_file: String = String::new();
+    let mut no_loading_bar: bool = false;
+    let mut skip: bool = false;
+    let mut threads: u8 = num_cpus::get_physical() as u8;
+    let mut wordlist_values: WordlistValues = WordlistValues {
         numbers: false,
         special_characters: false,
         uppercase: false,
@@ -560,17 +559,18 @@ fn allocate_wordlist_config_cli(
     })
 }
 
-/// This function is charged to schedule the execution of the benchmark feature of the program
-/// It will display the number of passwords generated in 1 minute
-/// The benchmark is based on the generation of random passwords
+/// This function is charged to schedule the execution of the benchmark feature of the program.
+/// It will display the number of passwords generated in 1 minute.
+/// The benchmark is based on the generation of random passwords.
+/// The profile used for the benchmark is defined in the benchmark module (PASSWORD_CONFIG constant).
 ///
 /// # Arguments
 ///
-/// * `args` - A vector of String containing the arguments passed to the program
+/// * `args` - A vector of String containing the arguments passed to the program.
 ///
 /// # Returns
 ///
-/// Ok if the benchmark has been executed, WorgenXError otherwise
+/// Ok if the benchmark has been executed, WorgenXError otherwise.
 ///
 fn run_benchmark(args: &[String]) -> Result<(), WorgenXError> {
     match allocate_benchmark_config_cli(args) {
@@ -587,20 +587,20 @@ fn run_benchmark(args: &[String]) -> Result<(), WorgenXError> {
     }
 }
 
-/// This function is charged to check the syntax of the arguments passed to the program for the benchmark feature
-/// This function is called only if the user specifies the -b or --benchmark argument
+/// This function is charged to check the syntax of the arguments passed to the program for the benchmark feature.
+/// This function is called only if the user specifies the -b or --benchmark argument.
 ///
 /// # Arguments
 ///
-/// * `args` - A vector of String containing the arguments passed to the program
+/// * `args` - A vector of String containing the arguments passed to the program.
 ///
 /// # Returns
 ///
-/// BenchmarkOptions containing the benchmark configuration or WorgenXError if an error occurs
+/// BenchmarkOptions containing the benchmark configuration, WorgenXError otherwise.
 ///
 fn allocate_benchmark_config_cli(args: &[String]) -> Result<BenchmarkOptions, WorgenXError> {
-    let mut threads = num_cpus::get_physical() as u8;
-    let mut skip = false;
+    let mut threads: u8 = num_cpus::get_physical() as u8;
+    let mut skip: bool = false;
 
     for i in 2..args.len() {
         if skip {
@@ -637,16 +637,16 @@ fn allocate_benchmark_config_cli(args: &[String]) -> Result<BenchmarkOptions, Wo
     Ok(BenchmarkOptions { threads })
 }
 
-/// This function is charged to check path for the 'output' arguments
+/// This function is charged to check path for the 'output' arguments, if it's a valid path on the system.
 ///
 /// # Arguments
 ///
-/// * `path` - The path to check
-/// * `arg` - The argument name
+/// * `path` - The path to check.
+/// * `arg` - The argument name.
 ///
 /// # Returns
 ///
-/// Ok if the path is valid, WorgenXError otherwise
+/// Ok if the path is valid, WorgenXError otherwise.
 ///
 fn check_output_arg(path: &str, arg: &str) -> Result<String, WorgenXError> {
     if path.starts_with('-') {
@@ -660,17 +660,18 @@ fn check_output_arg(path: &str, arg: &str) -> Result<String, WorgenXError> {
     }
 }
 
-/// This function is charged to check a value for the numerical arguments
+/// This function is charged to check a value for the numerical arguments.
+/// This is a generic function that can be used for all numerical types.
 ///
 /// # Arguments
 ///
-/// * `value` - The value to check
-/// * `arg` - The argument name
-/// * `max` - The maximum value for the argument
+/// * `value` - The value to check.
+/// * `arg` - The argument name.
+/// * `max` - The maximum value for the argument.
 ///
 /// # Returns
 ///
-/// Ok if the value is valid, WorgenXError otherwise
+/// Ok if the value is valid, WorgenXError otherwise.
 ///
 fn check_numerical_value<T>(value: &str, arg: &str, max: T) -> Result<T, WorgenXError>
 where
@@ -701,7 +702,7 @@ where
     }
 }
 
-/// This function is charged to display the help menu with all the features of WorgenX
+/// This function is charged to display the help menu with all the features of WorgenX and their options.
 ///
 fn display_help() {
     println!("Usage: worgenX <command> [options]");
