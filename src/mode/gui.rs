@@ -43,7 +43,7 @@ pub fn run() {
 /// This function is charged to display the header menu
 ///
 fn display_title() {
-    for _ in 0..30 {
+    for _ in 0..100 {
         print!("#");
     }
     println!();
@@ -52,15 +52,25 @@ fn display_title() {
 /// This function is charged to display the menu
 ///
 fn print_menu() {
+    print!("\x1B[2J\x1B[1;1H"); // Clear the screen
+    
     display_title();
-    println!("\n   WorgenX by Xen0rInspire \n");
+    println!(
+        r#"
+      __        __                        __  __  _            __  __           ___       
+      \ \      / /__  _ __ __ _  ___ _ __ \ \/ / | |__  _   _  \ \/ /___ _ __  / _ \ _ __ 
+       \ \ /\ / / _ \| '__/ _` |/ _ \ '_ \ \  /  | '_ \| | | |  \  // _ \ '_ \| | | | '__|
+        \ V  V / (_) | | | (_| |  __/ | | |/  \  | |_) | |_| |  /  \  __/ | | | |_| | |   
+         \_/\_/ \___/|_|  \__, |\___|_| |_/_/\_\ |_.__/ \__, | /_/\_\___|_| |_|\___/|_|   
+                          |___/                         |___/                             
+"#
+    );
     display_title();
 
-    print!("\n\n");
-    println!("1 : Create wordlist(s)");
+    println!("\n1 : Create wordlist(s)");
     println!("2 : Generate random password(s)");
     println!("3 : Benchmark CPU");
-    println!("0 : Exit WorgenX");
+    println!("0 : Exit WorgenX\n");
 }
 
 /// This is the main function of the random password generation feature
