@@ -1,4 +1,5 @@
 /// ADD CLI and GUI modules here
+///
 #[cfg(feature = "cli")]
 pub mod cli;
 

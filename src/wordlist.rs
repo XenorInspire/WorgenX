@@ -13,12 +13,12 @@ use std::{
     thread::{self, JoinHandle},
 };
 
-/// This constant is used to set the size of the buffer used to write the passwords in the file
-/// It specifies the maximum number of passwords that will be written in the file at once per thread
+/// This constant is used to set the size of the buffer used to write the passwords in the file.
+/// It specifies the maximum number of passwords that will be written in the file at once per thread.
 ///
 const BUFFER_SIZE: usize = 100000;
 
-/// This struct is built from the user's choices will be used to generate the wordlist
+/// This struct is built from the user's choices will be used to generate the wordlist.
 ///
 pub struct WordlistValues {
     pub numbers: bool,
@@ -28,7 +28,7 @@ pub struct WordlistValues {
     pub mask: String,
 }
 
-/// This struct is built from the WordlistValues struct and will be used to generate the wordlist
+/// This struct is built from the WordlistValues struct and will be used to generate the wordlist.
 ///
 pub struct WordlistConfig {
     pub dict: Vec<u8>,
@@ -36,16 +36,16 @@ pub struct WordlistConfig {
     pub formated_mask: Vec<char>,
 }
 
-/// This function is charged to build the final dictionary from the user's choices
-/// It returns a vector of u8 containing the characters that will be used to generate the wordlist
+/// This function is charged to build the final dictionary from the user's choices.
+/// It returns a vector of u8 containing the characters that will be used to generate the wordlist.
 ///
 /// # Arguments
 ///
-/// * `wordlist_values` - The struct containing the user's values
+/// * `wordlist_values` - The struct containing the user's values.
 ///
 /// # Returns
 ///
-/// The vector of u8 containing the characters that will be used to generate the wordlist
+/// The vector of u8 containing the characters that will be used to generate the wordlist.
 ///
 fn create_wordlist_content(wordlist_values: &WordlistValues) -> Vec<u8> {
     let mut final_dict: Vec<u8> = Vec::new();
@@ -69,21 +69,21 @@ fn create_wordlist_content(wordlist_values: &WordlistValues) -> Vec<u8> {
     final_dict
 }
 
-/// This function is charged to build to format the mask into a vector of char and indexes
-/// This will be used to generate the wordlist
+/// This function is charged to build to format the mask into a vector of char and indexes.
+/// This will be used to generate the wordlist.
 ///
 /// # Arguments
 ///
-/// * `mask` - The mask provided by the user
+/// * `mask` - The mask provided by the user.
 ///
 /// # Returns
 ///
-/// A tuple containing the vector of char (formated_mask) and the vector of indexes (mask_indexes)
+/// A tuple containing the vector of char (formated_mask) and the vector of indexes (mask_indexes).
 ///
 fn format_mask_to_indexes(mask: &str) -> (Vec<char>, Vec<usize>) {
     let mut mask_indexes: Vec<usize> = Vec::new();
     let mut formated_mask: Vec<char> = Vec::new();
-    let mut escaped = false;
+    let mut escaped: bool = false;
     let mut idx_formated_mask: usize = 0;
     for c in mask.chars() {
         match c {
@@ -115,15 +115,15 @@ fn format_mask_to_indexes(mask: &str) -> (Vec<char>, Vec<usize>) {
     (formated_mask, mask_indexes)
 }
 
-/// This function is charged to build the WordlistValues struct from the user's values
+/// This function is charged to build the WordlistValues struct from the user's values.
 ///
 /// # Arguments
 ///
-/// * `wordlist_values` - The struct containing the user's values
+/// * `wordlist_values` - The struct containing the user's values.
 ///
 /// # Returns
 ///
-/// The WordlistConfig struct containing the settings of the wordlist
+/// The WordlistConfig struct containing the settings of the wordlist.
 ///
 pub fn build_wordlist_config(wordlist_values: &WordlistValues) -> WordlistConfig {
     let dict: Vec<u8> = create_wordlist_content(wordlist_values);
@@ -135,20 +135,20 @@ pub fn build_wordlist_config(wordlist_values: &WordlistValues) -> WordlistConfig
     }
 }
 
-/// This function is charged to schedule the wordlist generation
+/// This function is charged to schedule the wordlist generation.
 ///
 /// # Arguments
 ///
-/// * `wordlist_config` - The WordlistConfig struct containing the settings of the wordlist
-/// * `wordlist_values` - The WordlistValues struct containing the user's values
-/// * `nb_of_passwords` - The number of passwords to generate
-/// * `nb_of_threads` - The number of threads to use
-/// * `tx` - The channel sender for the progress bar and/or errors
+/// * `wordlist_config` - The WordlistConfig struct containing the settings of the wordlist.
+/// * `wordlist_values` - The WordlistValues struct containing the user's values.
+/// * `nb_of_passwords` - The number of passwords to generate.
+/// * `nb_of_threads` - The number of threads to use.
+/// * `tx` - The channel sender for the progress bar and/or errors.
 ///
 /// # Returns
 ///
-/// On success, it returns the time elapsed to generate the wordlist
-/// On error, it returns a WordlistError
+/// On success, it returns the time elapsed to generate the wordlist.
+/// On error, it returns a WordlistError.
 ///
 pub fn wordlist_generation_scheduler(
     wordlist_config: &WordlistConfig,
@@ -157,12 +157,12 @@ pub fn wordlist_generation_scheduler(
     file_path: &str,
     tx: &Sender<Result<u64, WorgenXError>>,
 ) -> Result<(), WorgenXError> {
-    let shared_formated_mask = Arc::new(wordlist_config.formated_mask.clone());
-    let shared_mask_indexes = Arc::new(wordlist_config.mask_indexes.clone());
-    let dict_size = wordlist_config.dict.len();
-    let shared_dict = Arc::new(wordlist_config.dict.clone());
+    let shared_formated_mask: Arc<Vec<char>> = Arc::new(wordlist_config.formated_mask.clone());
+    let shared_mask_indexes: Arc<Vec<usize>> = Arc::new(wordlist_config.mask_indexes.clone());
+    let dict_size: usize = wordlist_config.dict.len();
+    let shared_dict: Arc<Vec<u8>> = Arc::new(wordlist_config.dict.clone());
 
-    let file = match OpenOptions::new()
+    let file: File = match OpenOptions::new()
         .write(true)
         .create(true)
         .truncate(true)
@@ -176,7 +176,7 @@ pub fn wordlist_generation_scheduler(
             )))
         }
     };
-    let shared_file = Arc::new(Mutex::new(file));
+    let shared_file: Arc<Mutex<File>> = Arc::new(Mutex::new(file));
 
     let mut threads: Vec<JoinHandle<()>> = Vec::new();
     let dict_indexes: Vec<usize> = vec![0; wordlist_config.mask_indexes.len()];
@@ -189,13 +189,13 @@ pub fn wordlist_generation_scheduler(
             nb_of_passwd_per_thread = nb_of_passwd_last_thread;
         }
 
-        let shared_formated_mask = Arc::clone(&shared_formated_mask);
-        let shared_mask_indexes = Arc::clone(&shared_mask_indexes);
-        let shared_dict = Arc::clone(&shared_dict);
-        let file = Arc::clone(&shared_file);
-        let temp_clone = temp.clone();
-        let tx_clone = tx.clone();
-        let thread = thread::spawn(move || {
+        let shared_formated_mask: Arc<Vec<char>> = Arc::clone(&shared_formated_mask);
+        let shared_mask_indexes: Arc<Vec<usize>> = Arc::clone(&shared_mask_indexes);
+        let shared_dict: Arc<Vec<u8>> = Arc::clone(&shared_dict);
+        let file: Arc<Mutex<File>> = Arc::clone(&shared_file);
+        let temp_clone: Vec<usize> = temp.clone();
+        let tx_clone: Sender<Result<u64, WorgenXError>> = tx.clone();
+        let thread: JoinHandle<()> = thread::spawn(move || {
             generate_wordlist_part(
                 nb_of_passwd_per_thread,
                 temp_clone,
@@ -233,18 +233,18 @@ pub fn wordlist_generation_scheduler(
     Ok(())
 }
 
-/// This function is charged to generate a part of the wordlist or the whole wordlist if there is only one thread
-/// It can send possible errors through the channel
+/// This function is charged to generate a part of the wordlist or the whole wordlist if there is only one thread.
+/// It returns nothing because it writes the passwords in the file and sends the progress through the channel.
 ///
 /// # Arguments
 ///
-/// * `nb_of_passwd` - The number of passwords to generate
-/// * `dict_indexes` - The indexes of the dictionary
-/// * `formated_mask` - The final mask
-/// * `mask_indexes` - The indexes of the mask
-/// * `dict` - The dictionary
-/// * `file` - The file to write to, wrapped in an `Arc<Mutex<File>>`
-/// * `tx` - The channel sender for the progress bar and/or errors
+/// * `nb_of_passwd` - The number of passwords to generate.
+/// * `dict_indexes` - The indexes of the dictionary.
+/// * `formated_mask` - The final mask.
+/// * `mask_indexes` - The indexes of the mask.
+/// * `dict` - The dictionary.
+/// * `file` - The file to write to, wrapped in an `Arc<Mutex<File>>`.
+/// * `tx` - The channel sender for the progress bar and/or errors.
 ///
 fn generate_wordlist_part(
     nb_of_passwords: u64,
@@ -257,7 +257,7 @@ fn generate_wordlist_part(
 ) {
     let mut buffer: Vec<String> = Vec::new();
     for _ in 0..nb_of_passwords {
-        let mut line = String::new();
+        let mut line: String = String::new();
         (0..formated_mask.len()).for_each(|i| {
             let mut found = false;
             for idx in 0..mask_indexes.len() {
@@ -303,13 +303,14 @@ fn generate_wordlist_part(
     }
 }
 
-/// This function is charged to build the progress bar during the wordlist generation
+/// This function is charged to build the progress bar during the wordlist generation.
+/// It returns nothing because it juste updates the progress bar.
 ///
 /// # Arguments
 ///
-/// * `nb_of_passwd_generated` - The number of passwords generated
-/// * `total_nb_of_passwd` - The total number of passwords to generate
-/// * `pb` - The progress bar instance (from the indicatif crate)
+/// * `nb_of_passwd_generated` - The number of passwords generated.
+/// * `total_nb_of_passwd` - The total number of passwords to generate.
+/// * `pb` - The progress bar instance (from the indicatif crate).
 ///
 pub fn build_wordlist_progress_bar(
     nb_of_passwd_generated: u64,

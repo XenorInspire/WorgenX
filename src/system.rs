@@ -10,14 +10,14 @@ use std::{
     io::Write,
     path::Path,
     sync::{Arc, Mutex},
-    time::Instant,
+    time::{Duration, Instant},
 };
 
-/// OS specific constants for GUI mode
+/// OS specific constants for GUI mode.
 ///
-/// * `HOME_ENV_VAR` - The environment variable that holds the user's home directory
-/// * `PASSWORDS_FOLDER` - The folder where the passwords will be saved
-/// * `WORDLISTS_FOLDER` - The folder where the wordlists will be saved
+/// * `HOME_ENV_VAR` - The environment variable that holds the user's home directory.
+/// * `PASSWORDS_FOLDER` - The folder where the passwords will be saved.
+/// * `WORDLISTS_FOLDER` - The folder where the wordlists will be saved.
 ///
 #[cfg(all(target_family = "unix", feature = "gui"))]
 pub mod unix {
@@ -32,7 +32,7 @@ pub mod windows {
     pub const WORDLISTS_FOLDER: &str = "\\worgenx\\wordlists\\";
 }
 
-/// This function is charged to get user String input y/n
+/// This function is charged to get user String input y/n.
 ///
 /// # Returns
 ///
@@ -40,7 +40,7 @@ pub mod windows {
 ///
 #[cfg(feature = "gui")]
 pub fn get_user_choice_yn() -> String {
-    let mut choice = get_user_choice();
+    let mut choice: String = get_user_choice();
     while !choice.eq("y") && !choice.eq("n") {
         println!("Please enter a valid answer (y/n)");
         choice = get_user_choice();
@@ -49,7 +49,7 @@ pub fn get_user_choice_yn() -> String {
     choice
 }
 
-/// This function is charged to get user String input
+/// This function is charged to get user String input.
 ///
 /// # Returns
 ///
@@ -57,18 +57,20 @@ pub fn get_user_choice_yn() -> String {
 ///
 #[cfg(feature = "gui")]
 pub fn get_user_choice() -> String {
-    let mut buffer = String::new();
+    let mut buffer: String = String::new();
     match stdin().read_line(&mut buffer) {
         Ok(_) => buffer.trim().to_string(),
         Err(_) => String::new(),
     }
 }
 
-/// This function is charged to get user int input
+/// This function is charged to get user int input.
+/// The function will keep asking the user to enter a valid number greater than 0 until the user does so.
+/// This is a generic function, so it can be used for any basic integer type.
 ///
 /// # Returns
 ///
-/// The value entered by the user. If an error occurs, the function returns 0
+/// The value entered by the user. If an error occurs, the function returns 0.
 ///
 #[cfg(feature = "gui")]
 pub fn get_user_choice_int<T>() -> T
@@ -76,11 +78,11 @@ where
     T: FromStr + Display + PartialOrd + Copy + Default,
     <T as FromStr>::Err: Display,
 {
-    let mut is_good_number = false;
+    let mut is_good_number: bool = false;
     let mut number: T = T::default();
 
     while !is_good_number {
-        let choice = get_user_choice();
+        let choice: String = get_user_choice();
         if choice.is_empty() {
             println!("Please enter a valid number greater than 0");
             continue;
@@ -101,18 +103,18 @@ where
     number
 }
 
-/// This function is charged to check a path/filename
+/// This function is charged to check a path/filename.
 ///
 /// # Arguments
 ///
-/// * `path` - A string slice that holds the path/filename to check
+/// * `path` - A string slice that holds the path/filename to check.
 ///
 /// # Returns
 ///
-/// Ok(String) if the path/filename is valid, containing the full path, SystemError otherwise
+/// Ok(String) if the path/filename is valid, containing the full path, SystemError otherwise.
 ///
 pub fn is_valid_path(path: String) -> Result<String, SystemError> {
-    let filename = match Path::new(&path).file_name() {
+    let filename: String = match Path::new(&path).file_name() {
         Some(f) => match f.to_str() {
             Some(f) => f.to_string(),
             None => return Err(SystemError::InvalidPath(path.to_string())),
@@ -125,8 +127,8 @@ pub fn is_valid_path(path: String) -> Result<String, SystemError> {
         return Err(SystemError::InvalidFilename(filename.to_string()));
     }
 
-    let full_path = if !Path::new(&path).is_absolute() {
-        let current_dir = match std::env::current_dir() {
+    let full_path: String = if !Path::new(&path).is_absolute() {
+        let current_dir: String = match std::env::current_dir() {
             Ok(c) => match c.to_str() {
                 Some(s) => s.to_string(),
                 None => return Err(SystemError::InvalidPath(path.to_string())),
@@ -154,33 +156,33 @@ pub fn is_valid_path(path: String) -> Result<String, SystemError> {
     Ok(full_path)
 }
 
-/// Check if folder exists
+/// This function is charged to check if a folder exists on the system.
 ///
 /// # Arguments
 ///
-/// * `folder` - A string slice that holds the folder to check
+/// * `folder` - A string slice that holds the folder to check.
 ///
 /// # Returns
 ///
-/// True if the folder exists, false otherwise
+/// True if the folder exists, false otherwise.
 ///
 pub fn check_if_folder_exists(folder: &str) -> bool {
     Path::new(folder).parent().is_some()
 }
 
-/// This function is charged to create the passwords or wordlists folder if it doesn't exist
+/// This function is charged to create the passwords or wordlists folder if it doesn't exist.
 ///
 /// # Arguments
 ///
-/// * `folder` - A string slice that holds the folder to create
+/// * `folder` - A string slice that holds the folder to create.
 ///
 /// # Returns
 ///
-/// Ok if the folder has been created, SystemError otherwise
+/// Ok if the folder has been created, SystemError otherwise.
 ///
 #[cfg(feature = "gui")]
 pub fn create_folder_if_not_exists(folder: &str) -> Result<(), SystemError> {
-    let mut folder = String::from(folder);
+    let mut folder: String = String::from(folder);
     if folder.pop().is_none() {
         return Err(SystemError::InvalidPath(folder.clone()));
     }
@@ -198,52 +200,52 @@ pub fn create_folder_if_not_exists(folder: &str) -> Result<(), SystemError> {
     Ok(())
 }
 
-/// This function send the invalid chars for windows path
+/// This function send the invalid chars for windows path.
 ///
 /// # Returns
 ///
-/// '<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@', '\0', '\r', '\n' chars
+/// '<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@', '\0', '\r', '\n' chars.
 ///
 #[cfg(target_family = "windows")]
 fn get_invalid_chars() -> &'static [char] {
     &['<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@', '\0', '\r', '\n',]
 }
 
-/// This function send the invalid chars for unix platforms path
+/// This function send the invalid chars for unix platforms path.
 ///
 /// # Returns
 ///
-/// '/', '\0', '\r', '\n' chars
+/// '/', '\0', '\r', '\n' chars.
 ///
 #[cfg(target_family = "unix")]
 fn get_invalid_chars() -> &'static [char] {
     &['/', '\0', '\r', '\n']
 }
 
-/// This function is charged to calculate the elapsed time between two timestamps
-/// The result is returned in human readable format (hours, minutes, seconds depending on the elapsed time)
+/// This function is charged to calculate the elapsed time between two timestamps.
+/// The result is returned in human readable format (hours, minutes, seconds depending on the elapsed time).
 ///
 /// # Arguments
 ///
-/// * `start_time` - The start timestamp
+/// * `start_time` - The start timestamp.
 ///
 /// # Returns
 ///
-/// A string slice containing the elapsed time in human readable format
+/// A string slice containing the elapsed time in human readable format.
 ///
 pub fn get_elapsed_time(start_time: Instant) -> String {
-    let elapsed_time = start_time.elapsed();
-    let mut elapsed_time = elapsed_time.as_secs();
-    let mut elapsed_time_str = String::new();
+    let elapsed_time: Duration = start_time.elapsed();
+    let mut elapsed_time: u64 = elapsed_time.as_secs();
+    let mut elapsed_time_str: String = String::new();
 
     if elapsed_time >= 3600 {
-        let hours = elapsed_time / 3600;
+        let hours: u64 = elapsed_time / 3600;
         elapsed_time -= hours * 3600;
         elapsed_time_str.push_str(&hours.to_string());
         elapsed_time_str.push_str(" hour(s) and ");
     }
     if elapsed_time >= 60 {
-        let minutes = elapsed_time / 60;
+        let minutes: u64 = elapsed_time / 60;
         elapsed_time -= minutes * 60;
         elapsed_time_str.push_str(&minutes.to_string());
         elapsed_time_str.push_str("minute(s) and ");
@@ -259,16 +261,16 @@ pub fn get_elapsed_time(start_time: Instant) -> String {
     elapsed_time_str
 }
 
-/// This function is charged to save the generated passwords in a file and send the progress/possible errors to the channel
+/// This function is charged to save the generated passwords in a file and send the progress/possible errors to the channel.
 ///
 /// # Arguments
 ///
-/// * `file` - The file to write to, wrapped in an `Arc<Mutex<File>>`
-/// * `passwords` - The passwords to write
+/// * `file` - The file to write to, wrapped in an `Arc<Mutex<File>>`.
+/// * `passwords` - The passwords to write.
 ///
 /// # Returns
 ///
-/// Ok if the passwords have been written to the file, WorgenXError otherwise
+/// Ok if the passwords have been written to the file, WorgenXError otherwise.
 ///
 pub fn save_passwd_to_file(file: Arc<Mutex<File>>, passwords: String) -> Result<(), WorgenXError> {
     let mut file = match file.lock() {
@@ -289,11 +291,11 @@ pub fn save_passwd_to_file(file: Arc<Mutex<File>>, passwords: String) -> Result<
     }
 }
 
-/// This function is charged to return the progress used by the program
+/// This function is charged to return the progress used by the program.
 ///
 /// # Returns
 ///
-/// A ProgressBar from the indicatif crate
+/// A ProgressBar from the indicatif crate.
 ///
 pub fn get_progress_bar() -> indicatif::ProgressBar {
     let pb: ProgressBar = indicatif::ProgressBar::new(100);
