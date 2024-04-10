@@ -10,4 +10,5 @@
         "--workspace",
         "--all",
     ],
+    "rust-analyzer.cargo.features": "all",
 }
