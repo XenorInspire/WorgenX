@@ -5,7 +5,7 @@ use crate::{
     json,
     password::{self, PasswordConfig},
     system,
-    wordlist::{self, WordlistValues},
+    wordlist::{self, WordlistConfig, WordlistValues},
 };
 
 // External crates
@@ -332,7 +332,7 @@ fn allocate_passwd_config_cli(args: &[String]) -> Result<PasswordGenerationOptio
     })
 }
 
-/// This function is charged to schedule the execution of the wordlist generation feature of the program.
+/// This function is charged to schedule the execution of the wordlist generation feature.
 ///
 /// # Arguments
 ///
@@ -345,8 +345,7 @@ fn allocate_passwd_config_cli(args: &[String]) -> Result<PasswordGenerationOptio
 fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
     match allocate_wordlist_config_cli(args) {
         Ok(wordlist_generation_parameters) => {
-            let wordlist_config =
-                wordlist::build_wordlist_config(&wordlist_generation_parameters.wordlist_values);
+            let wordlist_config: WordlistConfig = wordlist::build_wordlist_config(&wordlist_generation_parameters.wordlist_values);
             // nb of passwd = pow(dict.len(), nb of '?')
             let nb_of_passwd: u64 = wordlist_config
                 .dict
@@ -354,8 +353,7 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
                 .pow(wordlist_config.mask_indexes.len() as u32)
                 as u64;
             let (tx, rx) = mpsc::channel::<Result<u64, WorgenXError>>();
-            let pb: Arc<Mutex<indicatif::ProgressBar>> =
-                Arc::new(Mutex::new(system::get_progress_bar()));
+            let pb: Arc<Mutex<indicatif::ProgressBar>> = Arc::new(Mutex::new(system::get_progress_bar()));
             let pb_clone: Arc<Mutex<indicatif::ProgressBar>> = Arc::clone(&pb);
             let main_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
                 let mut current_value: u64 = 0;
@@ -715,7 +713,7 @@ fn display_help() {
     println!("You can find below the options for the main features of WorgenX:\n");
 
     println!("  --- Wordlist generation ---");
-    println!("  You must specify at least one of the following options: -l, -u, -n, -s");
+    println!("  You must specify at least one of the following options: -l, -u, -n, -x");
     println!("    -l, --lowercase\t\t\tAdd lowercase characters to the words");
     println!("    -u, --uppercase\t\t\tAdd uppercase characters to the words");
     println!("    -n, --numbers\t\t\tAdd numbers to the words");
@@ -728,7 +726,7 @@ fn display_help() {
     println!("    -t <threads>, --threads <threads>\tNumber of threads to use to generate the passwords\n\t\t\t\t\tBy default, the number of threads is based on the number of physical cores of the CPU");
 
     println!("\n  --- Password generation ---");
-    println!("  You must specify at least one of the following options: -l, -u, -n, -s");
+    println!("  You must specify at least one of the following options: -l, -u, -n, -x");
     println!("    -l, --lowercase\t\t\tAdd lowercase characters to the words");
     println!("    -u, --uppercase\t\t\tAdd uppercase characters to the words");
     println!("    -n, --numbers\t\t\tAdd numbers to the words");

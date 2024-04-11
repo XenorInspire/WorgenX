@@ -259,7 +259,7 @@ fn generate_wordlist_part(
     for _ in 0..nb_of_passwords {
         let mut line: String = String::new();
         (0..formated_mask.len()).for_each(|i| {
-            let mut found = false;
+            let mut found: bool = false;
             for idx in 0..mask_indexes.len() {
                 if i == mask_indexes[idx] {
                     found = true;
