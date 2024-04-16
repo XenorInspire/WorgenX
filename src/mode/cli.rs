@@ -352,8 +352,14 @@ fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
                 .len()
                 .pow(wordlist_config.mask_indexes.len() as u32)
                 as u64;
+            println!(
+                "Estimated size of the wordlist: {}",
+                system::get_estimated_size(nb_of_passwd, wordlist_config.mask_indexes.len() as u64)
+            );
+
             let (tx, rx) = mpsc::channel::<Result<u64, WorgenXError>>();
-            let pb: Arc<Mutex<indicatif::ProgressBar>> = Arc::new(Mutex::new(system::get_progress_bar()));
+            let pb: Arc<Mutex<indicatif::ProgressBar>> =
+                Arc::new(Mutex::new(system::get_progress_bar()));
             let pb_clone: Arc<Mutex<indicatif::ProgressBar>> = Arc::clone(&pb);
             let main_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
                 let mut current_value: u64 = 0;
@@ -722,7 +728,9 @@ fn display_help() {
     println!("    -m <mask>, --mask <mask>\t\tMask used to generate the words");
     println!("    -o <path>, --output <path>\t\tSave the wordlist in a text file");
     println!("\n  The following options are optional:");
-    println!("    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist");
+    println!(
+        "    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist"
+    );
     println!("    -t <threads>, --threads <threads>\tNumber of threads to use to generate the passwords\n\t\t\t\t\tBy default, the number of threads is based on the number of physical cores of the CPU");
 
     println!("\n  --- Password generation ---");
@@ -736,7 +744,9 @@ fn display_help() {
     println!("    -c <count>, --count <count>\t\tNumber of passwords to generate");
     println!("\n  The following options are optional:");
     println!("    -o <path>, --output <path>\t\tSave the passwords in a file");
-    println!("    -O <path>, --output-only <path>\tSave the passwords only in a file, not in stdout");
+    println!(
+        "    -O <path>, --output-only <path>\tSave the passwords only in a file, not in stdout"
+    );
     println!("    -j, --json\t\t\t\tOutput in JSON format\n\t\t\t\t\tCombine with -o to save the json output in a file");
 
     println!("\n  --- CPU Benchmark ---");

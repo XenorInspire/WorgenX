@@ -194,6 +194,14 @@ fn main_wordlist_generation() {
             .dict
             .len()
             .pow(wordlist_config.mask_indexes.len() as u32) as u64;
+        println!(
+            "Estimated size of the wordlist: {}",
+            system::get_estimated_size(nb_of_passwd, wordlist_config.mask_indexes.len() as u64)
+        );
+        println!("Do you want to continue ? (y/n)");
+        if system::get_user_choice_yn().eq("n") {
+            return;
+        }
 
         let mut file_result: Result<(File, String), SystemError> = saving_procedure(target::WORDLISTS_FOLDER);
         while file_result.is_err() {

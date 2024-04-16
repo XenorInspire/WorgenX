@@ -307,3 +307,43 @@ pub fn get_progress_bar() -> indicatif::ProgressBar {
     );
     pb
 }
+
+/// This functions is charged to return the estimated size of the wordlist.
+///
+/// # Arguments
+///
+/// * `nb_of_passwords` - The number of passwords in the wordlist.
+/// * `length` - The length of the passwords.
+///
+/// # Returns
+///
+/// The estimated size of the wordlist in human readable format.
+/// It sends the size in bytes, kilobytes, megabytes, gigabytes, terabytes depending on the size.
+/// If the size is less than 1KB, it will return the size in bytes.
+/// The function will return an empty string if the parameters are equal to 0.
+///
+pub fn get_estimated_size(nb_of_passwords: u64, length: u64) -> String {
+    if nb_of_passwords == 0 || length == 0 {
+        return String::new();
+    }
+
+    let size: u64 = nb_of_passwords * (length + 1); // +1 for the newline character
+    let mut size_str: String = String::new();
+    if size < 1024 {
+        size_str.push_str(&size.to_string());
+        size_str.push_str(" bytes");
+    } else if size < 1048576 {
+        size_str.push_str(&format!("{:.2}", size as f64 / 1024.0));
+        size_str.push_str(" KB");
+    } else if size < 1073741824 {
+        size_str.push_str(&format!("{:.2}", size as f64 / 1048576.0));
+        size_str.push_str(" MB");
+    } else if size < 1099511627776 {
+        size_str.push_str(&format!("{:.2}", size as f64 / 1073741824.0));
+        size_str.push_str(" GB");
+    } else {
+        size_str.push_str(&format!("{:.2}", size as f64 / 1099511627776.0));
+        size_str.push_str(" TB");
+    }
+    size_str
+}
