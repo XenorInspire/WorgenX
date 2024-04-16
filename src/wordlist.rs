@@ -9,8 +9,12 @@ use crate::{
 use indicatif::ProgressBar;
 use std::{
     fs::{File, OpenOptions},
-    sync::{mpsc::Sender, Arc, Mutex},
+    sync::{
+        mpsc::{self, Sender},
+        Arc, Mutex,
+    },
     thread::{self, JoinHandle},
+    time::Instant,
 };
 
 /// This constant is used to set the size of the buffer used to write the passwords in the file.
@@ -138,6 +142,84 @@ pub fn build_wordlist_config(wordlist_values: &WordlistValues) -> WordlistConfig
 /// This function is charged to schedule the wordlist generation.
 ///
 /// # Arguments
+/// * `wordlist_config` - The WordlistConfig struct containing the settings of the wordlist.
+/// * `nb_of_passwords` - The number of passwords to generate.
+/// * `nb_of_threads` - The number of threads to use.
+/// * `file_path` - The path of the file where the wordlist will be saved.
+/// * `no_loading_bar` - A boolean to specify if the loading bar should be displayed or not.
+///
+/// # Returns
+///
+/// Ok(()) if the wordlist generation is successful, WorgenXError otherwise.
+///
+pub fn wordlist_generation_scheduler(
+    wordlist_config: &WordlistConfig,
+    nb_of_passwords: u64,
+    nb_of_threads: u8,
+    file_path: &str,
+    no_loading_bar: bool,
+) -> Result<(), WorgenXError> {
+    let (tx, rx) = mpsc::channel::<Result<u64, WorgenXError>>();
+    let pb: Arc<Mutex<indicatif::ProgressBar>> = Arc::new(Mutex::new(system::get_progress_bar()));
+    let pb_clone: Arc<Mutex<indicatif::ProgressBar>> = Arc::clone(&pb);
+    let start: Instant = Instant::now();
+    let main_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
+        let mut current_value: u64 = 0;
+        println!("Wordlist generation in progress...");
+        for received in rx {
+            match received {
+                Ok(value) => {
+                    current_value += value;
+                    if !no_loading_bar {
+                        build_wordlist_progress_bar(current_value, nb_of_passwords, &pb_clone)
+                    }
+                }
+                Err(e) => {
+                    return Err(e);
+                }
+            }
+            if current_value == nb_of_passwords {
+                break;
+            }
+        }
+        Ok(())
+    });
+
+    match run_wordlist_generation(
+        wordlist_config,
+        nb_of_passwords,
+        nb_of_threads,
+        file_path,
+        &tx,
+    ) {
+        Ok(_) => (),
+        Err(e) => {
+            return Err(e);
+        }
+    };
+    match main_thread.join() {
+        Ok(_) => (),
+        Err(e) => {
+            if let Some(err) = e.downcast_ref::<WorgenXError>() {
+                return Err(err.clone());
+            } else {
+                return Err(WorgenXError::SystemError(SystemError::ThreadError(
+                    format!("{:?}", e),
+                )));
+            }
+        }
+    }
+    println!(
+        "\nWordlist generated in {}",
+        system::get_elapsed_time(start)
+    );
+    Ok(())
+}
+
+/// This function is charged to start the wordlist generation.
+/// It dispatches the work to the threads and sends the progress through the channel.
+///
+/// # Arguments
 ///
 /// * `wordlist_config` - The WordlistConfig struct containing the settings of the wordlist.
 /// * `wordlist_values` - The WordlistValues struct containing the user's values.
@@ -147,10 +229,9 @@ pub fn build_wordlist_config(wordlist_values: &WordlistValues) -> WordlistConfig
 ///
 /// # Returns
 ///
-/// On success, it returns the time elapsed to generate the wordlist.
-/// On error, it returns a WordlistError.
+/// It returns nothing because it writes the passwords in the file and sends the progress through the channel.
 ///
-pub fn wordlist_generation_scheduler(
+fn run_wordlist_generation(
     wordlist_config: &WordlistConfig,
     nb_of_passwords: u64,
     nb_of_threads: u8,

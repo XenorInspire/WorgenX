@@ -15,9 +15,7 @@ use std::{
     fmt::Display,
     fs::{File, OpenOptions},
     str::FromStr,
-    sync::{mpsc, Arc, Mutex},
-    thread::{self, JoinHandle},
-    time::Instant,
+    sync::{Arc, Mutex},
 };
 
 /// This struct is built from PasswordConfig and optional arguments will be used to generate the random password.
@@ -345,78 +343,34 @@ fn allocate_passwd_config_cli(args: &[String]) -> Result<PasswordGenerationOptio
 fn run_wordlist(args: &[String]) -> Result<(), WorgenXError> {
     match allocate_wordlist_config_cli(args) {
         Ok(wordlist_generation_parameters) => {
-            let wordlist_config: WordlistConfig = wordlist::build_wordlist_config(&wordlist_generation_parameters.wordlist_values);
+            let wordlist_config: WordlistConfig =
+                wordlist::build_wordlist_config(&wordlist_generation_parameters.wordlist_values);
             // nb of passwd = pow(dict.len(), nb of '?')
-            let nb_of_passwd: u64 = wordlist_config
+            let nb_of_passwords: u64 = wordlist_config
                 .dict
                 .len()
                 .pow(wordlist_config.mask_indexes.len() as u32)
                 as u64;
             println!(
                 "Estimated size of the wordlist: {}",
-                system::get_estimated_size(nb_of_passwd, wordlist_config.mask_indexes.len() as u64)
+                system::get_estimated_size(
+                    nb_of_passwords,
+                    wordlist_config.formated_mask.len() as u64
+                )
             );
 
-            let (tx, rx) = mpsc::channel::<Result<u64, WorgenXError>>();
-            let pb: Arc<Mutex<indicatif::ProgressBar>> =
-                Arc::new(Mutex::new(system::get_progress_bar()));
-            let pb_clone: Arc<Mutex<indicatif::ProgressBar>> = Arc::clone(&pb);
-            let main_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
-                let mut current_value: u64 = 0;
-                println!("Wordlist generation in progress...");
-                for received in rx {
-                    match received {
-                        Ok(value) => {
-                            current_value += value;
-                            if !wordlist_generation_parameters.no_loading_bar {
-                                wordlist::build_wordlist_progress_bar(
-                                    current_value,
-                                    nb_of_passwd,
-                                    &pb_clone,
-                                )
-                            }
-                        }
-                        Err(e) => {
-                            return Err(e);
-                        }
-                    }
-                    if current_value == nb_of_passwd {
-                        break;
-                    }
-                }
-                Ok(())
-            });
-
-            let start: Instant = Instant::now();
             match wordlist::wordlist_generation_scheduler(
                 &wordlist_config,
-                nb_of_passwd,
+                nb_of_passwords,
                 wordlist_generation_parameters.threads,
                 &wordlist_generation_parameters.output_file,
-                &tx,
+                wordlist_generation_parameters.no_loading_bar,
             ) {
-                Ok(_) => (),
+                Ok(_) => Ok(()),
                 Err(e) => {
-                    return Err(e);
-                }
-            };
-            match main_thread.join() {
-                Ok(_) => (),
-                Err(e) => {
-                    if let Some(err) = e.downcast_ref::<WorgenXError>() {
-                        return Err(err.clone());
-                    } else {
-                        return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                            format!("{:?}", e),
-                        )));
-                    }
+                    Err(e)
                 }
             }
-            println!(
-                "\nWordlist generated in {}",
-                system::get_elapsed_time(start)
-            );
-            Ok(())
         }
         Err(e) => Err(e),
     }
@@ -728,9 +682,7 @@ fn display_help() {
     println!("    -m <mask>, --mask <mask>\t\tMask used to generate the words");
     println!("    -o <path>, --output <path>\t\tSave the wordlist in a text file");
     println!("\n  The following options are optional:");
-    println!(
-        "    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist"
-    );
+    println!("    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist");
     println!("    -t <threads>, --threads <threads>\tNumber of threads to use to generate the passwords\n\t\t\t\t\tBy default, the number of threads is based on the number of physical cores of the CPU");
 
     println!("\n  --- Password generation ---");
@@ -744,9 +696,7 @@ fn display_help() {
     println!("    -c <count>, --count <count>\t\tNumber of passwords to generate");
     println!("\n  The following options are optional:");
     println!("    -o <path>, --output <path>\t\tSave the passwords in a file");
-    println!(
-        "    -O <path>, --output-only <path>\tSave the passwords only in a file, not in stdout"
-    );
+    println!("    -O <path>, --output-only <path>\tSave the passwords only in a file, not in stdout");
     println!("    -j, --json\t\t\t\tOutput in JSON format\n\t\t\t\t\tCombine with -o to save the json output in a file");
 
     println!("\n  --- CPU Benchmark ---");

@@ -1,7 +1,7 @@
 // Internal crates
 use crate::{
     benchmark,
-    error::{SystemError, WorgenXError},
+    error::SystemError,
     password::{self, PasswordConfig},
     system,
     wordlist::{self, WordlistConfig, WordlistValues},
@@ -17,9 +17,8 @@ use system::windows as target;
 use std::{
     env,
     fs::{File, OpenOptions},
-    sync::{mpsc, Arc, Mutex},
-    thread::{self, JoinHandle},
-    time::Instant,
+    sync::{Arc, Mutex},
+    thread,
 };
 
 /// This function is charged to schedule in GUI mode the execution of the different features of the program according to the user's choices.
@@ -91,7 +90,8 @@ fn main_passwd_generation() {
         println!("\nDo you want to save the passwords in a file ? (y/n)");
         let choice: String = system::get_user_choice_yn();
         if choice.eq("y") {
-            let mut file_result: Result<(File, String), SystemError> = saving_procedure(target::PASSWORDS_FOLDER);
+            let mut file_result: Result<(File, String), SystemError> =
+                saving_procedure(target::PASSWORDS_FOLDER);
 
             while file_result.is_err() {
                 println!("{}", file_result.unwrap_err());
@@ -190,13 +190,14 @@ fn main_wordlist_generation() {
     while again.eq("y") {
         let wordlist_values: WordlistValues = allocate_wordlist_config_gui();
         let wordlist_config: WordlistConfig = wordlist::build_wordlist_config(&wordlist_values);
-        let nb_of_passwd: u64 = wordlist_config
+        let nb_of_passwords: u64 = wordlist_config
             .dict
             .len()
-            .pow(wordlist_config.mask_indexes.len() as u32) as u64;
+            .pow(wordlist_config.mask_indexes.len() as u32)
+            as u64;
         println!(
             "Estimated size of the wordlist: {}",
-            system::get_estimated_size(nb_of_passwd, wordlist_config.mask_indexes.len() as u64)
+            system::get_estimated_size(nb_of_passwords, wordlist_config.formated_mask.len() as u64)
         );
         println!("Do you want to continue ? (y/n)");
         if system::get_user_choice_yn().eq("n") {
@@ -214,67 +215,19 @@ fn main_wordlist_generation() {
         }
 
         let (_, filename) = file_result.unwrap();
-
-        let (tx, rx) = mpsc::channel::<Result<u64, WorgenXError>>();
-        let pb: Arc<Mutex<indicatif::ProgressBar>> = Arc::new(Mutex::new(system::get_progress_bar()));
-        let pb_clone: Arc<Mutex<indicatif::ProgressBar>> = Arc::clone(&pb);
-        let main_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
-            let mut current_value: u64 = 0;
-            println!("Wordlist generation in progress...");
-            for received in rx {
-                match received {
-                    Ok(value) => {
-                        current_value += value;
-                        wordlist::build_wordlist_progress_bar(
-                            current_value,
-                            nb_of_passwd,
-                            &pb_clone,
-                        )
-                    }
-                    Err(e) => {
-                        return Err(e);
-                    }
-                }
-                if current_value == nb_of_passwd {
-                    break;
-                }
-            }
-            Ok(())
-        });
-
-        let start: Instant = Instant::now();
         match wordlist::wordlist_generation_scheduler(
             &wordlist_config,
-            nb_of_passwd,
+            nb_of_passwords,
             num_cpus::get_physical() as u8,
-            filename.as_str(),
-            &tx,
+            &filename,
+            false,
         ) {
             Ok(_) => (),
             Err(e) => {
                 println!("{}", e);
                 return;
             }
-        };
-        match main_thread.join() {
-            Ok(_) => (),
-            Err(e) => {
-                if let Some(err) = e.downcast_ref::<WorgenXError>() {
-                    println!("{}", err);
-                    return;
-                } else {
-                    println!(
-                        "{:?}",
-                        WorgenXError::SystemError(SystemError::ThreadError(format!("{:?}", e)))
-                    );
-                    return;
-                }
-            }
         }
-        println!(
-            "\nWordlist generated in {}",
-            system::get_elapsed_time(start)
-        );
         println!("The wordlist has been saved in the file : {}", filename);
 
         println!("\nDo you want to generate another wordlist ? (y/n)");
