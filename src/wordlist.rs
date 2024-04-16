@@ -9,10 +9,7 @@ use crate::{
 use indicatif::ProgressBar;
 use std::{
     fs::{File, OpenOptions},
-    sync::{
-        mpsc::{self, Sender},
-        Arc, Mutex,
-    },
+    sync::{Arc, Mutex},
     thread::{self, JoinHandle},
     time::Instant,
 };
@@ -21,6 +18,12 @@ use std::{
 /// It specifies the maximum number of passwords that will be written in the file at once per thread.
 ///
 const BUFFER_SIZE: usize = 100000;
+
+/// This static variable is used to keep track of the number of passwords generated.
+/// It is used to update the progress bar.
+/// It is wrapped in a Mutex to avoid data sharing issues between the threads.
+///
+static GLOBAL_COUNTER: Mutex<u64> = Mutex::new(0);
 
 /// This struct is built from the user's choices will be used to generate the wordlist.
 ///
@@ -142,6 +145,7 @@ pub fn build_wordlist_config(wordlist_values: &WordlistValues) -> WordlistConfig
 /// This function is charged to schedule the wordlist generation.
 ///
 /// # Arguments
+///
 /// * `wordlist_config` - The WordlistConfig struct containing the settings of the wordlist.
 /// * `nb_of_passwords` - The number of passwords to generate.
 /// * `nb_of_threads` - The number of threads to use.
@@ -159,39 +163,25 @@ pub fn wordlist_generation_scheduler(
     file_path: &str,
     no_loading_bar: bool,
 ) -> Result<(), WorgenXError> {
-    let (tx, rx) = mpsc::channel::<Result<u64, WorgenXError>>();
     let pb: Arc<Mutex<indicatif::ProgressBar>> = Arc::new(Mutex::new(system::get_progress_bar()));
     let pb_clone: Arc<Mutex<indicatif::ProgressBar>> = Arc::clone(&pb);
     let start: Instant = Instant::now();
     let main_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
-        let mut current_value: u64 = 0;
         println!("Wordlist generation in progress...");
-        for received in rx {
-            match received {
-                Ok(value) => {
-                    current_value += value;
-                    if !no_loading_bar {
-                        build_wordlist_progress_bar(current_value, nb_of_passwords, &pb_clone)
-                    }
-                }
-                Err(e) => {
-                    return Err(e);
+        let mut current_value = 0;
+        while current_value < nb_of_passwords {
+            if let Ok(global_counter) = GLOBAL_COUNTER.lock() {
+                current_value = *global_counter;
+                if !no_loading_bar {
+                    build_wordlist_progress_bar(current_value, nb_of_passwords, &pb_clone);
                 }
             }
-            if current_value == nb_of_passwords {
-                break;
-            }
+            thread::sleep(std::time::Duration::from_millis(100));
         }
         Ok(())
     });
 
-    match run_wordlist_generation(
-        wordlist_config,
-        nb_of_passwords,
-        nb_of_threads,
-        file_path,
-        &tx,
-    ) {
+    match run_wordlist_generation(wordlist_config, nb_of_passwords, nb_of_threads, file_path) {
         Ok(_) => (),
         Err(e) => {
             return Err(e);
@@ -216,27 +206,24 @@ pub fn wordlist_generation_scheduler(
     Ok(())
 }
 
-/// This function is charged to start the wordlist generation.
-/// It dispatches the work to the threads and sends the progress through the channel.
+/// This function is charged to start the wordlist generation and dispatch the work between the threads.
 ///
 /// # Arguments
 ///
 /// * `wordlist_config` - The WordlistConfig struct containing the settings of the wordlist.
-/// * `wordlist_values` - The WordlistValues struct containing the user's values.
 /// * `nb_of_passwords` - The number of passwords to generate.
 /// * `nb_of_threads` - The number of threads to use.
-/// * `tx` - The channel sender for the progress bar and/or errors.
+/// * `file_path` - The path of the file where the wordlist will be saved.
 ///
 /// # Returns
 ///
-/// It returns nothing because it writes the passwords in the file and sends the progress through the channel.
+/// Ok(()) if the wordlist generation is successful, WorgenXError otherwise.
 ///
 fn run_wordlist_generation(
     wordlist_config: &WordlistConfig,
     nb_of_passwords: u64,
     nb_of_threads: u8,
     file_path: &str,
-    tx: &Sender<Result<u64, WorgenXError>>,
 ) -> Result<(), WorgenXError> {
     let shared_formated_mask: Arc<Vec<char>> = Arc::new(wordlist_config.formated_mask.clone());
     let shared_mask_indexes: Arc<Vec<usize>> = Arc::new(wordlist_config.mask_indexes.clone());
@@ -257,9 +244,9 @@ fn run_wordlist_generation(
             )))
         }
     };
-    let shared_file: Arc<Mutex<File>> = Arc::new(Mutex::new(file));
 
-    let mut threads: Vec<JoinHandle<()>> = Vec::new();
+    let shared_file: Arc<Mutex<File>> = Arc::new(Mutex::new(file));
+    let mut threads: Vec<JoinHandle<Result<(), WorgenXError>>> = Vec::new();
     let dict_indexes: Vec<usize> = vec![0; wordlist_config.mask_indexes.len()];
     let mut nb_of_passwd_per_thread: u64 = nb_of_passwords / nb_of_threads as u64;
     let nb_of_passwd_last_thread: u64 = nb_of_passwd_per_thread + nb_of_passwords % nb_of_threads as u64;
@@ -275,17 +262,18 @@ fn run_wordlist_generation(
         let shared_dict: Arc<Vec<u8>> = Arc::clone(&shared_dict);
         let file: Arc<Mutex<File>> = Arc::clone(&shared_file);
         let temp_clone: Vec<usize> = temp.clone();
-        let tx_clone: Sender<Result<u64, WorgenXError>> = tx.clone();
-        let thread: JoinHandle<()> = thread::spawn(move || {
-            generate_wordlist_part(
+        let thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
+            match generate_wordlist_part(
                 nb_of_passwd_per_thread,
                 temp_clone,
-                shared_formated_mask,
-                shared_mask_indexes,
-                shared_dict,
+                &shared_formated_mask,
+                &shared_mask_indexes,
+                &shared_dict,
                 file,
-                &tx_clone,
-            );
+            ) {
+                Ok(_) => Ok(()),
+                Err(e) => Err(e),
+            }
         });
         threads.push(thread);
 
@@ -325,20 +313,24 @@ fn run_wordlist_generation(
 /// * `mask_indexes` - The indexes of the mask.
 /// * `dict` - The dictionary.
 /// * `file` - The file to write to, wrapped in an `Arc<Mutex<File>>`.
-/// * `tx` - The channel sender for the progress bar and/or errors.
+///
+/// # Returns
+///
+/// Ok(()) if the wordlist generation is successful, WorgenXError otherwise.
 ///
 fn generate_wordlist_part(
     nb_of_passwords: u64,
     mut dict_indexes: Vec<usize>,
-    formated_mask: Arc<Vec<char>>,
-    mask_indexes: Arc<Vec<usize>>,
-    dict: Arc<Vec<u8>>,
+    formated_mask: &[char],
+    mask_indexes: &[usize],
+    dict: &[u8],
     file: Arc<Mutex<File>>,
-    tx: &Sender<Result<u64, WorgenXError>>,
-) {
+) -> Result<(), WorgenXError> {
     let mut buffer: Vec<String> = Vec::new();
+    let mut line = Vec::with_capacity(formated_mask.len());
     for _ in 0..nb_of_passwords {
-        let mut line: String = String::new();
+        line.clear();
+        line.shrink_to_fit();
         (0..formated_mask.len()).for_each(|i| {
             let mut found: bool = false;
             for idx in 0..mask_indexes.len() {
@@ -361,16 +353,26 @@ fn generate_wordlist_part(
             dict_indexes[idx] = 0;
         }
 
-        buffer.push(line);
-        tx.send(Ok(1)).unwrap_or(());
+        buffer.push(line.iter().collect());
+        let mut counter = match GLOBAL_COUNTER.lock() {
+            Ok(counter) => counter,
+            Err(e) => {
+                return Err(WorgenXError::SystemError(SystemError::ThreadError(
+                    e.to_string(),
+                )))
+            }
+        };
+        *counter += 1;
+
         if buffer.len() == BUFFER_SIZE {
             match system::save_passwd_to_file(Arc::clone(&file), buffer.join("\n")) {
                 Ok(_) => {}
                 Err(e) => {
-                    tx.send(Err(e)).unwrap_or(());
+                    return Err(e);
                 }
             }
             buffer.clear();
+            buffer.shrink_to_fit();
         }
     }
 
@@ -378,10 +380,11 @@ fn generate_wordlist_part(
         match system::save_passwd_to_file(Arc::clone(&file), buffer.join("\n")) {
             Ok(_) => {}
             Err(e) => {
-                tx.send(Err(e)).unwrap_or(());
+                return Err(e);
             }
         }
     }
+    Ok(())
 }
 
 /// This function is charged to build the progress bar during the wordlist generation.
