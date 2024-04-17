@@ -13,5 +13,5 @@ gui = []
 rand = "0.8.5"
 thiserror = "1.0.58"
 num_cpus = "1.16.0"
-serde_json = { version = "1.0.115", optional = true }
+serde_json = { version = "1.0.116", optional = true }
 indicatif = "0.17.8"
