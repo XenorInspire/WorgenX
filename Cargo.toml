@@ -4,9 +4,10 @@ version = "1.0.1"
 edition = "2021"
 authors = ["Xen0rInspire"]
 license = "GNU General Public License v3.0"
+description = "A powerful command line tool to generate relevant wordlists for password cracking. It can also generate random passwords with a good entropy."
 
 [features]
-cli = ["serde_json"]
+cli = ["serde_json", "clap"]
 gui = []
 
 [dependencies]
@@ -15,3 +16,4 @@ thiserror = "1.0.58"
 num_cpus = "1.16.0"
 serde_json = { version = "1.0.116", optional = true }
 indicatif = "0.17.8"
+clap = { version = "4.5.4", optional = true }

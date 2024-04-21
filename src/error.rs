@@ -28,9 +28,9 @@ pub enum ArgError {
     /// This error is raised if the user specified and invalid numerical value for an argument.
     #[error("Error: invalid value `{0}` for argument {1}\nPlease specify a valid numerical value between 1 and {2}\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
     InvalidNumericalValue(String, String, String),
-    /// This error is raised if there isn't any configuration given by the user (for example just -d or --dict without any values after, or none of the -n, -s, -u, -l arguments).
+    /// This error is raised if there isn't any configuration given by the user (for example just wordlist feature without any type of characters specified).
     #[error("Error: no configuration given for argument. Please specify the mandatory parameters and at least one type of characters.\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
-    MissingConfiguration(String),
+    MissingConfiguration,
     /// This error is raised if the user has specified both -o and -O arguments.
     #[error("Error: cannot specify both -o and -O arguments\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
     BothOutputArguments,
