@@ -525,9 +525,9 @@ fn update_config<T: Clone + Send + Sync + 'static>(
 fn display_help() {
     println!("Usage: worgenX <command> [options]");
     println!("Commands:");
-    println!("  -w, --wordlist\tGenerate a wordlist");
-    println!("  -p, --passwd\t\tGenerate random password(s)");
-    println!("  -b, --benchmark\tCPU Benchmark");
+    println!("  wordlist\t\tGenerate a wordlist");
+    println!("  passwordd\t\tGenerate random password(s)");
+    println!("  benchmark\t\tCPU Benchmark");
     println!("  -v, --version\t\tDisplay the version of WorgenX");
     println!("  -h, --help\t\tDisplay this help message\n\n");
     println!("You can find below the options for the main features of WorgenX:\n");

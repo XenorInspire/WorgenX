@@ -85,9 +85,9 @@ $ worgenX --help
 
 Usage: worgenX <command> [options]
 Commands:
-  -w, --wordlist        Generate a wordlist
-  -p, --passwd          Generate random password(s)
-  -b, --benchmark       CPU Benchmark
+  wordlist              Generate a wordlist
+  passwordd             Generate random password(s)
+  benchmark             CPU Benchmark
   -v, --version         Display the version of WorgenX
   -h, --help            Display this help message
 
@@ -95,7 +95,7 @@ Commands:
 You can find below the options for the main features of WorgenX:
 
   --- Wordlist generation ---
-  You must specify at least one of the following options: -l, -u, -n, -s
+  You must specify at least one of the following options: -l, -u, -n, -x
     -l, --lowercase                     Add lowercase characters to the words
     -u, --uppercase                     Add uppercase characters to the words
     -n, --numbers                       Add numbers to the words
@@ -107,11 +107,11 @@ You can find below the options for the main features of WorgenX:
 
   The following options are optional:
     -d, --disable-loading-bar           Disable the loading bar when generating the wordlist
-    -t <threads>, --threads <threads>   Number of threads to use to generate the passwords
+    -t <threads>, --threads <threads>   Number of threads to generate the passwords
                                         By default, the number of threads is based on the number of physical cores of the CPU
 
   --- Password generation ---
-  You must specify at least one of the following options: -l, -u, -n, -s
+  You must specify at least one of the following options: -l, -u, -n, -x
     -l, --lowercase                     Add lowercase characters to the words
     -u, --uppercase                     Add uppercase characters to the words
     -n, --numbers                       Add numbers to the words
