@@ -16,27 +16,12 @@ pub enum ArgError {
     /// This error is raised if the user doesn't specify any argument.
     #[error("Error: no argument specified\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
     NoArgument,
-    /// This error is raised if the user specifies an unknown argument.
-    #[error("Error: unknown argument {0}\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
-    UnknownArgument(String),
     /// This error is raised if the user specifies an argument that requires a value but doesn't give it.
     #[error("Error: missing value for {0}")]
     MissingValue(String),
-    //// This error is raised if the user doesn't specify a mandatory argument.
-    #[error("Error: missing argument {0}\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
-    MissingArgument(String),
-    /// This error is raised if the user specified and invalid numerical value for an argument.
-    #[error("Error: invalid value `{0}` for argument {1}\nPlease specify a valid numerical value between 1 and {2}\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
-    InvalidNumericalValue(String, String, String),
     /// This error is raised if there isn't any configuration given by the user (for example just wordlist feature without any type of characters specified).
     #[error("Error: no configuration given for argument. Please specify the mandatory parameters and at least one type of characters.\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
     MissingConfiguration,
-    /// This error is raised if the user has specified both -o and -O arguments.
-    #[error("Error: cannot specify both -o and -O arguments\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
-    BothOutputArguments,
-    /// This error is raised if the mask given by the user is invalid (for wordlist generation).
-    #[error("Error: invalid mask\nPlease specify a valid mask with \" or \'\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
-    InvalidMask(),
 }
 
 #[derive(Debug, Error, Clone)]
