@@ -16,29 +16,29 @@ use std::{
     time::{Duration, Instant},
 };
 
-/// This constant structure is used to define the password configuration for the benchmark
-/// Update these values if you want to stress the CPU more or less
+/// This constant structure is used to define the password configuration for the benchmark.
+/// Update these values if you want to stress the CPU more or less.
 ///
-const PASSWORD_CONFIG: password::PasswordConfig = PasswordConfig {
+const PASSWORD_CONFIG: PasswordConfig = PasswordConfig {
     numbers: true,
     special_characters: true,
     uppercase: true,
     lowercase: true,
     length: 10000,
-    number_of_passwords: 1, // Don't change this value, it's used to generate a single password on each iteration
+    number_of_passwords: 1, // Don't change this value, it's used to generate a single password on each iteration.
 };
 
-/// This function is charged to load the CPU benchmark
+/// This function is charged to load the CPU benchmark.
 ///
 /// # Arguments
 ///
-/// * `nb_of_threads` - The number of threads to use for the stress test
+/// * `nb_of_threads` - The number of threads to use for the stress test.
 ///
 /// # Returns
 ///
-/// * `Result<u64, WorgenXError>` - The number of passwords generated in 60 seconds, WorgenXError otherwise
+/// * `Result<u64, WorgenXError>` - The number of passwords generated in 60 seconds, WorgenXError otherwise.
 ///
-pub fn load_cpu_benchmark(nb_of_threads: u64) -> Result<u64, WorgenXError> {
+pub fn load_cpu_benchmark(nb_of_threads: u8) -> Result<u64, WorgenXError> {
     let (tx_progress_bar, rx_progress_bar) = mpsc::channel::<Result<u64, WorgenXError>>();
     let pb: Arc<Mutex<ProgressBar>> = Arc::new(Mutex::new(system::get_progress_bar()));
     let pb_clone: Arc<Mutex<ProgressBar>> = Arc::clone(&pb);
@@ -46,7 +46,7 @@ pub fn load_cpu_benchmark(nb_of_threads: u64) -> Result<u64, WorgenXError> {
     let shared_signal: Arc<AtomicBool> = Arc::new(AtomicBool::new(true));
     let shared_passwd_counter: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
 
-    let progress_bar_thread = thread::spawn(move || {
+    let progress_bar_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
         println!("WorgenX CPU Benchmark is in progress...");
         for received in rx_progress_bar {
             match received {
@@ -63,12 +63,12 @@ pub fn load_cpu_benchmark(nb_of_threads: u64) -> Result<u64, WorgenXError> {
         Ok(())
     });
 
-    let start = Instant::now();
+    let start: Instant = Instant::now();
     for _ in 0..nb_of_threads {
-        let shared_signal_rst = Arc::clone(&shared_signal);
+        let shared_signal_rst: Arc<AtomicBool> = Arc::clone(&shared_signal);
         let shared_passwd_counter: Arc<Mutex<u64>> = Arc::clone(&shared_passwd_counter);
         threads.push(thread::spawn(move || {
-            let shared_passwd_counter = Arc::clone(&shared_passwd_counter);
+            let shared_passwd_counter: Arc<Mutex<u64>> = Arc::clone(&shared_passwd_counter);
             match run_stress_test(shared_signal_rst, shared_passwd_counter) {
                 Ok(_) => {}
                 Err(e) => {
@@ -107,7 +107,7 @@ pub fn load_cpu_benchmark(nb_of_threads: u64) -> Result<u64, WorgenXError> {
         }
     }
 
-    let nb_of_passwd = match shared_passwd_counter.lock() {
+    let nb_of_passwd: u64 = match shared_passwd_counter.lock() {
         Ok(counter) => *counter,
         Err(_) => {
             return Err(WorgenXError::SystemError(SystemError::ThreadError(
@@ -118,18 +118,18 @@ pub fn load_cpu_benchmark(nb_of_threads: u64) -> Result<u64, WorgenXError> {
     Ok(nb_of_passwd)
 }
 
-/// This function is charged to run the stress test in a thread
-/// It generates a lot of passwords in a loop
-/// The number of passwords generated is stored in a shared counter
+/// This function is charged to run the stress test in a thread.
+/// It generates a lot of passwords in a loop.
+/// The number of passwords generated is stored in a shared counter.
 ///
 /// # Arguments
 ///
-/// * `stop_signal` - The stop signal to stop the stress test
-/// * `shared_passwd_counter` - The shared counter to store the number of passwords generated
+/// * `stop_signal` - The stop signal to stop the stress test.
+/// * `shared_passwd_counter` - The shared counter to store the number of passwords generated.
 ///
 /// # Returns
 ///
-/// Ok(()) if the stress test is done, WorgenXError otherwise
+/// Ok(()) if the stress test is done, WorgenXError otherwise.
 ///
 fn run_stress_test(
     stop_signal: Arc<AtomicBool>,
@@ -156,12 +156,12 @@ fn run_stress_test(
     }
 }
 
-/// This function is charged to build the progress bar during the benchmark
+/// This function is charged to build the progress bar during the benchmark.
 ///
 /// # Arguments
 ///
-/// * `seconds` - The number of seconds elapsed
-/// * `pb` - The progress bar instance (from the indicatif crate)
+/// * `seconds` - The number of seconds elapsed.
+/// * `pb` - The progress bar instance (from the indicatif crate).
 ///
 fn build_wordlist_progress_bar(seconds: u64, pb: &Arc<Mutex<ProgressBar>>) {
     let mut pourcentage: u64 = (seconds * 100) / 60;
