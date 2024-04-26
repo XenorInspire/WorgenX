@@ -42,7 +42,7 @@ sudo dnf install ./worgenx_<version>_<arch>.rpm
 
 #### For Windows :
 
-Just download the .exe file and execute it. You can also add the path to the environment variables to use it in the command line.
+Just download the .exe file and execute it. You can also add the path to the environment variables to use it in the command line directly without specifying the full path.
 
 ### Install from the source code
 
