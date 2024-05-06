@@ -49,14 +49,7 @@ pub fn load_cpu_benchmark(nb_of_threads: u8) -> Result<u64, WorgenXError> {
     let progress_bar_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
         println!("WorgenX CPU Benchmark is in progress...");
         for received in rx_progress_bar {
-            match received {
-                Ok(value) => {
-                    build_wordlist_progress_bar(value, &pb_clone);
-                }
-                Err(e) => {
-                    return Err(e);
-                }
-            }
+            build_wordlist_progress_bar(received?, &pb_clone);
         }
 
         build_wordlist_progress_bar(60, &pb_clone);
@@ -68,13 +61,8 @@ pub fn load_cpu_benchmark(nb_of_threads: u8) -> Result<u64, WorgenXError> {
         let shared_signal_rst: Arc<AtomicBool> = Arc::clone(&shared_signal);
         let shared_passwd_counter: Arc<Mutex<u64>> = Arc::clone(&shared_passwd_counter);
         threads.push(thread::spawn(move || {
-            let shared_passwd_counter: Arc<Mutex<u64>> = Arc::clone(&shared_passwd_counter);
-            match run_stress_test(shared_signal_rst, shared_passwd_counter) {
-                Ok(_) => {}
-                Err(e) => {
-                    println!("{}", e);
-                }
-            }
+            run_stress_test(shared_signal_rst, shared_passwd_counter)
+                .unwrap_or_else(|e| println!("{}", e));
         }));
     }
 
