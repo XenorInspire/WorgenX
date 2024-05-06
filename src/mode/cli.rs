@@ -526,7 +526,7 @@ fn display_help() {
     println!("Usage: worgenX <command> [options]");
     println!("Commands:");
     println!("  wordlist\t\tGenerate a wordlist");
-    println!("  passwordd\t\tGenerate random password(s)");
+    println!("  password\t\tGenerate random password(s)");
     println!("  benchmark\t\tCPU Benchmark");
     println!("  -v, --version\t\tDisplay the version of WorgenX");
     println!("  -h, --help\t\tDisplay this help message\n\n");
