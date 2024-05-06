@@ -1,4 +1,4 @@
-/// The default dictionaries used to generate the password(s)
+/// The default dictionaries used to generate the password(s).
 ///
 pub const LOWERCASE: &[u8] = b"abcdefghijklmnopqrstuvwxyz";
 pub const UPPERCASE: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ";

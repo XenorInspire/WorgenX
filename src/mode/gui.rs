@@ -82,12 +82,9 @@ fn main_passwd_generation() {
         let password_config: PasswordConfig = allocate_passwd_config_gui();
         let passwords: Vec<String> = password::generate_random_passwords(&password_config);
 
-        println!("You can find your password(s) below :");
-        for password in &passwords {
-            println!("{}", password);
-        }
-
+        println!("\nYou can find your password(s) below :\n\n{}", passwords.join("\n"));
         println!("\nDo you want to save the passwords in a file ? (y/n)");
+
         let choice: String = system::get_user_choice_yn();
         if choice.eq("y") {
             let mut file_result: Result<(File, String), SystemError> =
@@ -215,21 +212,18 @@ fn main_wordlist_generation() {
         }
 
         let (_, filename) = file_result.unwrap();
-        match wordlist::wordlist_generation_scheduler(
+        if let Err(e) = wordlist::wordlist_generation_scheduler(
             &wordlist_config,
             nb_of_passwords,
             num_cpus::get_physical() as u8,
             &filename,
             false,
         ) {
-            Ok(_) => (),
-            Err(e) => {
-                println!("{}", e);
-                return;
-            }
+            println!("{}", e);
+            return;
         }
-        println!("The wordlist has been saved in the file : {}", filename);
 
+        println!("The wordlist has been saved in the file : {}", filename);
         println!("\nDo you want to generate another wordlist ? (y/n)");
         again = system::get_user_choice_yn();
     }
