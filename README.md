@@ -86,7 +86,7 @@ $ worgenX --help
 Usage: worgenX <command> [options]
 Commands:
   wordlist              Generate a wordlist
-  passwordd             Generate random password(s)
+  password              Generate random password(s)
   benchmark             CPU Benchmark
   -v, --version         Display the version of WorgenX
   -h, --help            Display this help message
