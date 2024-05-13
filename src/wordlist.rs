@@ -415,3 +415,69 @@ pub fn build_wordlist_progress_bar(
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_create_wordlist_content() {
+        let wordlist_values: WordlistValues = WordlistValues {
+            numbers: true,
+            special_characters: true,
+            uppercase: true,
+            lowercase: true,
+            mask: String::from("????"),
+        };
+        let result: Vec<u8> = create_wordlist_content(&wordlist_values);
+        assert_eq!(result.len(), 91);
+    }
+
+    #[test]
+    fn test_format_mask_to_indexes() {
+        let mask: String = String::from("????");
+        let (formated_mask, mask_indexes) = format_mask_to_indexes(&mask);
+        assert_eq!(formated_mask, vec!['\0', '\0', '\0', '\0']);
+        assert_eq!(mask_indexes, vec![0, 1, 2, 3]);
+    }
+
+    #[test]
+    fn test_build_wordlist_config() {
+        let wordlist_values: WordlistValues = WordlistValues {
+            numbers: true,
+            special_characters: true,
+            uppercase: true,
+            lowercase: true,
+            mask: String::from("????"),
+        };
+        let wordlist_config: WordlistConfig = build_wordlist_config(&wordlist_values);
+        assert_eq!(wordlist_config.dict.len(), 91);
+        assert_eq!(wordlist_config.mask_indexes, vec![0, 1, 2, 3]);
+        assert_eq!(wordlist_config.formated_mask, vec!['\0', '\0', '\0', '\0']);
+    }
+
+    #[test]
+    fn test_generate_wordlist_part() {
+        let nb_of_passwords: u64 = 10;
+        let dict_indexes: Vec<usize> = vec![0, 0, 0, 0];
+        let formated_mask: Vec<char> = vec!['\0', '\0', '\0', '\0'];
+        let mask_indexes: Vec<usize> = vec![0, 1, 2, 3];
+        let dict: Vec<u8> = vec![b'a', b'b', b'c', b'd'];
+        let file: Arc<Mutex<File>> = Arc::new(Mutex::new(File::create("test.txt").unwrap()));
+        let result: Result<(), WorgenXError> = generate_wordlist_part(
+            nb_of_passwords,
+            dict_indexes,
+            &formated_mask,
+            &mask_indexes,
+            &dict,
+            Arc::clone(&file),
+        );
+        assert!(result.is_ok());
+
+        let content: String = std::fs::read_to_string("test.txt").unwrap();
+        let expected_content: String = String::from("aaaa\naaab\naaac\naaad\naaba\naabb\naabc\naabd\naaca\naacb\n");
+        assert_eq!(content.lines().count(), 10);
+        assert_eq!(content, expected_content);
+        std::fs::remove_file("test.txt").unwrap();
+    }
+}
