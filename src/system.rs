@@ -150,24 +150,27 @@ pub fn is_valid_path(path: String) -> Result<String, SystemError> {
         return Err(SystemError::PathTooLong(path.to_string()));
     }
 
-    if !check_if_folder_exists(&full_path) {
+    if !check_if_parent_folder_exists(&full_path) {
         return Err(SystemError::ParentFolderDoesntExist(path.to_string()));
     }
     Ok(full_path)
 }
 
-/// This function is charged to check if a folder exists on the system.
+/// This function is charged to check if the parent folder exists from a given file path.
 ///
 /// # Arguments
 ///
-/// * `folder` - A string slice that holds the folder to check.
+/// * `file_path` - A string slice that holds the file path.
 ///
 /// # Returns
 ///
-/// True if the folder exists, false otherwise.
+/// True if the parent folder exists, false otherwise.
 ///
-pub fn check_if_folder_exists(folder: &str) -> bool {
-    Path::new(folder).parent().is_some()
+pub fn check_if_parent_folder_exists(file_path: &str) -> bool {
+    match Path::new(file_path).parent() {
+        Some(p) => p.exists(),
+        None => false,
+    }
 }
 
 /// This function is charged to create the passwords or wordlists folder if it doesn't exist.
@@ -346,4 +349,96 @@ pub fn get_estimated_size(nb_of_passwords: u64, length: u64) -> String {
         size_str.push_str(" TB");
     }
     size_str
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_is_valid_path() {
+        let relative_path: String = "./test.txt".to_string();
+        let invalid_path: String = "test.txt\0".to_string();
+
+        #[cfg(target_family = "windows")]
+        let absolute_path: String = "C:/Users/test.txt".to_string();
+
+        #[cfg(target_family = "unix")]
+        let absolute_path: String = "/home/test.txt".to_string();
+
+        assert!(is_valid_path(relative_path.clone()).is_ok());
+        assert!(is_valid_path(absolute_path.clone()).is_ok());
+        assert!(is_valid_path(invalid_path.clone()).is_err());
+    }
+
+    #[test]
+    fn test_check_if_folder_exists() {
+        let valid_relative_file_path: &str = "./test.txt";
+        let invalid_file_path: &str = "./test/test.txt";
+
+        #[cfg(target_family = "windows")]
+        let valid_absolute_file_path: &str = "C:/Users/test.txt";
+
+        #[cfg(target_family = "unix")]
+        let valid_absolute_file_path: &str = "/home/test.txt";
+
+        assert!(check_if_parent_folder_exists(valid_relative_file_path));
+        assert!(!check_if_parent_folder_exists(invalid_file_path));
+        assert!(check_if_parent_folder_exists(valid_absolute_file_path));
+    }
+
+    #[test]
+    #[cfg(feature = "gui")]
+    fn test_create_folder_if_not_exists() {
+        let valid_folder: &str = "./test_folder/";
+
+        assert!(create_folder_if_not_exists(valid_folder).is_ok());
+        std::fs::remove_dir(valid_folder).unwrap();
+    }
+
+    #[test]
+    fn test_get_elapsed_time() {
+        let start_time: Instant = Instant::now();
+        std::thread::sleep(Duration::from_secs(2));
+        let elapsed_time: String = get_elapsed_time(start_time);
+
+        assert_eq!(elapsed_time, "2 seconds");
+    }
+
+    #[test]
+    fn test_save_passwd_to_file() {
+        let file: Arc<Mutex<File>> = Arc::new(Mutex::new(File::create("./test.txt").unwrap()));
+        let passwords: String = "test".to_string();
+        assert!(save_passwd_to_file(file, passwords).is_ok());
+
+        let content: String = std::fs::read_to_string("./test.txt").unwrap();
+        assert_eq!(content, "test\n");
+
+        std::fs::remove_file("./test.txt").unwrap();
+    }
+
+    #[test]
+    fn test_get_progress_bar() {
+        let pb: ProgressBar = get_progress_bar();
+        assert_eq!(pb.length(), Some(100));
+    }
+
+    #[test]
+    fn test_get_estimated_size() {
+        let nb_of_passwords: u64 = 1000;
+        let length: u64 = 10;
+        assert_eq!(get_estimated_size(nb_of_passwords, length), "10.74 KB");
+
+        let nb_of_passwords: u64 = 1000000;
+        let length: u64 = 10;
+        assert_eq!(get_estimated_size(nb_of_passwords, length), "10.49 MB");
+
+        let nb_of_passwords: u64 = 0;
+        let length: u64 = 10;
+        assert_eq!(get_estimated_size(nb_of_passwords, length), "");
+
+        let nb_of_passwords: u64 = 10;
+        let length: u64 = 0;
+        assert_eq!(get_estimated_size(nb_of_passwords, length), "");
+    }
 }
