@@ -31,3 +31,37 @@ pub fn password_config_to_json(
     })
     .to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use serde_json::Value;
+
+    use super::*;
+
+    #[test]
+    fn test_password_config_to_json() {
+        let password_config: PasswordConfig = PasswordConfig {
+            numbers: true,
+            special_characters: true,
+            uppercase: true,
+            lowercase: true,
+            length: 10,
+            number_of_passwords: 1,
+        };
+        let passwords: Vec<String> = vec!["password".to_string()];
+        let json_output: String = password_config_to_json(&password_config, &passwords);
+
+        let json_from_str: Value = serde_json::from_str(&json_output).unwrap();
+        let json_expected_object: Value = json!({
+            "number_of_passwords": 1,
+            "password_length": 10,
+            "uppercase": true,
+            "lowercase": true,
+            "numbers": true,
+            "special_characters": true,
+            "passwords": ["password"]
+        });
+
+        assert_eq!(json_from_str, json_expected_object);
+    }
+}
