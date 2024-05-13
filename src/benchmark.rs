@@ -166,3 +166,14 @@ fn build_wordlist_progress_bar(seconds: u64, pb: &Arc<Mutex<ProgressBar>>) {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_load_cpu_benchmark() {
+        let result: Result<u64, WorgenXError> = load_cpu_benchmark(4);
+        assert!(result.is_ok());
+    }
+}
