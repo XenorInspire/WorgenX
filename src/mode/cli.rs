@@ -563,3 +563,71 @@ fn display_help() {
     println!("  The following option is optional:");
     println!("    -t <threads>, --threads <threads>\tNumber of threads to use for the CPU benchmark\n\t\t\t\t\tBy default, the number of threads is based on the number of physical cores of the CPU\n");
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_allocate_passwd_config_cli() {
+        let command_context: Command = build_command_context();
+        let matches: ArgMatches = command_context.get_matches_from(vec!["worgenX", "password", "-l", "-u", "-n", "-x", "-s", "10", "-c", "5", "-o", "test.txt", "-j"]);
+        
+        match matches.subcommand(){
+            Some(("password", sub_matches)) => {
+                let result: PasswordGenerationOptions = allocate_passwd_config_cli(sub_matches).unwrap();
+                assert_eq!(result.password_config.number_of_passwords, 5);
+                assert_eq!(result.password_config.length, 10);
+                assert!(result.password_config.lowercase);
+                assert!(result.password_config.uppercase);
+                assert!(result.password_config.numbers);
+                assert!(result.password_config.special_characters);
+                assert!(result.output_file.contains("test.txt"));
+                assert!(result.json);
+                assert!(!result.no_display);
+            },
+            _ => panic!("Should never happen")
+        }
+    }
+
+    #[test]
+    fn test_allocate_wordlist_config_cli() {
+        let command_context: Command = build_command_context();
+        let matches: ArgMatches = command_context.get_matches_from(vec!["worgenX", "wordlist", "-l", "-u", "-n", "-x", "-m", "A?1", "-o", "test.txt", "-d", "-t", "4"]);
+        
+        match matches.subcommand(){
+            Some(("wordlist", sub_matches)) => {
+                let result: WordlistGenerationOptions = allocate_wordlist_config_cli(sub_matches).unwrap();
+                assert_eq!(result.wordlist_values.mask, "A?1");
+                assert_eq!(result.threads, 4);
+                assert!(result.wordlist_values.lowercase);
+                assert!(result.wordlist_values.uppercase);
+                assert!(result.wordlist_values.numbers);
+                assert!(result.wordlist_values.special_characters);
+                assert!(result.output_file.contains("test.txt"));
+                assert!(result.no_loading_bar);
+            },
+            _ => panic!("Should never happen")
+        }
+    }
+
+    #[test]
+    fn test_allocate_benchmark_config_cli() {
+        let command_context: Command = build_command_context();
+        let matches: ArgMatches = command_context.get_matches_from(vec!["worgenX", "benchmark", "-t", "4"]);
+        
+        match matches.subcommand(){
+            Some(("benchmark", sub_matches)) => {
+                let result: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches).unwrap();
+                assert_eq!(result.threads, 4);
+            },
+            _ => panic!("Should never happen")
+        }
+    }
+
+    #[test]
+    fn test_check_output_arg() {
+        let result: Result<String, WorgenXError> = check_output_arg("./test.txt");
+        assert!(result.is_ok());
+    }
+}
