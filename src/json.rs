@@ -34,9 +34,8 @@ pub fn password_config_to_json(
 
 #[cfg(test)]
 mod tests {
-    use serde_json::Value;
-
     use super::*;
+    use serde_json::Value;
 
     #[test]
     fn test_password_config_to_json() {
