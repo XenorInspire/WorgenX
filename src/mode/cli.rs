@@ -108,7 +108,7 @@ fn build_command_context() -> Command {
                 .short('t')
                 .long("threads")
                 .help("Number of threads to generate the passwords")
-                .value_parser(value_parser!(u8))
+                .value_parser(value_parser!(u8).range(1..u8::MAX as i64))
                 .value_name("threads")
                 .default_value(default_threads),
         );
@@ -148,7 +148,7 @@ fn build_command_context() -> Command {
                 .short('s')
                 .long("size")
                 .help("Size of the passwords in characters")
-                .value_parser(value_parser!(u32))
+                .value_parser(value_parser!(u32).range(1..u32::MAX as i64))
                 .value_name("size")
                 .required(true),
         )
@@ -157,7 +157,7 @@ fn build_command_context() -> Command {
                 .short('c')
                 .long("count")
                 .help("Number of passwords to generate")
-                .value_parser(value_parser!(u64))
+                .value_parser(value_parser!(u64).range(1..u64::MAX))
                 .value_name("count")
                 .required(true),
         )
@@ -193,7 +193,7 @@ fn build_command_context() -> Command {
                 .short('t')
                 .long("threads")
                 .help("Number of threads to use for the CPU benchmark")
-                .value_parser(value_parser!(u8))
+                .value_parser(value_parser!(u8).range(1..u8::MAX as i64))
                 .value_name("threads")
                 .default_value(default_threads),
         );
