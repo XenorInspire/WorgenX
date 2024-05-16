@@ -104,6 +104,14 @@ fn build_command_context() -> Command {
                 .action(ArgAction::SetTrue),
         )
         .arg(
+            Arg::new("hash")
+                .short('h')
+                .long("hash")
+                .help("Hash algorithm to use for the wordlist")
+                .value_parser(vec!["md5", "sha1", "sha224", "sha256", "sha384", "sha512", "sha3-224", "sha3-256", "sha3-384", "sha3-512", "blake2b", "blake2s", "whirlpool"])
+                .value_name("hash"),
+        )
+        .arg(
             Arg::new("threads_wordlist")
                 .short('t')
                 .long("threads")
@@ -543,6 +551,7 @@ fn display_help() {
     println!("    -o <path>, --output <path>\t\tSave the wordlist in a text file");
     println!("\n  The following options are optional:");
     println!("    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist");
+    println!("    -h, --hash <hash>\t\t\tHash algorithm to use for the wordlist.\n\t\t\t\t\tYou can choose between: md5, sha1, sha224, sha256, sha384, sha512,\n\t\t\t\t\tsha3-224, sha3-256, sha3-384, sha3-512, blake2b, blake2s and whirlpool");
     println!("    -t <threads>, --threads <threads>\tNumber of threads to generate the passwords\n\t\t\t\t\tBy default, the number of threads is based on the number of physical cores of the CPU");
 
     println!("\n  --- Password generation ---");
