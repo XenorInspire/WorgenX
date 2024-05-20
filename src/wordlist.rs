@@ -9,7 +9,7 @@ use crate::{
 use indicatif::ProgressBar;
 use std::{
     fs::{File, OpenOptions},
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, MutexGuard},
     thread::{self, JoinHandle},
     time::Instant,
 };
@@ -34,6 +34,7 @@ pub struct WordlistValues {
     pub uppercase: bool,
     pub lowercase: bool,
     pub mask: String,
+    pub hash: String,
 }
 
 /// This struct is built from the WordlistValues struct and will be used to generate the wordlist.
@@ -43,6 +44,7 @@ pub struct WordlistConfig {
     pub dict: Vec<u8>,
     pub mask_indexes: Vec<usize>,
     pub formated_mask: Vec<char>,
+    pub hash: String,
 }
 
 /// This function is charged to build the final dictionary from the user's choices.
@@ -141,6 +143,7 @@ pub fn build_wordlist_config(wordlist_values: &WordlistValues) -> WordlistConfig
         dict,
         mask_indexes,
         formated_mask,
+        hash: wordlist_values.hash.clone(),
     }
 }
 
@@ -231,20 +234,15 @@ fn run_wordlist_generation(
     let dict_size: usize = wordlist_config.dict.len();
     let shared_dict: Arc<Vec<u8>> = Arc::new(wordlist_config.dict.clone());
 
-    let file: File = match OpenOptions::new()
+    let file: File = OpenOptions::new()
         .write(true)
         .create(true)
         .truncate(true)
         .open(file_path)
-    {
-        Ok(file) => file,
-        Err(_) => {
-            return Err(WorgenXError::SystemError(SystemError::UnableToCreateFile(
-                file_path.to_string(),
-                "Please check the path and try again".to_string(),
-            )))
-        }
-    };
+        .map_err(|_| WorgenXError::SystemError(SystemError::UnableToCreateFile(
+            file_path.to_string(),
+            "Please check the path and try again".to_string(),
+        )))?;
 
     let shared_file: Arc<Mutex<File>> = Arc::new(Mutex::new(file));
     let mut threads: Vec<JoinHandle<Result<(), WorgenXError>>> = Vec::new();
@@ -261,20 +259,19 @@ fn run_wordlist_generation(
         let shared_formated_mask: Arc<Vec<char>> = Arc::clone(&shared_formated_mask);
         let shared_mask_indexes: Arc<Vec<usize>> = Arc::clone(&shared_mask_indexes);
         let shared_dict: Arc<Vec<u8>> = Arc::clone(&shared_dict);
+        let shared_hash: String = wordlist_config.hash.clone();
         let file: Arc<Mutex<File>> = Arc::clone(&shared_file);
         let temp_clone: Vec<usize> = temp.clone();
         let thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
-            match generate_wordlist_part(
+            generate_wordlist_part(
                 nb_of_passwd_per_thread,
                 temp_clone,
                 &shared_formated_mask,
                 &shared_mask_indexes,
                 &shared_dict,
                 file,
-            ) {
-                Ok(_) => Ok(()),
-                Err(e) => Err(e),
-            }
+                &shared_hash,
+            )
         });
         threads.push(thread);
 
@@ -326,6 +323,7 @@ fn generate_wordlist_part(
     mask_indexes: &[usize],
     dict: &[u8],
     file: Arc<Mutex<File>>,
+    hash: &str,
 ) -> Result<(), WorgenXError> {
     let mut buffer: Vec<String> = Vec::new();
     let mut line: Vec<char> = Vec::with_capacity(formated_mask.len());
@@ -354,8 +352,21 @@ fn generate_wordlist_part(
             dict_indexes[idx] = 0;
         }
 
-        buffer.push(line.iter().collect());
-        let mut counter = match GLOBAL_COUNTER.lock() {
+        let line_str: String = line.iter().collect::<String>();
+        if !hash.is_empty() {
+            match system::manage_hash(line_str, hash) {
+                Ok(hashed_passwd) => {
+                    buffer.push(hashed_passwd);
+                }
+                Err(e) => {
+                    return Err(WorgenXError::SystemError(e));
+                }
+            }
+        } else {
+            buffer.push(line_str);
+        }
+
+        let mut counter: MutexGuard<u64> = match GLOBAL_COUNTER.lock() {
             Ok(counter) => counter,
             Err(e) => {
                 return Err(WorgenXError::SystemError(SystemError::ThreadError(
@@ -459,13 +470,13 @@ mod tests {
     }
 
     #[test]
-    fn test_generate_wordlist_part() {
+    fn test_generate_wordlist_part_without_hash() {
         let nb_of_passwords: u64 = 10;
         let dict_indexes: Vec<usize> = vec![0, 0, 0, 0];
         let formated_mask: Vec<char> = vec!['\0', '\0', '\0', '\0'];
         let mask_indexes: Vec<usize> = vec![0, 1, 2, 3];
         let dict: Vec<u8> = vec![b'a', b'b', b'c', b'd'];
-        let file: Arc<Mutex<File>> = Arc::new(Mutex::new(File::create("test.txt").unwrap()));
+        let file: Arc<Mutex<File>> = Arc::new(Mutex::new(File::create("test1.txt").unwrap()));
         let result: Result<(), WorgenXError> = generate_wordlist_part(
             nb_of_passwords,
             dict_indexes,
@@ -477,10 +488,55 @@ mod tests {
         );
         assert!(result.is_ok());
 
-        let content: String = std::fs::read_to_string("test.txt").unwrap();
-        let expected_content: String = String::from("aaaa\naaab\naaac\naaad\naaba\naabb\naabc\naabd\naaca\naacb\n");
+        let content: String = std::fs::read_to_string("test1.txt").unwrap();
+        let expected_content: String =
+            String::from("aaaa\naaab\naaac\naaad\naaba\naabb\naabc\naabd\naaca\naacb\n");
         assert_eq!(content.lines().count(), 10);
         assert_eq!(content, expected_content);
-        std::fs::remove_file("test.txt").unwrap();
+        std::fs::remove_file("test1.txt").unwrap();
+    }
+
+    #[test]
+    fn test_generate_wordlist_part_with_hash() {
+        let nb_of_passwords: u64 = 16;
+        let dict_indexes: Vec<usize> = vec![0, 0];
+        let formated_mask: Vec<char> = vec!['\0', '\0'];
+        let mask_indexes: Vec<usize> = vec![0, 1];
+        let dict: Vec<u8> = vec![b'0', b'1', b'2', b'3'];
+        let file: Arc<Mutex<File>> = Arc::new(Mutex::new(File::create("test2.txt").unwrap()));
+        let result: Result<(), WorgenXError> = generate_wordlist_part(
+            nb_of_passwords,
+            dict_indexes,
+            &formated_mask,
+            &mask_indexes,
+            &dict,
+            Arc::clone(&file),
+            "sha256",
+        );
+        assert!(result.is_ok());
+
+        let content: String = std::fs::read_to_string("test2.txt").unwrap();
+        let expected_content: String = String::from(
+            "f1534392279bddbf9d43dde8701cb5be14b82f76ec6607bf8d6ad557f60f304e
+938db8c9f82c8cb58d3f3ef4fd250036a48d26a712753d2fde5abd03a85cabf4
+a953f09a1b6b6725b81956e9ad0b1eb49e3ad40004c04307ef8af6246a054116
+0b8efa5a3bf104413a725c6ff0459a6be12b1fd33314cbb138745baf39504ae5
+4a44dc15364204a80fe80e9039455cc1608281820fe2b24f1e5233ade6af1dd5
+4fc82b26aecb47d2868c4efbe3581732a3e7cbcc6c2efb32062c08170a05eeb8
+6b51d431df5d7f141cbececcf79edf3dd861c3b4069f0b11661a3eefacbba918
+3fdba35f04dc8c462986c992bcf875546257113072a909c162f7e470e581e278
+f5ca38f748a1d6eaf726b8a42fb575c3c71f1864a8143301782de13da2d9202b
+6f4b6612125fb3a0daecd2799dfd6c9c299424fd920f9b308110a2c1fbd8f443
+785f3ec7eb32f30b90cd0fcf3657d388b5ff4297f2f9716ff66e9b69c05ddd09
+535fa30d7e25dd8a49f1536779734ec8286108d115da5045d77f3b4185d8f790
+624b60c58c9d8bfb6ff1886c2fd605d2adeb6ea4da576068201b6c6958ce93f4
+eb1e33e8a81b697b75855af6bfcdbcbf7cbbde9f94962ceaec1ed8af21f5a50f
+e29c9c180c6279b0b02abd6a1801c7c04082cf486ec027aa13515e4f3884bb6b
+c6f3ac57944a531490cd39902d0f777715fd005efac9a30622d5f5205e7f6894
+",
+        );
+        assert_eq!(content.lines().count(), 16);
+        assert_eq!(content, expected_content);
+        std::fs::remove_file("test2.txt").unwrap();
     }
 }

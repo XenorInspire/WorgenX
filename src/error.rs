@@ -52,4 +52,7 @@ pub enum SystemError {
     /// This error is raised if there is a thread error.
     #[error("Error: thread error\n{0}")]
     ThreadError(String),
+    /// This error is raised if the hash algorithm is not supported.
+    #[error("Error: the hash algorithm `{0}` is not supported")]
+    UnsupportedHashAlgorithm(String),
 }

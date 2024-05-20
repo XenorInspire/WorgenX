@@ -2,9 +2,11 @@
 use crate::error::{SystemError, WorgenXError};
 
 // Extern crates
+use digest::Digest;
 use indicatif::{ProgressBar, ProgressStyle};
-#[cfg(feature = "gui")]
-use std::{cmp::PartialOrd, default::Default, fmt::Display, io::stdin, marker::Copy, str::FromStr};
+use md5::Md5;
+use sha1::Sha1;
+use sha2::{Sha224, Sha256, Sha384, Sha512};
 use std::{
     fs::File,
     io::Write,
@@ -12,6 +14,9 @@ use std::{
     sync::{Arc, Mutex},
     time::{Duration, Instant},
 };
+
+#[cfg(feature = "gui")]
+use std::{cmp::PartialOrd, default::Default, fmt::Display, io::stdin, marker::Copy, str::FromStr};
 
 /// OS specific constants for GUI mode.
 ///
@@ -351,6 +356,49 @@ pub fn get_estimated_size(nb_of_passwords: u64, length: u64) -> String {
     size_str
 }
 
+/// This functions is charged to manage password hashing.
+/// It returns the hashed password from the hash algorithm specified by the user.
+/// If the hash algorithm is not supported, it returns an error.
+///
+/// # Arguments
+///
+/// * `password` - The password to hash.
+/// * `hash` - The hash algorithm to use.
+///
+/// # Returns
+///
+/// The hashed password, SystemError otherwise.
+///
+pub fn manage_hash(password: String, hash: &str) -> Result<String, SystemError> {
+    match hash {
+        "md5" => Ok(hash_with_digest(Md5::new(), password)),
+        "sha1" => Ok(hash_with_digest(Sha1::new(), password)),
+        "sha224" => Ok(hash_with_digest(Sha224::new(), password)),
+        "sha256" => Ok(hash_with_digest(Sha256::new(), password)),
+        "sha384" => Ok(hash_with_digest(Sha384::new(), password)),
+        "sha512" => Ok(hash_with_digest(Sha512::new(), password)),
+        _ => Err(SystemError::UnsupportedHashAlgorithm(hash.to_string())),
+    }
+}
+
+/// This functions is charged to hash a password with a specific hash algorithm.
+/// It returns the hashed password.
+///
+/// # Arguments
+///
+/// * `hasher` - The hasher to use, it must implement the Digest trait.
+/// * `password` - The password to hash.
+///
+/// # Returns
+///
+/// The hashed password.
+///
+fn hash_with_digest<D: Digest>(mut hasher: D, password: String) -> String {
+        hasher.update(password.as_bytes());
+        let result = hasher.finalize();
+        hex::encode(result)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -440,5 +488,18 @@ mod tests {
         let nb_of_passwords: u64 = 10;
         let length: u64 = 0;
         assert_eq!(get_estimated_size(nb_of_passwords, length), "");
+    }
+
+    #[test]
+    fn test_hash_password() {
+        let password: String = String::from("password");
+
+        assert_eq!(manage_hash(password.clone(), "md5").unwrap(), "5f4dcc3b5aa765d61d8327deb882cf99");
+        assert_eq!(manage_hash(password.clone(), "sha1").unwrap(), "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" );
+        assert_eq!(manage_hash(password.clone(), "sha224").unwrap(), "d63dc919e201d7bc4c825630d2cf25fdc93d4b2f0d46706d29038d01");
+        assert_eq!(manage_hash(password.clone(), "sha256").unwrap(), "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8");
+        assert_eq!(manage_hash(password.clone(), "sha384").unwrap(), "a8b64babd0aca91a59bdbb7761b421d4f2bb38280d3a75ba0f21f2bebc45583d446c598660c94ce680c47d19c30783a7");
+        assert_eq!(manage_hash(password.clone(), "sha512").unwrap(), "b109f3bbbc244eb82441917ed06d618b9008dd09b3befd1b5e07394c706a8bb980b1d7785e5976ec049b46df5f1326af5a2ea6d103fd07c95385ffab0cacbc86");
+        assert!(manage_hash(password, "sha999").is_err());
     }
 }
