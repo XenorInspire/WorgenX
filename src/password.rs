@@ -6,6 +6,7 @@ use rand::{rngs::OsRng, seq::SliceRandom, Rng};
 
 /// This struct built from the user's choices will be used to generate the random password.
 ///
+#[derive(Debug)]
 pub struct PasswordConfig {
     pub numbers: bool,
     pub special_characters: bool,
