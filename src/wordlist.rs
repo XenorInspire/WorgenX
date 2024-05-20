@@ -27,6 +27,7 @@ static GLOBAL_COUNTER: Mutex<u64> = Mutex::new(0);
 
 /// This struct is built from the user's choices will be used to generate the wordlist.
 ///
+#[derive(Debug)]
 pub struct WordlistValues {
     pub numbers: bool,
     pub special_characters: bool,
@@ -37,6 +38,7 @@ pub struct WordlistValues {
 
 /// This struct is built from the WordlistValues struct and will be used to generate the wordlist.
 ///
+#[derive(Debug)]
 pub struct WordlistConfig {
     pub dict: Vec<u8>,
     pub mask_indexes: Vec<usize>,
@@ -167,8 +169,7 @@ pub fn wordlist_generation_scheduler(
     let pb_clone: Arc<Mutex<indicatif::ProgressBar>> = Arc::clone(&pb);
     let start: Instant = Instant::now();
     let main_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
-        println!("Wordlist generation in progress...");
-        let mut current_value = 0;
+        let mut current_value: u64 = 0;
         while current_value < nb_of_passwords {
             if let Ok(global_counter) = GLOBAL_COUNTER.lock() {
                 current_value = *global_counter;
@@ -327,10 +328,10 @@ fn generate_wordlist_part(
     file: Arc<Mutex<File>>,
 ) -> Result<(), WorgenXError> {
     let mut buffer: Vec<String> = Vec::new();
-    let mut line = Vec::with_capacity(formated_mask.len());
+    let mut line: Vec<char> = Vec::with_capacity(formated_mask.len());
     for _ in 0..nb_of_passwords {
         line.clear();
-        line.shrink_to_fit();
+
         (0..formated_mask.len()).for_each(|i| {
             let mut found: bool = false;
             for idx in 0..mask_indexes.len() {
@@ -372,7 +373,6 @@ fn generate_wordlist_part(
                 }
             }
             buffer.clear();
-            buffer.shrink_to_fit();
         }
     }
 
@@ -428,6 +428,7 @@ mod tests {
             uppercase: true,
             lowercase: true,
             mask: String::from("????"),
+            hash: String::from(""),
         };
         let result: Vec<u8> = create_wordlist_content(&wordlist_values);
         assert_eq!(result.len(), 91);
@@ -449,6 +450,7 @@ mod tests {
             uppercase: true,
             lowercase: true,
             mask: String::from("????"),
+            hash: String::from(""),
         };
         let wordlist_config: WordlistConfig = build_wordlist_config(&wordlist_values);
         assert_eq!(wordlist_config.dict.len(), 91);
@@ -471,6 +473,7 @@ mod tests {
             &mask_indexes,
             &dict,
             Arc::clone(&file),
+            "",
         );
         assert!(result.is_ok());
 

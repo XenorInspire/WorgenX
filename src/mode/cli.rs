@@ -385,6 +385,7 @@ fn run_wordlist(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     let wordlist_config: WordlistConfig = wordlist::build_wordlist_config(&wordlist_generation_parameters.wordlist_values);
     let nb_of_passwords: u64 = wordlist_config.dict.len().pow(wordlist_config.mask_indexes.len() as u32) as u64;
     println!("Estimated size of the wordlist: {}", system::get_estimated_size(nb_of_passwords, wordlist_config.formated_mask.len() as u64));
+    println!("Wordlist generation in progress...");
 
     wordlist::wordlist_generation_scheduler(
         &wordlist_config,
@@ -418,6 +419,7 @@ fn allocate_wordlist_config_cli(
         uppercase: false,
         lowercase: false,
         mask: String::new(),
+        hash: String::new(),
     };
 
     update_config(&mut wordlist_values.lowercase, sub_matches, "lowercase_wordlist");
@@ -425,6 +427,7 @@ fn allocate_wordlist_config_cli(
     update_config(&mut wordlist_values.numbers, sub_matches, "numbers_wordlist");
     update_config(&mut wordlist_values.special_characters, sub_matches, "special_characters_wordlist");
     update_config(&mut wordlist_values.mask, sub_matches, "mask");
+    update_config(&mut wordlist_values.hash, sub_matches, "hash");
     update_config(&mut output_file, sub_matches, "output");
     update_config(&mut no_loading_bar, sub_matches, "disable_loading_bar");
     update_config(&mut threads, sub_matches, "threads_wordlist");

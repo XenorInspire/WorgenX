@@ -211,6 +211,7 @@ fn main_wordlist_generation() {
             file_result = saving_procedure(target::WORDLISTS_FOLDER);
         }
 
+        println!("Wordlist generation started.");
         let (_, filename) = file_result.unwrap();
         if let Err(e) = wordlist::wordlist_generation_scheduler(
             &wordlist_config,
@@ -243,6 +244,7 @@ fn allocate_wordlist_config_gui() -> WordlistValues {
         uppercase: false,
         lowercase: false,
         mask: String::new(),
+        hash: String::new(),
     };
     let mut is_option_chosen: bool = false;
 
