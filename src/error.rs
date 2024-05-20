@@ -20,7 +20,7 @@ pub enum ArgError {
     #[error("Error: missing value for {0}")]
     MissingValue(String),
     /// This error is raised if there isn't any configuration given by the user (for example just wordlist feature without any type of characters specified).
-    #[error("Error: no configuration given for argument. Please specify the mandatory parameters and at least one type of characters.\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
+    #[error("Error: no configuration given for argument.\nPlease specify the mandatory parameters and at least one type of characters.\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
     MissingConfiguration,
 }
 
