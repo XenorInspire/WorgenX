@@ -194,10 +194,9 @@ pub fn create_folder_if_not_exists(folder: &str) -> Result<(), SystemError> {
     if folder.pop().is_none() {
         return Err(SystemError::InvalidPath(folder));
     }
-    
     if !Path::new(&folder).exists() {
         std::fs::create_dir_all(&folder)
-            .map_err(|e| SystemError::UnableToCreateFolder(folder.clone(), e.to_string()))?;
+            .map_err(|e| SystemError::UnableToCreateFolder(folder, e.to_string()))?;
     }
 
     Ok(())
@@ -258,7 +257,7 @@ pub fn get_elapsed_time(start_time: Instant) -> String {
         elapsed_time_str.push_str("less than a second");
     } else {
         elapsed_time_str.push_str(&elapsed_time.to_string());
-        elapsed_time_str.push_str(" seconds");
+        elapsed_time_str.push_str(" second(s)");
     }
 
     elapsed_time_str
