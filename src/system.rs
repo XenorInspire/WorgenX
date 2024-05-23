@@ -192,19 +192,14 @@ pub fn check_if_parent_folder_exists(file_path: &str) -> bool {
 pub fn create_folder_if_not_exists(folder: &str) -> Result<(), SystemError> {
     let mut folder: String = String::from(folder);
     if folder.pop().is_none() {
-        return Err(SystemError::InvalidPath(folder.clone()));
+        return Err(SystemError::InvalidPath(folder));
     }
+    
     if !Path::new(&folder).exists() {
-        match std::fs::create_dir_all(&folder) {
-            Ok(_) => return Ok(()),
-            Err(e) => {
-                return Err(SystemError::UnableToCreateFolder(
-                    folder.clone(),
-                    e.to_string(),
-                ))
-            }
-        };
+        std::fs::create_dir_all(&folder)
+            .map_err(|e| SystemError::UnableToCreateFolder(folder.clone(), e.to_string()))?;
     }
+
     Ok(())
 }
 

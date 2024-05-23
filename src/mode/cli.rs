@@ -242,21 +242,10 @@ pub fn run() -> Result<(), WorgenXError> {
 
     command_context.build();
     match command_context.get_matches().subcommand() {
-        Some(("wordlist", sub_matches)) => match run_wordlist(sub_matches) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(e),
-        },
-        Some(("password", sub_matches)) => match run_passwd(sub_matches) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(e),
-        },
-        Some(("benchmark", sub_matches)) => match run_benchmark(sub_matches) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(e),
-        },
-        _ => {
-            Err(WorgenXError::ArgError(ArgError::NoArgument)) // Should never happen
-        }
+        Some(("wordlist", sub_matches)) => run_wordlist(sub_matches),
+        Some(("password", sub_matches)) => run_passwd(sub_matches),
+        Some(("benchmark", sub_matches)) => run_benchmark(sub_matches),
+        _ => Err(WorgenXError::ArgError(ArgError::NoArgument)) // Should never happen
     }
 }
 
