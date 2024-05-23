@@ -394,9 +394,9 @@ pub fn manage_hash(password: String, hash: &str) -> Result<String, SystemError> 
 /// The hashed password.
 ///
 fn hash_with_digest<D: Digest>(mut hasher: D, password: String) -> String {
-        hasher.update(password.as_bytes());
-        let result = hasher.finalize();
-        hex::encode(result)
+    hasher.update(password.as_bytes());
+    let result = hasher.finalize();
+    hex::encode(result)
 }
 
 #[cfg(test)]

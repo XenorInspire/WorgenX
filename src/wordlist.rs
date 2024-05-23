@@ -311,6 +311,7 @@ fn run_wordlist_generation(
 /// * `mask_indexes` - The indexes of the mask.
 /// * `dict` - The dictionary.
 /// * `file` - The file to write to, wrapped in an `Arc<Mutex<File>>`.
+/// * `hash` - The hash algorithm to use, if any.
 ///
 /// # Returns
 ///
@@ -327,6 +328,19 @@ fn generate_wordlist_part(
 ) -> Result<(), WorgenXError> {
     let mut buffer: Vec<String> = Vec::new();
     let mut line: Vec<char> = Vec::with_capacity(formated_mask.len());
+
+    // This closure is used to hash the password if the user has specified a hash algorithm.
+    let process_line: Box<dyn Fn(String) -> Result<String, WorgenXError>> = if !hash.is_empty() {
+        Box::new(|line_str: String| -> Result<String, WorgenXError> {
+            match system::manage_hash(line_str, hash) {
+                Ok(hashed_passwd) => Ok(hashed_passwd),
+                Err(e) => Err(WorgenXError::SystemError(e)),
+            }
+        })
+    } else {
+        Box::new(|line_str: String| -> Result<String, WorgenXError> { Ok(line_str) })
+    };
+
     for _ in 0..nb_of_passwords {
         line.clear();
 
@@ -352,19 +366,7 @@ fn generate_wordlist_part(
             dict_indexes[idx] = 0;
         }
 
-        let line_str: String = line.iter().collect::<String>();
-        if !hash.is_empty() {
-            match system::manage_hash(line_str, hash) {
-                Ok(hashed_passwd) => {
-                    buffer.push(hashed_passwd);
-                }
-                Err(e) => {
-                    return Err(WorgenXError::SystemError(e));
-                }
-            }
-        } else {
-            buffer.push(line_str);
-        }
+        buffer.push(process_line(line.iter().collect::<String>())?);
 
         let mut counter: MutexGuard<u64> = match GLOBAL_COUNTER.lock() {
             Ok(counter) => counter,
@@ -377,23 +379,13 @@ fn generate_wordlist_part(
         *counter += 1;
 
         if buffer.len() == BUFFER_SIZE {
-            match system::save_passwd_to_file(Arc::clone(&file), buffer.join("\n")) {
-                Ok(_) => {}
-                Err(e) => {
-                    return Err(e);
-                }
-            }
+            system::save_passwd_to_file(Arc::clone(&file), buffer.join("\n"))?;
             buffer.clear();
         }
     }
 
     if !buffer.is_empty() {
-        match system::save_passwd_to_file(Arc::clone(&file), buffer.join("\n")) {
-            Ok(_) => {}
-            Err(e) => {
-                return Err(e);
-            }
-        }
+        system::save_passwd_to_file(Arc::clone(&file), buffer.join("\n"))?;
     }
     Ok(())
 }
@@ -489,8 +481,7 @@ mod tests {
         assert!(result.is_ok());
 
         let content: String = std::fs::read_to_string("test1.txt").unwrap();
-        let expected_content: String =
-            String::from("aaaa\naaab\naaac\naaad\naaba\naabb\naabc\naabd\naaca\naacb\n");
+        let expected_content: String = String::from("aaaa\naaab\naaac\naaad\naaba\naabb\naabc\naabd\naaca\naacb\n");
         assert_eq!(content.lines().count(), 10);
         assert_eq!(content, expected_content);
         std::fs::remove_file("test1.txt").unwrap();
