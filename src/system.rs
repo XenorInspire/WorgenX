@@ -444,7 +444,7 @@ mod tests {
         std::thread::sleep(Duration::from_secs(2));
         let elapsed_time: String = get_elapsed_time(start_time);
 
-        assert_eq!(elapsed_time, "2 seconds");
+        assert_eq!(elapsed_time, "2 second(s)");
     }
 
     #[test]
