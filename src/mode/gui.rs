@@ -26,7 +26,7 @@ use std::{
 pub fn run() {
     loop {
         print_menu();
-        let choice = system::get_user_choice();
+        let choice: String = system::get_user_choice();
         match &*choice {
             "0" => break,
             "1" => main_wordlist_generation(),
@@ -279,6 +279,11 @@ fn allocate_wordlist_config_gui() -> WordlistValues {
         }
     }
 
+    println!("Do you want to hash the passwords of the wordlist ? (y/n)");
+    if system::get_user_choice_yn().eq("y") {
+        wordlist_config.hash = get_hash_choice();
+    }
+
     println!("\nEnter the mask of the wordlist :");
     println!("For every character you want to be fixed, enter the character itself.");
     println!("For every character you want to be variable, enter a ?.");
@@ -294,10 +299,7 @@ fn allocate_wordlist_config_gui() -> WordlistValues {
             println!("The mask must contain at least one '?' !");
             continue;
         } else {
-            println!(
-                "Do you want to validate the following mask : '{}' ? (y/n)",
-                wordlist_config.mask
-            );
+            println!("Do you want to validate the following mask : '{}' ? (y/n)", wordlist_config.mask);
             if system::get_user_choice_yn().eq("y") {
                 is_valid_mask = true;
             }
@@ -318,10 +320,7 @@ fn main_benchmark() {
         thread::sleep(std::time::Duration::from_secs(5));
         match benchmark::load_cpu_benchmark(num_cpus::get_physical() as u8) {
             Ok(nb_of_passwords) => {
-                println!(
-                    "Your CPU has generated {} passwords in 1 minute",
-                    nb_of_passwords
-                );
+                println!("Your CPU has generated {} passwords in 1 minute", nb_of_passwords);
             }
             Err(e) => {
                 println!("{}", e);
@@ -387,4 +386,41 @@ pub fn saving_procedure(target: &str) -> Result<(File, String), SystemError> {
     };
 
     Ok((file, filename))
+}
+
+/// This function is charged to get the hash choice from the user.
+///
+/// # Returns
+///
+/// The hash choice as a string. It returns an empty string if the user does not want to hash the passwords anymore.
+///
+fn get_hash_choice() -> String {
+    let hash_choices: [&str; 14] = [
+        "md5",
+        "sha1",
+        "sha224",
+        "sha256",
+        "sha384",
+        "sha512",
+        "sha3-224",
+        "sha3-256",
+        "sha3-384",
+        "sha3-512",
+        "blake2b-512",
+        "blake2s-256",
+        "whirlpool",
+        "",
+    ];
+
+    loop {
+        println!("Choose the hash algorithm you want to use :");
+        for (i, hash) in hash_choices.iter().enumerate() {
+            println!("{} : {}", i + 1, if hash.is_empty() { "None" } else { hash });
+        }
+
+        match system::get_user_choice().trim().parse::<usize>() {
+            Ok(n) if n >= 1 && n <= hash_choices.len() => return hash_choices[n - 1].to_string(),
+            _ => println!("Error: please specify a valid option"),
+        }
+    }
 }
