@@ -18,7 +18,7 @@ gui = []
 rand = "0.8.5"
 thiserror = "1.0.61"
 num_cpus = "1.16.0"
-serde_json = { version = "1.0.117", optional = true }
+serde_json = { version = "1.0.118", optional = true }
 indicatif = "0.17.8"
 clap = { version = "4.5.7", optional = true }
 md-5 = "0.10.6"
