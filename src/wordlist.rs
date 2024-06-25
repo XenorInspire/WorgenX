@@ -918,4 +918,92 @@ a114cd1299fea4e32d86d9bc877dddf99dee3bf306477e744e894d25a81c713c7d7109883779e6f3
         assert_eq!(content, expected_content);
         std::fs::remove_file("test11.txt").unwrap();
     }
+
+    #[test]
+    fn test_generate_wordlist_part_with_blake2b_512_hash() {
+        let nb_of_passwords: u64 = 16;
+        let dict_indexes: Vec<usize> = vec![0, 0];
+        let formated_mask: Vec<char> = vec!['\0', '\0'];
+        let mask_indexes: Vec<usize> = vec![0, 1];
+        let dict: Vec<u8> = vec![b'0', b'1', b'2', b'3'];
+        let file: Arc<Mutex<File>> = Arc::new(Mutex::new(File::create("test12.txt").unwrap()));
+        let result: Result<(), WorgenXError> = generate_wordlist_part(
+            nb_of_passwords,
+            dict_indexes,
+            &formated_mask,
+            &mask_indexes,
+            &dict,
+            Arc::clone(&file),
+            "blake2b-512",
+        );
+        assert!(result.is_ok());
+
+        let content: String = std::fs::read_to_string("test12.txt").unwrap();
+        let expected_content: String = String::from("7a4754f2de4589268c2a2d11914f71a1cf170c3f245e9b0593c27ab27f8d19a962da68e8d7e2d229e52510481ef285a0031ad3ac88f35a586ab6347b1716db02
+dba297d408c4c0a2ddf1cfbcc6696b440d35738168888c79ae4704e4a87d76f9b913552d15a93bbc2f15ba600d54d5a16a383c98972349661bb5dfa4c500b349
+6008769395ad460cb7ebdf92bc333eec778436d7772bcbc9d783ffcf9647eabe7c41fcdc1eeafae541a1f79b0e9bfe47b90415c7251c6269f30bb712fac51c8d
+0e86396455477a8a17e01419a5212f30858b4a5bde5edb8d8619c7b5fd39a5cc4710d0c44823f49e9f267fa8b478a598b9c330e47c6769f99021db7c4ce7de51
+f2e74cbc3eff574bbc45333c30edb947858543afda4cafdde2903324c9de0bd908b00575c556bd7b8aa2e32a32598a4d5f95cd4490b60a567a3d53680a3310f2
+7aa7e388f8145d395ac616bb526eaa35b10069f49e2b36d7327157d1d4af360dfbbfea805aa7e405ed025ce5eadd56c27c40b92991727a5a16b51df5604ad006
+b7a5a0f0fb0c4a128b8a3e042fc860775d68d825bb3bf180479d0e12b1884e2652fe51ddb9c991b73824fc15609d82cb1cc19053db7dc7637288091f6027bbce
+1da541ba91a8560c5dd0c1a4adc836dc4ac96bf5c407a89edb0a49d46de058a713c7b3d3fc8e0324f602c3a41978ef01dccb989eed22aa65bddc5621765713d3
+92ce61bf50a5c299bc88d6adad5db7b68c4b61abb7760947e8b9898c99312b18ba974d427e1699ede1be7c1c25b03440235a41a71ab2b4d1410399b72da87111
+8c715c0b894785852fbc391d662e2131bf0f0c703852f25b1c07429f35dc67ec8df5998acd4cafd4f1ff7019ebfda0877f79d6b91c1b98084efbb7314258608c
+3733d5bf4f3d2608ba160adf4a8cddbf545f77b417e3ee3a9e5d3b0afb351579125db853e5bce15d5e82c723f29de1ef294341f0ca3e8b3d3431cec7ac316f34
+08949f758439c6293fe5924defaf3e32bb79b9a93c1331f019c51b386557a9412b27f5a60a80bfa1f524c0d0c2e1f63c5b93d108a9a3af8cdb7fc87c765fca3f
+78a42a89d6e562a77f7e1782f29ac05e8c7dea6ccf51c50c9e38bbf09611577f4f6743ef6ea0419c9d536843a42df0195fbc2a404aebfe77de8edc82eb858694
+931314c2ee664b02b8902abbf64ae403208d939152c618a840aba58a3042cab624f16ba2b4e59f49a651d234527e62d06745bd7fff6707b1692e534e8dcfaf56
+33ddec12969ebc28a9a8512e4814170f421e97289c615dc7b1e117eb23d5b6523d4682f641871f9161966579b3714d15e956079a6cd07b4a0ea8b5631674f27a
+afd85ebe3a733ccf64c11c681e05595490854c4a485be585dfff1f2c1958823a0fa11069467c82602b3fece173df052206012b8df3a90b68569c32b3b85c817c
+");
+
+        assert_eq!(content.lines().count(), 16);
+        assert_eq!(content, expected_content);
+        std::fs::remove_file("test12.txt").unwrap();
+    }
+
+    #[test]
+    fn test_generate_wordlist_part_with_blake2s_256_hash() {
+        let nb_of_passwords: u64 = 16;
+        let dict_indexes: Vec<usize> = vec![0, 0];
+        let formated_mask: Vec<char> = vec!['\0', '\0'];
+        let mask_indexes: Vec<usize> = vec![0, 1];
+        let dict: Vec<u8> = vec![b'0', b'1', b'2', b'3'];
+        let file: Arc<Mutex<File>> = Arc::new(Mutex::new(File::create("test13.txt").unwrap()));
+        let result: Result<(), WorgenXError> = generate_wordlist_part(
+            nb_of_passwords,
+            dict_indexes,
+            &formated_mask,
+            &mask_indexes,
+            &dict,
+            Arc::clone(&file),
+            "blake2s-256",
+        );
+        assert!(result.is_ok());
+
+        let content: String = std::fs::read_to_string("test13.txt").unwrap();
+        let expected_content: String = String::from(
+            "3cb66864b2523e549ae456039edcd9156e657edddfebff37e80fd1a80fc38863
+57e36dae300302953c953b59a1b263cb314326db44e919ca4acd57e1da8f0543
+f309b7dd406f649ea531807938154d576331c227d40501a8399fbce9a0b3175f
+b94039da1e9c82d9578a00af4535dd697687794e6f757c300603915426162a1b
+f75ef2a61a17d7acc2561bac08cb7dd4d4654ca4d6311bb7865bc0757873b0ba
+92a30ce2343131f27bdc139b6d337393a9b8549ce6b1a203da96417f5d1864a0
+109a7947e24479dd8391df82eb9af87d135de808edda86e5b9c0f78d7d05b170
+bf652f9276071fddbd19bc05b139d687dc248257a5c28b2957ed04c1a55f4e40
+584de556904b549357e11090ad216e56b5f879d95d0bcdeaf2d2b065a8bce6a7
+6ef2938d68ed56f7bada1d3055b6b591492a73fddeac860ee2d01f9c3f607d9b
+6f14e569ae0ca8f16d019169306bf77382ca79442b36fc7fb5bfbaa27d132bae
+c974d441f2d4398b0f1e1f2cdcd0ad1181773a2f7108bb75649538c24fd89b20
+803d729a8ca8142c2d1a952c969a846c07d0c35b1b9893d2ee54e9235b9800c5
+9dd3dfa071597218fc179995378cc1eb9a0d5da45afba5b86a808241894e91a1
+ad2e6c09da74d174a007c1eac6797f1b2f2ce21fa4e560e92902e0422bd9fa55
+fd5f8f39e9a41e624fb837cd766f55805bd120aac42fe4bc426497eeb7aeaacf
+",
+        );
+
+        assert_eq!(content.lines().count(), 16);
+        assert_eq!(content, expected_content);
+        std::fs::remove_file("test13.txt").unwrap();
+    }
 }
