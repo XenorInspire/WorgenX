@@ -6,6 +6,7 @@ You can generate efficient wordlists with a custom mask and charset, generate ra
 This software has been developed to be used especially for CLI use, but a GUI version is also available for a quick and easy use (but still in a command line interface).
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 ![GitHub release](https://img.shields.io/github/v/release/XenorInspire/WorgenX)
 
 
