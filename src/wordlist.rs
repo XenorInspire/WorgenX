@@ -1006,4 +1006,47 @@ fd5f8f39e9a41e624fb837cd766f55805bd120aac42fe4bc426497eeb7aeaacf
         assert_eq!(content, expected_content);
         std::fs::remove_file("test13.txt").unwrap();
     }
+
+    #[test]
+    fn test_generate_wordlist_part_with_whirlpool() {
+        let nb_of_passwords: u64 = 16;
+        let dict_indexes: Vec<usize> = vec![0, 0];
+        let formated_mask: Vec<char> = vec!['\0', '\0'];
+        let mask_indexes: Vec<usize> = vec![0, 1];
+        let dict: Vec<u8> = vec![b'0', b'1', b'2', b'3'];
+        let file: Arc<Mutex<File>> = Arc::new(Mutex::new(File::create("test14.txt").unwrap()));
+        let result: Result<(), WorgenXError> = generate_wordlist_part(
+            nb_of_passwords,
+            dict_indexes,
+            &formated_mask,
+            &mask_indexes,
+            &dict,
+            Arc::clone(&file),
+            "whirlpool",
+        );
+        assert!(result.is_ok());
+
+        let content: String = std::fs::read_to_string("test14.txt").unwrap();
+        let expected_content: String = String::from("e823fde96090bd56b012b6f2e152cc87d89b7fa0a1c8688579c0be2423ba3c16ea81f8b67e9346c3c03e59121bcfd2dd8c753beb20e8ad4e95870f2039206bc1
+4585dec207baf8ece36ee2a871f9a5dfb2df3039de04c456db019d74e736ed742c4a8a3f7f094bab2364577a274159bc13edb7b20385bd44fafc57afd214940f
+04f6127b0623ef98c4710b6c087f27e3abbe16c4250f1109b0659c2b742138bb976451e3124604624504ec6a5f4469c246aedce163be86641f5a25363cba0588
+180fadc681164f5d3a29ea42c49c7bb9352559652505b1eb9e16f029b5070781163cfd8836cd7e8eed72b2122a70adb7d9e0a2fff0cb0f0958b3a45147092a8f
+cd977ca1c2ffee1fcc1c4cb64d52412d61cdc81ad01ae93148b9a2c7e940da8906048743b17023f04463a468aea5965ce47daef5b9f1f4901f2c2b540687a4d0
+ebdaf73bf4ba32150a6f9c7cde8c7e6ea327324a9445407d727bd0a97fbd77c6d456d1a8942096e596238df0a754de10c1309a918ed0d1203cc379b24f062224
+24e3253ceeb4e32b854c86dafd7ddd6d747d8c9de574a003e9d5a590cc20e1254b853a85ae845ab1266874bb70da8dac00ca3991c2f3e46e008ad19340e06dbf
+72135fa8697eae1c9002bad98bc07d44abc9180794dfa54ed68a1a23d750e505426b9ed67510e16f778e3cecf74770692498d6b7d964856f041b7cc7c1c96a9d
+5bb1d9d5be046db9d749d4351e92ff8d53b1a03a20f4eb073f38331e0a8e73d2d08e5af1008cda104b20a6a7ae6bf4de22c96c3d81a8c7a0521ba5f0767d8389
+75b5bd3160157e9ea5576f9bf9e60f3d680cc77b0f9f4fae492c0c0917a6995c860c985c99b87eae874e35f2b38a06efaa3bda5f28cfab942dbc34886db64f4d
+c3e929030d6d1dfc8332c1f72ef49e379d124c2a583ca723f526e51321882de03a4f0a85558cd73eab6b7afe69773243b19aba674157b527b472791a4d2bd37e
+18417525e4d773854fdf954b1c44810628a2c67ea3b3f64229858721a614683a4c125aa5e7ba1fd7504c4a8e654239666eab6a7d2e67c4f837b1e12459ca2680
+665788107ae4bdcb0c28a7ce1c64fda77a676cbe73ef8b99e2621a675a58c7f84f907f2909512782a7df9736254f19a8560cbbc4d0d938ff3ad43435d77656a1
+5350b5db7c67126b3c910cbf2044416bca5aa4495fe37451bd0ae35f841dc33a7e3a09596b95fe1fcaed190a232756b082652e4f0c0fcf333c1990ba05c7febf
+adc14b8a3d1c67bb3bcf764d7e11dc0d53474221f9c30a61b344bb55c834eea6f1f2c7e5bffc677848291e759df5a83fbeee3d7d05bfbce0d4fff52c32882260
+56fcc26b6aacefd921d97fdabe8d927a6f5dd471a472aa546d4863552b728954c5e5d47ceae1ad9a012fecf148def311b957d7251000646ae590ff0484b03401
+");
+
+        assert_eq!(content.lines().count(), 16);
+        assert_eq!(content, expected_content);
+        std::fs::remove_file("test14.txt").unwrap();
+    }
 }
