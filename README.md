@@ -6,6 +6,7 @@ You can generate efficient wordlists with a custom mask and charset, generate ra
 This software has been developed to be used especially for CLI use, but a GUI version is also available for a quick and easy use (but still in a command line interface).
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
 ![GitHub release](https://img.shields.io/github/v/release/XenorInspire/WorgenX)
 
 
@@ -16,9 +17,9 @@ This software has been developed to be used especially for CLI use, but a GUI ve
 
 - [x] Generate a relevant wordlist with a custom mask and charset
 - [x] Generate a list of random passwords with a strong entropy
+- [x] Generate a relevant wordlist with a custom mask and charset, using hash algorithms
 - [x] Benchmark the performance of your CPU
 - [ ] Benchmark the performance of your GPU (not available yet)
-- [ ] Generate a relevant wordlist with a custom mask and charset, using hash algorithms like MD5, SHA1, SHA256, SHA512, etc. (not available yet)
 
 
 ## Installation
@@ -107,6 +108,8 @@ You can find below the options for the main features of WorgenX:
 
   The following options are optional:
     -d, --disable-loading-bar           Disable the loading bar when generating the wordlist
+    -h, --hash <hash>                   Hash algorithm to use for the wordlist.
+                                        You can choose between: md5, sha1, sha224, sha256, sha384, sha512, sha3-224, sha3-256, sha3-384, sha3-512, blake2b, blake2s and whirlpool
     -t <threads>, --threads <threads>   Number of threads to generate the passwords
                                         By default, the number of threads is based on the number of physical cores of the CPU
 
