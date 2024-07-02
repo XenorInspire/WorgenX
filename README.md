@@ -17,7 +17,7 @@ This software has been developed to be used especially for CLI use, but a GUI ve
 
 - [x] Generate a relevant wordlist with a custom mask and charset
 - [x] Generate a list of random passwords with a strong entropy
-- [] Generate a relevant wordlist with a custom mask and charset, using hash algorithms (not available yet)
+- [x] Generate a relevant wordlist with a custom mask and charset, using hash algorithms
 - [x] Benchmark the performance of your CPU
 - [ ] Benchmark the performance of your GPU (not available yet)
 
@@ -43,7 +43,7 @@ sudo dnf install ./worgenx_<version>_<arch>.rpm
 
 #### For Windows :
 
-Just download the .exe file and execute it. You can also add the path to the environment variables to use it in the command line.
+Just download the .exe file and execute it. You can also add the path to the environment variables to use it in the command line directly without specifying the full path.
 
 ### Install from the source code
 
