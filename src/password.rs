@@ -6,6 +6,7 @@ use rand::{rngs::OsRng, seq::SliceRandom, Rng};
 
 /// This struct built from the user's choices will be used to generate the random password.
 ///
+#[derive(Debug)]
 pub struct PasswordConfig {
     pub numbers: bool,
     pub special_characters: bool,
@@ -94,4 +95,48 @@ pub fn generate_random_passwords(password_config: &PasswordConfig) -> Vec<String
     }
 
     passwords
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_create_passwd_content() {
+        let password_config: PasswordConfig = PasswordConfig {
+            numbers: true,
+            special_characters: true,
+            uppercase: true,
+            lowercase: true,
+            length: 10,
+            number_of_passwords: 1,
+        };
+        let password_content: Vec<u8> = create_passwd_content(&password_config);
+        
+        assert_eq!(password_content.len(), 91);
+    }
+
+    #[test]
+    fn test_shuffle_dict() {
+        let dict: Vec<u8> = vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        let shuffled_dict: Vec<u8> = shuffle_dict(&dict);
+
+        assert_eq!(dict.len(), shuffled_dict.len());
+    }
+
+    #[test]
+    fn test_generate_random_passwords() {
+        let password_config: PasswordConfig = PasswordConfig {
+            numbers: true,
+            special_characters: true,
+            uppercase: true,
+            lowercase: true,
+            length: 10,
+            number_of_passwords: 1,
+        };
+        let passwords: Vec<String> = generate_random_passwords(&password_config);
+
+        assert_eq!(passwords.len(), 1);
+        assert_eq!(passwords[0].len(), 10);
+    }
 }

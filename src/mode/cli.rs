@@ -104,11 +104,19 @@ fn build_command_context() -> Command {
                 .action(ArgAction::SetTrue),
         )
         .arg(
+            Arg::new("hash")
+                .short('h')
+                .long("hash")
+                .help("Hash algorithm to use for the wordlist")
+                .value_parser(vec!["md5", "sha1", "sha224", "sha256", "sha384", "sha512", "sha3-224", "sha3-256", "sha3-384", "sha3-512", "blake2b", "blake2s", "whirlpool"])
+                .value_name("hash"),
+        )
+        .arg(
             Arg::new("threads_wordlist")
                 .short('t')
                 .long("threads")
                 .help("Number of threads to generate the passwords")
-                .value_parser(value_parser!(u8))
+                .value_parser(value_parser!(u8).range(1..u8::MAX as i64))
                 .value_name("threads")
                 .default_value(default_threads),
         );
@@ -148,7 +156,7 @@ fn build_command_context() -> Command {
                 .short('s')
                 .long("size")
                 .help("Size of the passwords in characters")
-                .value_parser(value_parser!(u32))
+                .value_parser(value_parser!(u32).range(1..u32::MAX as i64))
                 .value_name("size")
                 .required(true),
         )
@@ -157,7 +165,7 @@ fn build_command_context() -> Command {
                 .short('c')
                 .long("count")
                 .help("Number of passwords to generate")
-                .value_parser(value_parser!(u64))
+                .value_parser(value_parser!(u64).range(1..u64::MAX))
                 .value_name("count")
                 .required(true),
         )
@@ -193,7 +201,7 @@ fn build_command_context() -> Command {
                 .short('t')
                 .long("threads")
                 .help("Number of threads to use for the CPU benchmark")
-                .value_parser(value_parser!(u8))
+                .value_parser(value_parser!(u8).range(1..u8::MAX as i64))
                 .value_name("threads")
                 .default_value(default_threads),
         );
@@ -234,21 +242,10 @@ pub fn run() -> Result<(), WorgenXError> {
 
     command_context.build();
     match command_context.get_matches().subcommand() {
-        Some(("wordlist", sub_matches)) => match run_wordlist(sub_matches) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(e),
-        },
-        Some(("password", sub_matches)) => match run_passwd(sub_matches) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(e),
-        },
-        Some(("benchmark", sub_matches)) => match run_benchmark(sub_matches) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(e),
-        },
-        _ => {
-            Err(WorgenXError::ArgError(ArgError::NoArgument)) // Should never happen
-        }
+        Some(("wordlist", sub_matches)) => run_wordlist(sub_matches),
+        Some(("password", sub_matches)) => run_passwd(sub_matches),
+        Some(("benchmark", sub_matches)) => run_benchmark(sub_matches),
+        _ => Err(WorgenXError::ArgError(ArgError::NoArgument)) // Should never happen
     }
 }
 
@@ -377,6 +374,7 @@ fn run_wordlist(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     let wordlist_config: WordlistConfig = wordlist::build_wordlist_config(&wordlist_generation_parameters.wordlist_values);
     let nb_of_passwords: u64 = wordlist_config.dict.len().pow(wordlist_config.mask_indexes.len() as u32) as u64;
     println!("Estimated size of the wordlist: {}", system::get_estimated_size(nb_of_passwords, wordlist_config.formated_mask.len() as u64));
+    println!("Wordlist generation in progress...");
 
     wordlist::wordlist_generation_scheduler(
         &wordlist_config,
@@ -410,6 +408,7 @@ fn allocate_wordlist_config_cli(
         uppercase: false,
         lowercase: false,
         mask: String::new(),
+        hash: String::new(),
     };
 
     update_config(&mut wordlist_values.lowercase, sub_matches, "lowercase_wordlist");
@@ -417,6 +416,7 @@ fn allocate_wordlist_config_cli(
     update_config(&mut wordlist_values.numbers, sub_matches, "numbers_wordlist");
     update_config(&mut wordlist_values.special_characters, sub_matches, "special_characters_wordlist");
     update_config(&mut wordlist_values.mask, sub_matches, "mask");
+    update_config(&mut wordlist_values.hash, sub_matches, "hash");
     update_config(&mut output_file, sub_matches, "output");
     update_config(&mut no_loading_bar, sub_matches, "disable_loading_bar");
     update_config(&mut threads, sub_matches, "threads_wordlist");
@@ -543,6 +543,7 @@ fn display_help() {
     println!("    -o <path>, --output <path>\t\tSave the wordlist in a text file");
     println!("\n  The following options are optional:");
     println!("    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist");
+    println!("    -h, --hash <hash>\t\t\tHash algorithm to use for the wordlist.\n\t\t\t\t\tYou can choose between: md5, sha1, sha224, sha256, sha384, sha512,\n\t\t\t\t\tsha3-224, sha3-256, sha3-384, sha3-512, blake2b-512, blake2s-256 and whirlpool");
     println!("    -t <threads>, --threads <threads>\tNumber of threads to generate the passwords\n\t\t\t\t\tBy default, the number of threads is based on the number of physical cores of the CPU");
 
     println!("\n  --- Password generation ---");
@@ -562,4 +563,72 @@ fn display_help() {
     println!("\n  --- CPU Benchmark ---");
     println!("  The following option is optional:");
     println!("    -t <threads>, --threads <threads>\tNumber of threads to use for the CPU benchmark\n\t\t\t\t\tBy default, the number of threads is based on the number of physical cores of the CPU\n");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_allocate_passwd_config_cli() {
+        let command_context: Command = build_command_context();
+        let matches: ArgMatches = command_context.get_matches_from(vec!["worgenX", "password", "-l", "-u", "-n", "-x", "-s", "10", "-c", "5", "-o", "test.txt", "-j"]);
+        
+        match matches.subcommand(){
+            Some(("password", sub_matches)) => {
+                let result: PasswordGenerationOptions = allocate_passwd_config_cli(sub_matches).unwrap();
+                assert_eq!(result.password_config.number_of_passwords, 5);
+                assert_eq!(result.password_config.length, 10);
+                assert!(result.password_config.lowercase);
+                assert!(result.password_config.uppercase);
+                assert!(result.password_config.numbers);
+                assert!(result.password_config.special_characters);
+                assert!(result.output_file.contains("test.txt"));
+                assert!(result.json);
+                assert!(!result.no_display);
+            },
+            _ => panic!("Should never happen")
+        }
+    }
+
+    #[test]
+    fn test_allocate_wordlist_config_cli() {
+        let command_context: Command = build_command_context();
+        let matches: ArgMatches = command_context.get_matches_from(vec!["worgenX", "wordlist", "-l", "-u", "-n", "-x", "-m", "A?1", "-o", "test.txt", "-d", "-t", "4"]);
+        
+        match matches.subcommand(){
+            Some(("wordlist", sub_matches)) => {
+                let result: WordlistGenerationOptions = allocate_wordlist_config_cli(sub_matches).unwrap();
+                assert_eq!(result.wordlist_values.mask, "A?1");
+                assert_eq!(result.threads, 4);
+                assert!(result.wordlist_values.lowercase);
+                assert!(result.wordlist_values.uppercase);
+                assert!(result.wordlist_values.numbers);
+                assert!(result.wordlist_values.special_characters);
+                assert!(result.output_file.contains("test.txt"));
+                assert!(result.no_loading_bar);
+            },
+            _ => panic!("Should never happen")
+        }
+    }
+
+    #[test]
+    fn test_allocate_benchmark_config_cli() {
+        let command_context: Command = build_command_context();
+        let matches: ArgMatches = command_context.get_matches_from(vec!["worgenX", "benchmark", "-t", "4"]);
+        
+        match matches.subcommand(){
+            Some(("benchmark", sub_matches)) => {
+                let result: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches).unwrap();
+                assert_eq!(result.threads, 4);
+            },
+            _ => panic!("Should never happen")
+        }
+    }
+
+    #[test]
+    fn test_check_output_arg() {
+        let result: Result<String, WorgenXError> = check_output_arg("./test.txt");
+        assert!(result.is_ok());
+    }
 }

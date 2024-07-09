@@ -1,3 +1,7 @@
+// Prevents the use of unsafe code
+#![forbid(unsafe_code)]
+
+// Prevents the compilation of both modes which may cause conflicts
 #[cfg(all(not(feature = "gui"), not(feature = "cli")))]
 compile_error!("You must specify a mode: 'gui' or 'cli'.");
 
