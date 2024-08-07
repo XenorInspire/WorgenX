@@ -185,12 +185,7 @@ pub fn wordlist_generation_scheduler(
         Ok(())
     });
 
-    match run_wordlist_generation(wordlist_config, nb_of_passwords, nb_of_threads, file_path) {
-        Ok(_) => (),
-        Err(e) => {
-            return Err(e);
-        }
-    };
+    run_wordlist_generation(wordlist_config, nb_of_passwords, nb_of_threads, file_path)?;
     match main_thread.join() {
         Ok(_) => (),
         Err(e) => {

@@ -75,24 +75,18 @@ pub fn load_cpu_benchmark(nb_of_threads: u8) -> Result<u64, WorgenXError> {
     shared_signal.store(false, Ordering::SeqCst); // Stop the stress test
     drop(tx_progress_bar); // Drop the channel to stop the progress bar thread
 
-    match progress_bar_thread.join() {
-        Ok(_) => {}
-        Err(_) => {
-            return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                "Something went wrong with the progress bar thread".to_string(),
-            )))
-        }
-    }
+    let _ = progress_bar_thread.join().map_err(|_| {
+        WorgenXError::SystemError(SystemError::ThreadError(
+            "Something went wrong with the progress bar thread".to_string(),
+        ))
+    })?;
 
     for thread in threads {
-        match thread.join() {
-            Ok(_) => {}
-            Err(_) => {
-                return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                    "CPU Benchmark feature".to_string(),
-                )))
-            }
-        }
+        thread.join().map_err(|_| {
+            WorgenXError::SystemError(SystemError::ThreadError(
+                "CPU Benchmark feature".to_string(),
+            ))
+        })?;
     }
 
     let nb_of_passwd: u64 = match shared_passwd_counter.lock() {
