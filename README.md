@@ -47,7 +47,7 @@ Just download the .exe file and execute it. You can also add the path to the env
 
 ### Install from the source code
 
-First, if you don't have rustup installed, you can install it by following the instructions on the official website : [rustup.rs](https://rustup.rs/)
+First, if you don't have rustup or cargo installed, you can download these tools by following the instructions on the official website : [rustup.rs](https://rustup.rs/)
 
 #### Choose a directory and clone the repository :  
 ```
@@ -143,11 +143,6 @@ Just start worgenX_gui :
 ```bash
 $ worgenX_gui
 ```
-
-# Mirrors
-
-- <a href="https://github.com/XenorInspire/WorgenX">Github</a>
-- <a href="https://gitlab.com/XenorInspire/WorgenX">Gitlab</a>
 
 # Licence
 
