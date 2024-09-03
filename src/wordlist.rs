@@ -171,6 +171,7 @@ pub fn wordlist_generation_scheduler(
     let pb: Arc<Mutex<indicatif::ProgressBar>> = Arc::new(Mutex::new(system::get_progress_bar()));
     let pb_clone: Arc<Mutex<indicatif::ProgressBar>> = Arc::clone(&pb);
     let start: Instant = Instant::now();
+    
     let main_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
         let mut current_value: u64 = 0;
         while current_value < nb_of_passwords {
@@ -186,22 +187,17 @@ pub fn wordlist_generation_scheduler(
     });
 
     run_wordlist_generation(wordlist_config, nb_of_passwords, nb_of_threads, file_path)?;
-    match main_thread.join() {
-        Ok(_) => (),
-        Err(e) => {
-            if let Some(err) = e.downcast_ref::<WorgenXError>() {
-                return Err(err.clone());
-            } else {
-                return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                    format!("{:?}", e),
-                )));
-            }
+    if let Err(e) = main_thread.join() {
+        if let Some(err) = e.downcast_ref::<WorgenXError>() {
+            return Err(err.clone());
+        } else {
+            return Err(WorgenXError::SystemError(SystemError::ThreadError(
+                format!("{:?}", e),
+            )));
         }
     }
-    println!(
-        "\nWordlist generated in {}",
-        system::get_elapsed_time(start)
-    );
+
+    println!("\nWordlist generated in {}", system::get_elapsed_time(start));
     Ok(())
 }
 
@@ -282,13 +278,10 @@ fn run_wordlist_generation(
     }
 
     for thread in threads {
-        match thread.join() {
-            Ok(_) => {}
-            Err(_) => {
-                return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                    "wordlist generation".to_string(),
-                )))
-            }
+        if thread.join().is_err() {
+            return Err(WorgenXError::SystemError(SystemError::ThreadError(
+                "wordlist generation".to_string(),
+            )))
         }
     }
 
