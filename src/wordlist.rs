@@ -25,7 +25,7 @@ const BUFFER_SIZE: usize = 100000;
 ///
 static GLOBAL_COUNTER: Mutex<u64> = Mutex::new(0);
 
-/// This struct is built from the user's choices will be used to generate the wordlist.
+/// This struct is built from the user's choices and will be used to generate the wordlist.
 ///
 #[derive(Debug)]
 pub struct WordlistValues {

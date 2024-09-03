@@ -1,7 +1,7 @@
 // Internal crates
 use crate::error::{SystemError, WorgenXError};
 
-// Extern crates
+// External crates
 use blake2::{Blake2b512, Blake2s256};
 use digest::Digest;
 use indicatif::{ProgressBar, ProgressStyle};
