@@ -113,7 +113,7 @@ fn format_mask_to_indexes(mask: &str) -> (Vec<char>, Vec<usize>) {
                     formated_mask.push(c);
                 } else {
                     mask_indexes.push(idx_formated_mask);
-                    formated_mask.push(0 as char);
+                    formated_mask.push(0u8 as char);
                 }
             }
             _ => {
