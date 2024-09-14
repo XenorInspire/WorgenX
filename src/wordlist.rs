@@ -25,7 +25,7 @@ const BUFFER_SIZE: usize = 100000;
 ///
 static GLOBAL_COUNTER: Mutex<u64> = Mutex::new(0);
 
-/// This struct is built from the user's choices will be used to generate the wordlist.
+/// This struct is built from the user's choices and will be used to generate the wordlist.
 ///
 #[derive(Debug)]
 pub struct WordlistValues {
@@ -113,7 +113,7 @@ fn format_mask_to_indexes(mask: &str) -> (Vec<char>, Vec<usize>) {
                     formated_mask.push(c);
                 } else {
                     mask_indexes.push(idx_formated_mask);
-                    formated_mask.push(0 as char);
+                    formated_mask.push(0u8 as char);
                 }
             }
             _ => {
@@ -171,6 +171,7 @@ pub fn wordlist_generation_scheduler(
     let pb: Arc<Mutex<indicatif::ProgressBar>> = Arc::new(Mutex::new(system::get_progress_bar()));
     let pb_clone: Arc<Mutex<indicatif::ProgressBar>> = Arc::clone(&pb);
     let start: Instant = Instant::now();
+    
     let main_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
         let mut current_value: u64 = 0;
         while current_value < nb_of_passwords {
@@ -185,28 +186,18 @@ pub fn wordlist_generation_scheduler(
         Ok(())
     });
 
-    match run_wordlist_generation(wordlist_config, nb_of_passwords, nb_of_threads, file_path) {
-        Ok(_) => (),
-        Err(e) => {
-            return Err(e);
-        }
-    };
-    match main_thread.join() {
-        Ok(_) => (),
-        Err(e) => {
-            if let Some(err) = e.downcast_ref::<WorgenXError>() {
-                return Err(err.clone());
-            } else {
-                return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                    format!("{:?}", e),
-                )));
-            }
+    run_wordlist_generation(wordlist_config, nb_of_passwords, nb_of_threads, file_path)?;
+    if let Err(e) = main_thread.join() {
+        if let Some(err) = e.downcast_ref::<WorgenXError>() {
+            return Err(err.clone());
+        } else {
+            return Err(WorgenXError::SystemError(SystemError::ThreadError(
+                format!("{:?}", e),
+            )));
         }
     }
-    println!(
-        "\nWordlist generated in {}",
-        system::get_elapsed_time(start)
-    );
+
+    println!("\nWordlist generated in {}", system::get_elapsed_time(start));
     Ok(())
 }
 
@@ -287,13 +278,10 @@ fn run_wordlist_generation(
     }
 
     for thread in threads {
-        match thread.join() {
-            Ok(_) => {}
-            Err(_) => {
-                return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                    "wordlist generation".to_string(),
-                )))
-            }
+        if thread.join().is_err() {
+            return Err(WorgenXError::SystemError(SystemError::ThreadError(
+                "wordlist generation".to_string(),
+            )))
         }
     }
 
