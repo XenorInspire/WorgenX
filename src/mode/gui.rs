@@ -310,7 +310,7 @@ fn allocate_wordlist_config_gui() -> WordlistValues {
 }
 
 /// This is the main function of the CPU benchmark feature.
-/// It will start the benchmark after 5 seconds to let the user the time to read the message.
+/// It will start the benchmark after 5 seconds to let enough time for the user to read the message.
 ///
 fn main_benchmark() {
     let mut again: String = String::from("y");
@@ -332,7 +332,7 @@ fn main_benchmark() {
     println!("\n");
 }
 
-/// This function is charged to save the wordlist in a file with \n as separator between each word.
+/// This function is charged to save the wordlist in a file with '\n' as a separator between each word.
 /// This function is also charged to handle the creation of a backup file for the random passwords.
 ///
 /// # Returns
@@ -388,7 +388,7 @@ pub fn saving_procedure(target: &str) -> Result<(File, String), SystemError> {
     Ok((file, filename))
 }
 
-/// This function is charged to get the hash choice from the user.
+/// This function is charged to ask the hash algorithm from the user.
 ///
 /// # Returns
 ///

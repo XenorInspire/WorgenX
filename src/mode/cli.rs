@@ -437,18 +437,18 @@ fn allocate_wordlist_config_cli(
     })
 }
 
-/// This function is charged to schedule the execution of the benchmark feature of the program.
+/// This function is charged to schedule the execution of the benchmark feature of WorgenX.
 /// It will display the number of passwords generated in 1 minute.
 /// The benchmark is based on the generation of random passwords.
 /// The profile used for the benchmark is defined in the benchmark module (PASSWORD_CONFIG constant).
 ///
 /// # Arguments
 ///
-/// * `sub_matches` - A reference to ArgMatches containing the arguments passed to the program.
+/// * `sub_matches` - A reference to ArgMatches containing the arguments sent to the program.
 ///
 /// # Returns
 ///
-/// Ok if the benchmark has been executed, WorgenXError otherwise.
+/// Ok if the benchmark has correctly been executed, WorgenXError otherwise.
 ///
 fn run_benchmark(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     let benchmark_parameters: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches)?;
@@ -461,12 +461,12 @@ fn run_benchmark(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     }
 }
 
-/// This function is charged to check the syntax of the arguments passed to the program for the benchmark feature.
-/// This function is called only if the user specifies the -b or --benchmark argument.
+/// This function is charged to check the syntax of the arguments sent to the program for the benchmark feature.
+/// This function is called only if the user specifies the -b or the --benchmark argument.
 ///
 /// # Arguments
 ///
-/// * `sub_matches` - A reference to ArgMatches containing the arguments passed to the program.
+/// * `sub_matches` - A reference to ArgMatches containing the arguments sent to the program.
 ///
 /// # Returns
 ///
@@ -481,7 +481,7 @@ fn allocate_benchmark_config_cli(
     Ok(BenchmarkOptions { threads })
 }
 
-/// This function is charged to check path for the 'output' arguments, if it's a valid path on the system.
+/// This function is charged to check the path for the 'output' arguments, if it's a valid path on the system.
 ///
 /// # Arguments
 ///
