@@ -1,11 +1,11 @@
-// Internal crates
+// Internal crates.
 use crate::{
     error::{SystemError, WorgenXError},
     password::{self, PasswordConfig},
     system,
 };
 
-// External crates
+// External crates.
 use indicatif::ProgressBar;
 use std::{
     sync::{
@@ -28,7 +28,7 @@ const PASSWORD_CONFIG: PasswordConfig = PasswordConfig {
     number_of_passwords: 1, // Don't change this value, it's used to generate a single password on each iteration.
 };
 
-/// This function is charged to load the CPU benchmark.
+/// This function is responsible for loading the CPU benchmark.
 ///
 /// # Arguments
 ///
@@ -100,7 +100,7 @@ pub fn load_cpu_benchmark(nb_of_threads: u8) -> Result<u64, WorgenXError> {
     Ok(nb_of_passwd)
 }
 
-/// This function is charged to run the stress test in a thread.
+/// This function is responsible for running the stress test in a thread.
 /// It generates a lot of passwords in a loop.
 /// The number of passwords generated is stored in a shared counter.
 ///
@@ -111,7 +111,7 @@ pub fn load_cpu_benchmark(nb_of_threads: u8) -> Result<u64, WorgenXError> {
 ///
 /// # Returns
 ///
-/// Ok(()) if the stress test is done, WorgenXError otherwise.
+/// Ok(()) if the stress test succeed, WorgenXError otherwise.
 ///
 fn run_stress_test(
     stop_signal: Arc<AtomicBool>,
@@ -138,7 +138,7 @@ fn run_stress_test(
     }
 }
 
-/// This function is charged to build the progress bar during the benchmark.
+/// This function is responsible for building the progress bar during the benchmark.
 ///
 /// # Arguments
 ///

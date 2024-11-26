@@ -1,10 +1,10 @@
-// Internal crates
+// Internal crates.
 use crate::password::PasswordConfig;
 
-// External crates
+// External crates.
 use serde_json::json;
 
-/// This function is charged to return a JSON String of the password config structure.
+/// This function is responsible for returning a JSON String of the password config structure.
 /// The output can be used to interact with other programs.
 ///
 /// # Arguments

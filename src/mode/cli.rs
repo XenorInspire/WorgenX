@@ -40,7 +40,7 @@ struct BenchmarkOptions {
     threads: u8,
 }
 
-/// This function is reponsible for building the command context of the CLI mode with the clap framework.
+/// This function is responsible for building the command context of the CLI mode with the clap framework.
 ///
 /// # Returns
 ///
@@ -223,7 +223,7 @@ fn build_command_context() -> Command {
 ///
 /// # Returns
 ///
-/// Ok if the program has been executed, WorgenXError otherwise.
+/// Ok(()) if the program has been executed, WorgenXError otherwise.
 ///
 pub fn run() -> Result<(), WorgenXError> {
     let mut command_context: Command = build_command_context();
@@ -257,7 +257,7 @@ pub fn run() -> Result<(), WorgenXError> {
 ///
 /// # Returns
 ///
-/// Ok if the password has been generated, WorgenXError otherwise.
+/// Ok(()) if the password has been generated, WorgenXError otherwise.
 ///
 fn run_passwd(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     let password_generation_parameters: PasswordGenerationOptions = allocate_passwd_config_cli(sub_matches)?;
@@ -366,7 +366,7 @@ fn allocate_passwd_config_cli(
 ///
 /// # Returns
 ///
-/// Ok if the wordlist has been generated, WorgenXError otherwise.
+/// Ok(()) if the wordlist has been generated, WorgenXError otherwise.
 ///
 fn run_wordlist(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     let wordlist_generation_parameters: WordlistGenerationOptions = allocate_wordlist_config_cli(sub_matches)?;
@@ -448,7 +448,7 @@ fn allocate_wordlist_config_cli(
 ///
 /// # Returns
 ///
-/// Ok if the benchmark has correctly been executed, WorgenXError otherwise.
+/// Ok(()) if the benchmark has correctly been executed, WorgenXError otherwise.
 ///
 fn run_benchmark(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     let benchmark_parameters: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches)?;
@@ -489,7 +489,7 @@ fn allocate_benchmark_config_cli(
 ///
 /// # Returns
 ///
-/// Ok if the path is valid, WorgenXError otherwise.
+/// Ok(String) if the path is valid, WorgenXError otherwise.
 ///
 fn check_output_arg(path: &str) -> Result<String, WorgenXError> {
     match system::is_valid_path(path) {

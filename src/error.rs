@@ -1,4 +1,4 @@
-// External crates
+// External crates.
 use thiserror::Error;
 
 #[derive(Debug, Error, Clone)]
@@ -32,7 +32,7 @@ pub enum SystemError {
     /// This error is raised if parent folder doesn't exist.
     #[error("Error: the folder `{0}` doesn't exist.\nPlease specify a valid path")]
     ParentFolderDoesntExist(String),
-    /// This error is raised if the path given by the user is a too long (Windows only).
+    /// This error is raised if the path given by the user is a too long (for Windows systems only).
     #[cfg(target_family = "windows")]
     #[error("Error: the path `{0}` is too long (>260).\nPlease specify a valid path")]
     PathTooLong(String),
