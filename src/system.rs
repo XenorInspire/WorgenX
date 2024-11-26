@@ -122,8 +122,8 @@ where
 ///
 /// Ok(String) if the path/filename is valid, containing the full path, SystemError otherwise.
 ///
-pub fn is_valid_path(path: String) -> Result<String, SystemError> {
-    let filename: String = match Path::new(&path).file_name() {
+pub fn is_valid_path(path: &str) -> Result<String, SystemError> {
+    let filename: String = match Path::new(path).file_name() {
         Some(f) => match f.to_str() {
             Some(f) => f.to_string(),
             None => return Err(SystemError::InvalidPath(path.to_string())),
@@ -136,7 +136,7 @@ pub fn is_valid_path(path: String) -> Result<String, SystemError> {
         return Err(SystemError::InvalidFilename(filename.to_string()));
     }
 
-    let full_path: String = if !Path::new(&path).is_absolute() {
+    let full_path: String = if !Path::new(path).is_absolute() {
         let current_dir: String = match std::env::current_dir() {
             Ok(c) => match c.to_str() {
                 Some(s) => s.to_string(),
@@ -149,9 +149,9 @@ pub fn is_valid_path(path: String) -> Result<String, SystemError> {
                 ))
             }
         };
-        current_dir + "/" + &path
+        current_dir + "/" + path
     } else {
-        path.clone()
+        path.to_string()
     };
 
     #[cfg(target_family = "windows")]
@@ -408,18 +408,18 @@ mod tests {
 
     #[test]
     fn test_is_valid_path() {
-        let relative_path: String = "./test.txt".to_string();
-        let invalid_path: String = "test.txt\0".to_string();
+        let relative_path: &str = "./test.txt";
+        let invalid_path: &str = "test.txt\0";
 
         #[cfg(target_family = "windows")]
-        let absolute_path: String = "C:/Users/test.txt".to_string();
+        let absolute_path: &str = "C:/Users/test.txt";
 
         #[cfg(target_family = "unix")]
-        let absolute_path: String = "/home/test.txt".to_string();
+        let absolute_path: &str = "/home/test.txt";
 
-        assert!(is_valid_path(relative_path.clone()).is_ok());
-        assert!(is_valid_path(absolute_path.clone()).is_ok());
-        assert!(is_valid_path(invalid_path.clone()).is_err());
+        assert!(is_valid_path(relative_path).is_ok());
+        assert!(is_valid_path(absolute_path).is_ok());
+        assert!(is_valid_path(invalid_path).is_err());
     }
 
     #[test]

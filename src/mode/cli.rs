@@ -492,7 +492,7 @@ fn allocate_benchmark_config_cli(
 /// Ok if the path is valid, WorgenXError otherwise.
 ///
 fn check_output_arg(path: &str) -> Result<String, WorgenXError> {
-    match system::is_valid_path(path.to_string()) {
+    match system::is_valid_path(path) {
         Ok(full_path) => Ok(full_path),
         Err(e) => Err(WorgenXError::SystemError(e)),
     }

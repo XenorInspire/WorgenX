@@ -343,12 +343,12 @@ fn main_benchmark() {
 pub fn saving_procedure(target: &str) -> Result<(File, String), SystemError> {
     println!("Please enter the file name to backup the wordlist :");
     let mut filename: String = system::get_user_choice();
-    let mut result: Result<String, SystemError> = system::is_valid_path(filename.clone());
+    let mut result: Result<String, SystemError> = system::is_valid_path(&filename);
     while result.is_err() {
         println!("{}", result.unwrap_err());
         println!("Please enter a new file name:");
         filename = system::get_user_choice();
-        result = system::is_valid_path(filename.clone());
+        result = system::is_valid_path(&filename);
     }
 
     let filename: String = match env::var(target::HOME_ENV_VAR) {
