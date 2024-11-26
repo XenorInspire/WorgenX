@@ -80,7 +80,7 @@ fn create_wordlist_content(wordlist_values: &WordlistValues) -> Vec<u8> {
     final_dict
 }
 
-/// This function is responsible for building to format the mask into a vector of char and indexes.
+/// This function is responsible for converting the mask into a vector of char and indexes.
 /// This will be used to generate the wordlist.
 ///
 /// # Arguments
