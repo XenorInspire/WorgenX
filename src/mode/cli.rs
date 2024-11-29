@@ -452,13 +452,10 @@ fn allocate_wordlist_config_cli(
 ///
 fn run_benchmark(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     let benchmark_parameters: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches)?;
-    match benchmark::load_cpu_benchmark(benchmark_parameters.threads) {
-        Ok(results) => Ok(println!(
-            "Your CPU has generated {} passwords in 1 minute",
-            results
-        )),
-        Err(e) => Err(e),
-    }
+    let result: u64 = benchmark::load_cpu_benchmark(benchmark_parameters.threads)?;
+    
+    println!("Your CPU has generated {} passwords in 1 minute", result);
+    Ok(())
 }
 
 /// This function is responsible for checking the syntax of the arguments sent to the program for the benchmark feature.
