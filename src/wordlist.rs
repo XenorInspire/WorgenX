@@ -1,11 +1,11 @@
-// Internal crates
+// Internal crates.
 use crate::{
     dict,
     error::{SystemError, WorgenXError},
     system,
 };
 
-// External crates
+// External crates.
 use indicatif::ProgressBar;
 use std::{
     fs::{File, OpenOptions},
@@ -19,7 +19,7 @@ use std::{
 ///
 const BUFFER_SIZE: usize = 100000;
 
-/// This static variable is used to keep track of the number of passwords generated.
+/// This static variable is used to track the number of passwords generated.
 /// It is used to update the progress bar.
 /// It is wrapped in a Mutex to avoid data sharing issues between the threads.
 ///
@@ -47,7 +47,7 @@ pub struct WordlistConfig {
     pub hash: String,
 }
 
-/// This function is charged to build the final dictionary from the user's choices.
+/// This function is responsible for building the final dictionary from the user's choices.
 /// It returns a vector of u8 containing the characters that will be used to generate the wordlist.
 ///
 /// # Arguments
@@ -80,7 +80,7 @@ fn create_wordlist_content(wordlist_values: &WordlistValues) -> Vec<u8> {
     final_dict
 }
 
-/// This function is charged to build to format the mask into a vector of char and indexes.
+/// This function is responsible for converting the mask into a vector of char and indexes.
 /// This will be used to generate the wordlist.
 ///
 /// # Arguments
@@ -126,7 +126,7 @@ fn format_mask_to_indexes(mask: &str) -> (Vec<char>, Vec<usize>) {
     (formated_mask, mask_indexes)
 }
 
-/// This function is charged to build the WordlistValues struct from the user's values.
+/// This function is responsible for building the WordlistValues struct from the user's values.
 ///
 /// # Arguments
 ///
@@ -147,7 +147,7 @@ pub fn build_wordlist_config(wordlist_values: &WordlistValues) -> WordlistConfig
     }
 }
 
-/// This function is charged to schedule the wordlist generation.
+/// This function is responsible for scheduling the wordlist generation.
 ///
 /// # Arguments
 ///
@@ -201,7 +201,7 @@ pub fn wordlist_generation_scheduler(
     Ok(())
 }
 
-/// This function is charged to start the wordlist generation and dispatch the work between the threads.
+/// This function is responsible for starting the wordlist generation and dispatches the work between the threads.
 ///
 /// # Arguments
 ///
@@ -288,8 +288,8 @@ fn run_wordlist_generation(
     Ok(())
 }
 
-/// This function is charged to generate a part of the wordlist or the whole wordlist if there is only one thread.
-/// It returns nothing because it writes the passwords in the file and sends the progress through the channel.
+/// This function is responsible for generating a part of the wordlist or the whole wordlist if there is only one thread.
+/// It sends the progress value through the channel (to update the progess bar).
 ///
 /// # Arguments
 ///
@@ -378,8 +378,7 @@ fn generate_wordlist_part(
     Ok(())
 }
 
-/// This function is charged to build the progress bar during the wordlist generation.
-/// It returns nothing because it juste updates the progress bar.
+/// This function is responsible for building the progress bar during the wordlist generation.
 ///
 /// # Arguments
 ///

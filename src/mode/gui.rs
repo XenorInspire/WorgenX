@@ -1,4 +1,4 @@
-// Internal crates
+// Internal crates.
 use crate::{
     benchmark,
     error::SystemError,
@@ -13,7 +13,7 @@ use system::unix as target;
 #[cfg(target_family = "windows")]
 use system::windows as target;
 
-// External crates
+// External crates.
 use std::{
     env,
     fs::{File, OpenOptions},
@@ -21,7 +21,7 @@ use std::{
     thread,
 };
 
-/// This function is charged to schedule in GUI mode the execution of the different features of the program according to the user's choices.
+/// This function is responsible for scheduling in GUI mode the execution of the different features of the program according to the user's choices.
 ///
 pub fn run() {
     loop {
@@ -38,7 +38,7 @@ pub fn run() {
     println!("Bye!");
 }
 
-/// This function is charged to display the header menu.
+/// This function is responsible for displaying the header menu.
 /// It is used to display the title of the program.
 ///
 fn display_title() {
@@ -48,7 +48,7 @@ fn display_title() {
     println!();
 }
 
-/// This function is charged to display the menu.
+/// This function is responsible for displaying the menu.
 /// It is used to display the WorgenX ASCII art and the different features of the program.
 ///
 fn print_menu() {
@@ -122,7 +122,7 @@ fn main_passwd_generation() {
     println!("\n");
 }
 
-/// This function is charged to allocate the password config structure from the user's choices in the GUI.
+/// This function is responsible for allocating the password config structure from the user's choices in the GUI.
 ///
 /// # Returns
 ///
@@ -231,7 +231,7 @@ fn main_wordlist_generation() {
     println!("\n");
 }
 
-/// This function is charged to allocate the wordlist config structure from the user's choices.
+/// This function is responsible for allocating the wordlist config structure from the user's choices.
 ///
 /// # Returns
 ///
@@ -310,7 +310,7 @@ fn allocate_wordlist_config_gui() -> WordlistValues {
 }
 
 /// This is the main function of the CPU benchmark feature.
-/// It will start the benchmark after 5 seconds to let the user the time to read the message.
+/// It will start the benchmark after 5 seconds to let enough time for the user to read the message.
 ///
 fn main_benchmark() {
     let mut again: String = String::from("y");
@@ -332,8 +332,8 @@ fn main_benchmark() {
     println!("\n");
 }
 
-/// This function is charged to save the wordlist in a file with \n as separator between each word.
-/// This function is also charged to handle the creation of a backup file for the random passwords.
+/// This function is responsible for saving the wordlist in a file with '\n' as a separator between each word.
+/// This function also handles the creation of a backup file for the random passwords.
 ///
 /// # Returns
 ///
@@ -343,12 +343,12 @@ fn main_benchmark() {
 pub fn saving_procedure(target: &str) -> Result<(File, String), SystemError> {
     println!("Please enter the file name to backup the wordlist :");
     let mut filename: String = system::get_user_choice();
-    let mut result: Result<String, SystemError> = system::is_valid_path(filename.clone());
+    let mut result: Result<String, SystemError> = system::is_valid_path(&filename);
     while result.is_err() {
         println!("{}", result.unwrap_err());
         println!("Please enter a new file name:");
         filename = system::get_user_choice();
-        result = system::is_valid_path(filename.clone());
+        result = system::is_valid_path(&filename);
     }
 
     let filename: String = match env::var(target::HOME_ENV_VAR) {
@@ -388,7 +388,7 @@ pub fn saving_procedure(target: &str) -> Result<(File, String), SystemError> {
     Ok((file, filename))
 }
 
-/// This function is charged to get the hash choice from the user.
+/// This function is responsible for asking the hash algorithm from the user.
 ///
 /// # Returns
 ///

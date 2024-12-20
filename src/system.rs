@@ -1,7 +1,7 @@
-// Internal crates
+// Internal crates.
 use crate::error::{SystemError, WorgenXError};
 
-// External crates
+// External crates.
 use blake2::{Blake2b512, Blake2s256};
 use digest::Digest;
 use indicatif::{ProgressBar, ProgressStyle};
@@ -40,7 +40,7 @@ pub mod windows {
     pub const WORDLISTS_FOLDER: &str = "\\worgenx\\wordlists\\";
 }
 
-/// This function is charged to get user String input y/n.
+/// This function is responsible for getting user String input y/n.
 ///
 /// # Returns
 ///
@@ -57,7 +57,7 @@ pub fn get_user_choice_yn() -> String {
     choice
 }
 
-/// This function is charged to get user String input.
+/// This function is responsible for geting user String input.
 ///
 /// # Returns
 ///
@@ -73,7 +73,7 @@ pub fn get_user_choice() -> String {
     }
 }
 
-/// This function is charged to get user int input.
+/// This function is responsible for getting user int input.
 /// The function will keep asking the user to enter a valid number greater than 0 until the user does so.
 /// This is a generic function, so it can be used for any basic integer type.
 ///
@@ -112,7 +112,7 @@ where
     number
 }
 
-/// This function is charged to check a path/filename.
+/// This function is responsible for checking a path/filename.
 ///
 /// # Arguments
 ///
@@ -122,8 +122,8 @@ where
 ///
 /// Ok(String) if the path/filename is valid, containing the full path, SystemError otherwise.
 ///
-pub fn is_valid_path(path: String) -> Result<String, SystemError> {
-    let filename: String = match Path::new(&path).file_name() {
+pub fn is_valid_path(path: &str) -> Result<String, SystemError> {
+    let filename: String = match Path::new(path).file_name() {
         Some(f) => match f.to_str() {
             Some(f) => f.to_string(),
             None => return Err(SystemError::InvalidPath(path.to_string())),
@@ -136,7 +136,7 @@ pub fn is_valid_path(path: String) -> Result<String, SystemError> {
         return Err(SystemError::InvalidFilename(filename.to_string()));
     }
 
-    let full_path: String = if !Path::new(&path).is_absolute() {
+    let full_path: String = if !Path::new(path).is_absolute() {
         let current_dir: String = match std::env::current_dir() {
             Ok(c) => match c.to_str() {
                 Some(s) => s.to_string(),
@@ -149,9 +149,9 @@ pub fn is_valid_path(path: String) -> Result<String, SystemError> {
                 ))
             }
         };
-        current_dir + "/" + &path
+        current_dir + "/" + path
     } else {
-        path.clone()
+        path.to_string()
     };
 
     #[cfg(target_family = "windows")]
@@ -165,7 +165,7 @@ pub fn is_valid_path(path: String) -> Result<String, SystemError> {
     Ok(full_path)
 }
 
-/// This function is charged to check if the parent folder exists from a given file path.
+/// This function is responsible for checking if the parent folder exists from a given file path.
 ///
 /// # Arguments
 ///
@@ -182,7 +182,7 @@ pub fn check_if_parent_folder_exists(file_path: &str) -> bool {
     }
 }
 
-/// This function is charged to create the passwords or wordlists folder if it doesn't exist.
+/// This function is responsible for creating the passwords or wordlists folder if it doesn't exist.
 ///
 /// # Arguments
 ///
@@ -190,7 +190,7 @@ pub fn check_if_parent_folder_exists(file_path: &str) -> bool {
 ///
 /// # Returns
 ///
-/// Ok if the folder has been created, SystemError otherwise.
+/// Ok(()) if the folder has been created, SystemError otherwise.
 ///
 #[cfg(feature = "gui")]
 pub fn create_folder_if_not_exists(folder: &str) -> Result<(), SystemError> {
@@ -206,7 +206,7 @@ pub fn create_folder_if_not_exists(folder: &str) -> Result<(), SystemError> {
     Ok(())
 }
 
-/// This function send the invalid chars for windows path.
+/// This function sends the invalid chars for windows platforms.
 ///
 /// # Returns
 ///
@@ -217,7 +217,7 @@ fn get_invalid_chars() -> &'static [char] {
     &['<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@', '\0', '\r', '\n',]
 }
 
-/// This function send the invalid chars for unix platforms path.
+/// This function sends the invalid chars for unix platforms.
 ///
 /// # Returns
 ///
@@ -228,7 +228,7 @@ fn get_invalid_chars() -> &'static [char] {
     &['/', '\0', '\r', '\n']
 }
 
-/// This function is charged to calculate the elapsed time between two timestamps.
+/// This function is responsible for calculating the elapsed time between two timestamps.
 /// The result is returned in human readable format (hours, minutes, seconds depending on the elapsed time).
 ///
 /// # Arguments
@@ -267,7 +267,7 @@ pub fn get_elapsed_time(start_time: Instant) -> String {
     elapsed_time_str
 }
 
-/// This function is charged to save the generated passwords in a file and send the progress/possible errors to the channel.
+/// This function is responsible for saving the generated passwords in a file and sends the progress/possible errors to the channel.
 ///
 /// # Arguments
 ///
@@ -276,7 +276,7 @@ pub fn get_elapsed_time(start_time: Instant) -> String {
 ///
 /// # Returns
 ///
-/// Ok if the passwords have been written to the file, WorgenXError otherwise.
+/// Ok(()) if the passwords have been written to the file, WorgenXError otherwise.
 ///
 pub fn save_passwd_to_file(file: Arc<Mutex<File>>, passwords: String) -> Result<(), WorgenXError> {
     let mut file = file.lock().map_err(|_| {
@@ -295,7 +295,7 @@ pub fn save_passwd_to_file(file: Arc<Mutex<File>>, passwords: String) -> Result<
         })
 }
 
-/// This function is charged to return the progress used by the program.
+/// This function is responsible for returniong the progress used by the program.
 ///
 /// # Returns
 ///
@@ -312,7 +312,7 @@ pub fn get_progress_bar() -> indicatif::ProgressBar {
     pb
 }
 
-/// This functions is charged to return the estimated size of the wordlist.
+/// This functions is responsible for returning the estimated size of the wordlist.
 ///
 /// # Arguments
 ///
@@ -352,7 +352,7 @@ pub fn get_estimated_size(nb_of_passwords: u64, length: u64) -> String {
     size_str
 }
 
-/// This functions is charged to manage password hashing.
+/// This functions is responsible for managing password hashing.
 /// It returns the hashed password from the hash algorithm specified by the user.
 /// If the hash algorithm is not supported, it returns an error.
 ///
@@ -384,7 +384,7 @@ pub fn manage_hash(password: String, hash: &str) -> Result<String, SystemError> 
     }
 }
 
-/// This functions is charged to hash a password with a specific hash algorithm.
+/// This functions is responsible for hashing a password with a specific hash algorithm.
 /// It returns the hashed password.
 ///
 /// # Arguments
@@ -408,18 +408,18 @@ mod tests {
 
     #[test]
     fn test_is_valid_path() {
-        let relative_path: String = "./test.txt".to_string();
-        let invalid_path: String = "test.txt\0".to_string();
+        let relative_path: &str = "./test.txt";
+        let invalid_path: &str = "test.txt\0";
 
         #[cfg(target_family = "windows")]
-        let absolute_path: String = "C:/Users/test.txt".to_string();
+        let absolute_path: &str = "C:/Users/test.txt";
 
         #[cfg(target_family = "unix")]
-        let absolute_path: String = "/home/test.txt".to_string();
+        let absolute_path: &str = "/home/test.txt";
 
-        assert!(is_valid_path(relative_path.clone()).is_ok());
-        assert!(is_valid_path(absolute_path.clone()).is_ok());
-        assert!(is_valid_path(invalid_path.clone()).is_err());
+        assert!(is_valid_path(relative_path).is_ok());
+        assert!(is_valid_path(absolute_path).is_ok());
+        assert!(is_valid_path(invalid_path).is_err());
     }
 
     #[test]

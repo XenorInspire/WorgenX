@@ -1,7 +1,7 @@
-// Internal crates
+// Internal crates.
 use crate::dict;
 
-// External crates
+// External crates.
 use rand::{rngs::OsRng, seq::SliceRandom, Rng};
 
 /// This struct built from the user's choices will be used to generate the random password.
@@ -16,7 +16,7 @@ pub struct PasswordConfig {
     pub number_of_passwords: u64,
 }
 
-/// This function is charged to create the content of the password.
+/// This function is responsible for creating the content of the password.
 /// It returns a vector of u8 containing the characters that will be used to generate the password.
 ///
 /// # Arguments
@@ -52,7 +52,7 @@ fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
     password_content
 }
 
-/// This function is charged to shuffle a vector of u8 from the dict module.
+/// This function is responsible for shuffling a vector of u8 from the dict module.
 ///
 /// # Arguments
 ///
@@ -69,7 +69,7 @@ fn shuffle_dict(dict: &[u8]) -> Vec<u8> {
     shuffled_dict
 }
 
-/// This function is charged to generate an array of random passwords.
+/// This function is responsible for generating an array of random passwords.
 ///
 /// # Arguments
 ///

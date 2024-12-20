@@ -1,4 +1,4 @@
-// Internal crates
+// Internal crates.
 use crate::{
     benchmark,
     error::{ArgError, SystemError, WorgenXError},
@@ -8,7 +8,7 @@ use crate::{
     wordlist::{self, WordlistConfig, WordlistValues},
 };
 
-// External crates
+// External crates.
 use clap::{value_parser, Arg, ArgAction, ArgMatches, Command};
 use std::{
     env,
@@ -16,7 +16,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-/// This struct is built from PasswordConfig and optional arguments will be used to generate the random password.
+/// This struct is built from PasswordConfig and optional arguments that will be used to generate the random password.
 ///
 struct PasswordGenerationOptions {
     password_config: PasswordConfig,
@@ -25,7 +25,7 @@ struct PasswordGenerationOptions {
     no_display: bool,
 }
 
-/// This struct is built from WordlistValues and optional arguments will be used to generate the wordlist.
+/// This struct is built from WordlistValues and optional arguments that will be used to generate the wordlist.
 ///
 struct WordlistGenerationOptions {
     wordlist_values: WordlistValues,
@@ -40,11 +40,11 @@ struct BenchmarkOptions {
     threads: u8,
 }
 
-/// This function is charged to build the command context for the CLI mode with the clap framework.
+/// This function is responsible for building the command context of the CLI mode with the clap framework.
 ///
 /// # Returns
 ///
-/// Command containing the different features of WorgenX.
+/// Command struct containing the different features of WorgenX.
 ///
 fn build_command_context() -> Command {
     let default_threads: &'static str = Box::leak(num_cpus::get_physical().to_string().into_boxed_str()); // Ensure a static reference to the number of physical cores of the CPU
@@ -219,21 +219,21 @@ fn build_command_context() -> Command {
         .subcommand(benchmark_command)
 }
 
-/// This function is charged to schedule in CLI mode the execution of the different features of the program according to the user's choices.
+/// This function is responsible for scheduling the execution of the different features of the program according to the user's choices.
 ///
 /// # Returns
 ///
-/// Ok if the program has been executed, WorgenXError otherwise.
+/// Ok(()) if the program has been executed, WorgenXError otherwise.
 ///
 pub fn run() -> Result<(), WorgenXError> {
     let mut command_context: Command = build_command_context();
     if let Ok(matches) = command_context.clone().try_get_matches() {
-        // Call display_help() instead of clap help with the -h or --help arguments (better control of the help message)
+        // Call the `display_help()` function instead of clap help with the -h or --help arguments (better control of the help message).
         if matches.get_flag("help") {
             display_help();
             return Ok(());
         }
-        // Call println!() instead of clap version with the -v or --version arguments (better control of the version message)
+        // Call the `println!()` macro instead of clap version with the -v or --version arguments (better control of the version message).
         if matches.get_flag("version") {
             println!("WorgenX v{}", env!("CARGO_PKG_VERSION"));
             return Ok(());
@@ -245,11 +245,11 @@ pub fn run() -> Result<(), WorgenXError> {
         Some(("wordlist", sub_matches)) => run_wordlist(sub_matches),
         Some(("password", sub_matches)) => run_passwd(sub_matches),
         Some(("benchmark", sub_matches)) => run_benchmark(sub_matches),
-        _ => Err(WorgenXError::ArgError(ArgError::NoArgument)) // Should never happen
+        _ => Err(WorgenXError::ArgError(ArgError::NoArgument)) // Should never happen.
     }
 }
 
-/// This function is charged to schedule the execution of the random password generation feature of the program.
+/// This function is responsible for scheduling the execution of the random password generation functions of the program.
 ///
 /// # Arguments
 ///
@@ -257,7 +257,7 @@ pub fn run() -> Result<(), WorgenXError> {
 ///
 /// # Returns
 ///
-/// Ok if the password has been generated, WorgenXError otherwise.
+/// Ok(()) if the password has been generated, WorgenXError otherwise.
 ///
 fn run_passwd(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     let password_generation_parameters: PasswordGenerationOptions = allocate_passwd_config_cli(sub_matches)?;
@@ -299,8 +299,8 @@ fn run_passwd(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     Ok(())
 }
 
-/// This function is charged to check the values of the arguments passed to the program for the random password generation feature.
-/// This function is called only if the user specifies the -p or --passwd argument.
+/// This function is responsible for checking the values of the arguments passed to the program for the random password generation feature.
+/// This function is called only if the user specifies the password command.
 ///
 /// # Arguments
 ///
@@ -358,7 +358,7 @@ fn allocate_passwd_config_cli(
     })
 }
 
-/// This function is charged to schedule the execution of the wordlist generation feature.
+/// This function is responsible for scheduling the execution of the wordlist generation functions.
 ///
 /// # Arguments
 ///
@@ -366,7 +366,7 @@ fn allocate_passwd_config_cli(
 ///
 /// # Returns
 ///
-/// Ok if the wordlist has been generated, WorgenXError otherwise.
+/// Ok(()) if the wordlist has been generated, WorgenXError otherwise.
 ///
 fn run_wordlist(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     let wordlist_generation_parameters: WordlistGenerationOptions = allocate_wordlist_config_cli(sub_matches)?;
@@ -385,8 +385,8 @@ fn run_wordlist(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     )
 }
 
-/// This function is charged to check the values of the arguments passed to the program.
-/// This function is called only if the user specifies the -w or --wordlist argument.
+/// This function is responsible for checking the values of the arguments passed to the program.
+/// This function is called only if the user specifies the wordlist command.
 ///
 /// # Arguments
 ///
@@ -437,36 +437,33 @@ fn allocate_wordlist_config_cli(
     })
 }
 
-/// This function is charged to schedule the execution of the benchmark feature of the program.
+/// This function is responsible for scheduling the execution of the benchmark functions of WorgenX.
 /// It will display the number of passwords generated in 1 minute.
 /// The benchmark is based on the generation of random passwords.
-/// The profile used for the benchmark is defined in the benchmark module (PASSWORD_CONFIG constant).
+/// The profile used for the benchmark is defined in the benchmark module (`PASSWORD_CONFIG` constant).
 ///
 /// # Arguments
 ///
-/// * `sub_matches` - A reference to ArgMatches containing the arguments passed to the program.
+/// * `sub_matches` - A reference to ArgMatches containing the arguments sent to the program.
 ///
 /// # Returns
 ///
-/// Ok if the benchmark has been executed, WorgenXError otherwise.
+/// Ok(()) if the benchmark has correctly been executed, WorgenXError otherwise.
 ///
 fn run_benchmark(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     let benchmark_parameters: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches)?;
-    match benchmark::load_cpu_benchmark(benchmark_parameters.threads) {
-        Ok(results) => Ok(println!(
-            "Your CPU has generated {} passwords in 1 minute",
-            results
-        )),
-        Err(e) => Err(e),
-    }
+    let result: u64 = benchmark::load_cpu_benchmark(benchmark_parameters.threads)?;
+    
+    println!("Your CPU has generated {} passwords in 1 minute", result);
+    Ok(())
 }
 
-/// This function is charged to check the syntax of the arguments passed to the program for the benchmark feature.
-/// This function is called only if the user specifies the -b or --benchmark argument.
+/// This function is responsible for checking the syntax of the arguments sent to the program for the benchmark feature.
+/// This function is called only if the user specifies the benchmark command.
 ///
 /// # Arguments
 ///
-/// * `sub_matches` - A reference to ArgMatches containing the arguments passed to the program.
+/// * `sub_matches` - A reference to ArgMatches containing the arguments sent to the program.
 ///
 /// # Returns
 ///
@@ -481,7 +478,7 @@ fn allocate_benchmark_config_cli(
     Ok(BenchmarkOptions { threads })
 }
 
-/// This function is charged to check path for the 'output' arguments, if it's a valid path on the system.
+/// This function is responsible for checking the path for the 'output' arguments, if it's a valid path on the filesystem.
 ///
 /// # Arguments
 ///
@@ -489,16 +486,16 @@ fn allocate_benchmark_config_cli(
 ///
 /// # Returns
 ///
-/// Ok if the path is valid, WorgenXError otherwise.
+/// Ok(String) if the path is valid, WorgenXError otherwise.
 ///
 fn check_output_arg(path: &str) -> Result<String, WorgenXError> {
-    match system::is_valid_path(path.to_string()) {
+    match system::is_valid_path(path) {
         Ok(full_path) => Ok(full_path),
         Err(e) => Err(WorgenXError::SystemError(e)),
     }
 }
 
-/// This function is charged to update the value of a field from a structure (ArgMatches from clap framwork) with the value of an argument.
+/// This function is responsible for updating the value of a field from a structure (ArgMatches from clap framwork) with the value of a CLI argument.
 ///
 /// # Arguments
 ///
@@ -520,7 +517,7 @@ fn update_config<T: Clone + Send + Sync + 'static>(
     }
 }
 
-/// This function is charged to display the help menu with all the features of WorgenX and their options.
+/// This function is responsible for displaying the help menu with all the features of WorgenX and their options.
 ///
 fn display_help() {
     println!("Usage: worgenX <command> [options]");
@@ -573,57 +570,45 @@ mod tests {
     fn test_allocate_passwd_config_cli() {
         let command_context: Command = build_command_context();
         let matches: ArgMatches = command_context.get_matches_from(vec!["worgenX", "password", "-l", "-u", "-n", "-x", "-s", "10", "-c", "5", "-o", "test.txt", "-j"]);
+        let (_, sub_matches) = matches.subcommand().unwrap();
+        let result: PasswordGenerationOptions = allocate_passwd_config_cli(sub_matches).unwrap();
         
-        match matches.subcommand(){
-            Some(("password", sub_matches)) => {
-                let result: PasswordGenerationOptions = allocate_passwd_config_cli(sub_matches).unwrap();
-                assert_eq!(result.password_config.number_of_passwords, 5);
-                assert_eq!(result.password_config.length, 10);
-                assert!(result.password_config.lowercase);
-                assert!(result.password_config.uppercase);
-                assert!(result.password_config.numbers);
-                assert!(result.password_config.special_characters);
-                assert!(result.output_file.contains("test.txt"));
-                assert!(result.json);
-                assert!(!result.no_display);
-            },
-            _ => panic!("Should never happen")
-        }
+        assert_eq!(result.password_config.number_of_passwords, 5);
+        assert_eq!(result.password_config.length, 10);
+        assert!(result.password_config.lowercase);
+        assert!(result.password_config.uppercase);
+        assert!(result.password_config.numbers);
+        assert!(result.password_config.special_characters);
+        assert!(result.output_file.contains("test.txt"));
+        assert!(result.json);
+        assert!(!result.no_display);
     }
 
     #[test]
     fn test_allocate_wordlist_config_cli() {
         let command_context: Command = build_command_context();
         let matches: ArgMatches = command_context.get_matches_from(vec!["worgenX", "wordlist", "-l", "-u", "-n", "-x", "-m", "A?1", "-o", "test.txt", "-d", "-t", "4"]);
+        let (_, sub_matches) = matches.subcommand().unwrap();
+        let result: WordlistGenerationOptions = allocate_wordlist_config_cli(sub_matches).unwrap();
         
-        match matches.subcommand(){
-            Some(("wordlist", sub_matches)) => {
-                let result: WordlistGenerationOptions = allocate_wordlist_config_cli(sub_matches).unwrap();
-                assert_eq!(result.wordlist_values.mask, "A?1");
-                assert_eq!(result.threads, 4);
-                assert!(result.wordlist_values.lowercase);
-                assert!(result.wordlist_values.uppercase);
-                assert!(result.wordlist_values.numbers);
-                assert!(result.wordlist_values.special_characters);
-                assert!(result.output_file.contains("test.txt"));
-                assert!(result.no_loading_bar);
-            },
-            _ => panic!("Should never happen")
-        }
+        assert_eq!(result.wordlist_values.mask, "A?1");
+        assert_eq!(result.threads, 4);
+        assert!(result.wordlist_values.lowercase);
+        assert!(result.wordlist_values.uppercase);
+        assert!(result.wordlist_values.numbers);
+        assert!(result.wordlist_values.special_characters);
+        assert!(result.output_file.contains("test.txt"));
+        assert!(result.no_loading_bar);       
     }
 
     #[test]
     fn test_allocate_benchmark_config_cli() {
         let command_context: Command = build_command_context();
         let matches: ArgMatches = command_context.get_matches_from(vec!["worgenX", "benchmark", "-t", "4"]);
+        let (_, sub_matches) = matches.subcommand().unwrap();
+        let result: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches).unwrap();
         
-        match matches.subcommand(){
-            Some(("benchmark", sub_matches)) => {
-                let result: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches).unwrap();
-                assert_eq!(result.threads, 4);
-            },
-            _ => panic!("Should never happen")
-        }
+        assert_eq!(result.threads, 4);
     }
 
     #[test]
