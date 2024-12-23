@@ -313,6 +313,10 @@ fn run_passwd(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
 fn allocate_passwd_config_cli(
     sub_matches: &ArgMatches,
 ) -> Result<PasswordGenerationOptions, WorgenXError> {
+    // Clap framework ensures that the arguments are present.
+    let length: u32 = *sub_matches.get_one::<u32>("size").unwrap();
+    let size: u64 = *sub_matches.get_one::<u64>("count").unwrap();
+    
     let mut output_file: String = String::new();
     let mut json: bool = false;
     let mut no_display: bool = false;
@@ -322,8 +326,8 @@ fn allocate_passwd_config_cli(
             special_characters: false,
             uppercase: false,
             lowercase: false,
-            length: *sub_matches.get_one::<u32>("size").ok_or(WorgenXError::ArgError(ArgError::MissingValue("-s or --size".to_string())))?,
-            number_of_passwords: *sub_matches.get_one::<u64>("count").ok_or(WorgenXError::ArgError(ArgError::MissingValue("-c or --count".to_string())))?,
+            length,
+            number_of_passwords: size,
         };
 
     update_config(&mut password_config.lowercase, sub_matches, "lowercase_password");

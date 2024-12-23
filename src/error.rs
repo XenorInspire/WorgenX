@@ -16,9 +16,6 @@ pub enum ArgError {
     /// This error is raised if the user doesn't specify any argument.
     #[error("Error: no argument specified\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
     NoArgument,
-    /// This error is raised if the user specifies an argument that requires a value but doesn't give it.
-    #[error("Error: missing value for {0}")]
-    MissingValue(String),
     /// This error is raised if there isn't any configuration given by the user (for example just wordlist feature without any type of characters specified).
     #[error("Error: no configuration given for argument.\nPlease specify the mandatory parameters and at least one type of characters.\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
     MissingConfiguration,
