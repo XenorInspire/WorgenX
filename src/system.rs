@@ -149,7 +149,7 @@ pub fn is_valid_path(path: &str) -> Result<String, SystemError> {
                 ))
             }
         };
-        current_dir + "/" + path
+        current_dir + "/" + path.trim_start_matches("./")
     } else {
         path.to_string()
     };
