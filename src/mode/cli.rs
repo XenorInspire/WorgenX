@@ -245,7 +245,7 @@ pub fn run() -> Result<(), WorgenXError> {
         Some(("wordlist", sub_matches)) => run_wordlist(sub_matches),
         Some(("password", sub_matches)) => run_passwd(sub_matches),
         Some(("benchmark", sub_matches)) => run_benchmark(sub_matches),
-        _ => Err(WorgenXError::ArgError(ArgError::NoArgument)) // Should never happen.
+        _ => Err(WorgenXError::ArgError(ArgError::NoArgument))
     }
 }
 
