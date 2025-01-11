@@ -16,7 +16,7 @@ gui = []
 
 [dependencies]
 rand = { version = "0.8.5", features = ["getrandom"], default-features = false }
-thiserror = "2.0.10"
+thiserror = "2.0.11"
 num_cpus = "1.16.0"
 serde_json = { version = "1.0.135", optional = true, features = ["std"], default-features = false }
 indicatif = { version = "0.17.9", default-features = false }
