@@ -111,7 +111,7 @@ You can find below the options for the main features of WorgenX:
     -h, --hash <hash>                   Hash algorithm to use for the wordlist.
                                         You can choose between: md5, sha1, sha224, sha256, sha384, sha512, sha3-224, sha3-256, sha3-384, sha3-512, blake2b, blake2s and whirlpool
     -t <threads>, --threads <threads>   Number of threads to generate the passwords
-                                        By default, the number of threads is based on the number of physical cores of the CPU
+                                        By default, the number of threads is based on the number of logical cores of the CPU
 
   --- Password generation ---
   You must specify at least one of the following options: -l, -u, -n, -x
@@ -133,7 +133,7 @@ You can find below the options for the main features of WorgenX:
   --- CPU Benchmark ---
   The following option is optional:
     -t <threads>, --threads <threads>   Number of threads to use for the CPU benchmark
-                                        By default, the number of threads is based on the number of physical cores of the CPU
+                                        By default, the number of threads is based on the number of logical cores of the CPU
 
 ```
 

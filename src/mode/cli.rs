@@ -47,7 +47,7 @@ struct BenchmarkOptions {
 /// Command struct containing the different features of WorgenX.
 ///
 fn build_command_context() -> Command {
-    let default_threads: &'static str = Box::leak(num_cpus::get_physical().to_string().into_boxed_str()); // Ensure a static reference to the number of physical cores of the CPU
+    let default_threads: &'static str = Box::leak(num_cpus::get().to_string().into_boxed_str()); // Ensure a static reference to the number of logical cores of the CPU
     let wordlist_command: Command = Command::new("wordlist")
         .arg_required_else_help(true)
         .arg(
@@ -545,7 +545,7 @@ fn display_help() {
     println!("\n  The following options are optional:");
     println!("    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist");
     println!("    -h, --hash <hash>\t\t\tHash algorithm to use for the wordlist.\n\t\t\t\t\tYou can choose between: md5, sha1, sha224, sha256, sha384, sha512,\n\t\t\t\t\tsha3-224, sha3-256, sha3-384, sha3-512, blake2b-512, blake2s-256 and whirlpool");
-    println!("    -t <threads>, --threads <threads>\tNumber of threads to generate the passwords\n\t\t\t\t\tBy default, the number of threads is based on the number of physical cores of the CPU");
+    println!("    -t <threads>, --threads <threads>\tNumber of threads to generate the passwords\n\t\t\t\t\tBy default, the number of threads is based on the number of logical cores of the CPU");
 
     println!("\n  --- Password generation ---");
     println!("  You must specify at least one of the following options: -l, -u, -n, -x");
@@ -563,7 +563,7 @@ fn display_help() {
 
     println!("\n  --- CPU Benchmark ---");
     println!("  The following option is optional:");
-    println!("    -t <threads>, --threads <threads>\tNumber of threads to use for the CPU benchmark\n\t\t\t\t\tBy default, the number of threads is based on the number of physical cores of the CPU\n");
+    println!("    -t <threads>, --threads <threads>\tNumber of threads to use for the CPU benchmark\n\t\t\t\t\tBy default, the number of threads is based on the number of logical cores of the CPU\n");
 }
 
 #[cfg(test)]
