@@ -38,7 +38,7 @@ const PASSWORD_CONFIG: PasswordConfig = PasswordConfig {
 ///
 /// * `Result<u64, WorgenXError>` - The number of passwords generated in 60 seconds, WorgenXError otherwise.
 ///
-pub fn load_cpu_benchmark(nb_of_threads: u8) -> Result<u64, WorgenXError> {
+pub fn load_cpu_benchmark(nb_of_threads: usize) -> Result<u64, WorgenXError> {
     let (tx_progress_bar, rx_progress_bar) = mpsc::channel::<Result<u64, WorgenXError>>();
     let pb: Arc<Mutex<ProgressBar>> = Arc::new(Mutex::new(system::get_progress_bar()));
     let pb_clone: Arc<Mutex<ProgressBar>> = Arc::clone(&pb);
