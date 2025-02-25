@@ -312,7 +312,7 @@ pub fn get_progress_bar() -> indicatif::ProgressBar {
     pb
 }
 
-/// This functions is responsible for returning the estimated size of the wordlist.
+/// This function is responsible for returning the estimated size of the wordlist.
 ///
 /// # Arguments
 ///
@@ -352,7 +352,7 @@ pub fn get_estimated_size(nb_of_passwords: u64, length: u64) -> String {
     size_str
 }
 
-/// This functions is responsible for managing password hashing.
+/// This function is responsible for managing password hashing.
 /// It returns the hashed password from the hash algorithm specified by the user.
 /// If the hash algorithm is not supported, it returns an error.
 ///
@@ -384,7 +384,7 @@ pub fn manage_hash(password: String, hash: &str) -> Result<String, SystemError> 
     }
 }
 
-/// This functions is responsible for hashing a password with a specific hash algorithm.
+/// This function is responsible for hashing a password with a specific hash algorithm.
 /// It returns the hashed password.
 ///
 /// # Arguments
