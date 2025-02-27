@@ -17,7 +17,7 @@ use std::{
 /// This constant is used to set the size of the buffer used to write the passwords in the file.
 /// It specifies the maximum number of passwords that will be written in the file at once per thread.
 ///
-const BUFFER_SIZE: usize = usize::MAX;
+const BUFFER_SIZE: usize = 100000;
 
 /// This static variable is used to track the number of passwords generated.
 /// It is used to update the progress bar.
