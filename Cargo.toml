@@ -16,11 +16,11 @@ gui = []
 
 [dependencies]
 rand = { version = "0.8.5", features = ["getrandom"], default-features = false }
-thiserror = { version = "2.0.11", default-features = false }
+thiserror = { version = "2.0.12", default-features = false }
 num_cpus = { version = "1.16.0", default-features = false }
-serde_json = { version = "1.0.139", optional = true, features = ["std"], default-features = false }
+serde_json = { version = "1.0.140", optional = true, features = ["std"], default-features = false }
 indicatif = { version = "0.17.11", default-features = false }
-clap = { version = "4.5.31", optional = true, features = ["std"], default-features = false }
+clap = { version = "4.5.32", optional = true, features = ["std"], default-features = false }
 hex = { version = "0.4.3", features = ["alloc"], default-features = false }
 md-5 = { version = "0.10.6", default-features = false }
 sha-1 = { version = "0.10.1", default-features = false }
