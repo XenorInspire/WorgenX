@@ -2,7 +2,7 @@
 use crate::dict;
 
 // External crates.
-use rand::{rngs::OsRng, seq::SliceRandom, Rng};
+use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
 
 /// This struct built from the user's choices will be used to generate the random password.
 ///
@@ -47,7 +47,7 @@ fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
         password_content.extend(shuffle_dict(dict::SPECIAL_CHARACTERS));
     }
 
-    let mut rng: OsRng = OsRng;
+    let mut rng: ThreadRng = rand::rng();
     password_content.shuffle(&mut rng);
     password_content
 }
@@ -64,7 +64,7 @@ fn create_passwd_content(password_config: &PasswordConfig) -> Vec<u8> {
 ///
 fn shuffle_dict(dict: &[u8]) -> Vec<u8> {
     let mut shuffled_dict: Vec<u8> = dict.to_vec();
-    let mut rng: OsRng = OsRng;
+    let mut rng: ThreadRng = rand::rng();
     shuffled_dict.shuffle(&mut rng);
     shuffled_dict
 }
@@ -85,10 +85,10 @@ pub fn generate_random_passwords(password_config: &PasswordConfig) -> Vec<String
     let password_content: Vec<u8> = create_passwd_content(password_config);
 
     for _ in 0..password_config.number_of_passwords {
-        let mut rng: OsRng = OsRng;
+        let mut rng: ThreadRng = rand::rng();
         let mut password: String = String::new();
         for _ in 0..password_config.length {
-            let idx: usize = rng.gen_range(0..password_content.len());
+            let idx: usize = rng.random_range(0..password_content.len());
             password.push(password_content[idx] as char);
         }
         passwords.push(password);
@@ -112,7 +112,7 @@ mod tests {
             number_of_passwords: 1,
         };
         let password_content: Vec<u8> = create_passwd_content(&password_config);
-        
+
         assert_eq!(password_content.len(), 91);
     }
 
