@@ -27,13 +27,10 @@ fn main() {
     mode::gui::run();
 
     #[cfg(feature = "cli")]
-    match mode::cli::run() {
-        Ok(_) => {
-            std::process::exit(0);
-        }
-        Err(e) => {
-            println!("{}", e);
-            std::process::exit(1);
-        }
+    if let Err(e) =  mode::cli::run() {
+        eprintln!("{}", e);
+        std::process::exit(1);
     }
+
+    std::process::exit(0);
 }

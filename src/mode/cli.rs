@@ -31,13 +31,13 @@ struct WordlistGenerationOptions {
     wordlist_values: WordlistValues,
     output_file: String,
     no_loading_bar: bool,
-    threads: u8,
+    threads: usize,
 }
 
 /// This struct is built from the arguments for the benchmark feature.
 ///
 struct BenchmarkOptions {
-    threads: u8,
+    threads: usize,
 }
 
 /// This function is responsible for building the command context of the CLI mode with the clap framework.
@@ -47,7 +47,7 @@ struct BenchmarkOptions {
 /// Command struct containing the different features of WorgenX.
 ///
 fn build_command_context() -> Command {
-    let default_threads: &'static str = Box::leak(num_cpus::get_physical().to_string().into_boxed_str()); // Ensure a static reference to the number of physical cores of the CPU
+    let default_threads: &'static str = Box::leak(num_cpus::get().to_string().into_boxed_str()); // Ensure a static reference to the number of logical cores of the CPU
     let wordlist_command: Command = Command::new("wordlist")
         .arg_required_else_help(true)
         .arg(
@@ -116,7 +116,7 @@ fn build_command_context() -> Command {
                 .short('t')
                 .long("threads")
                 .help("Number of threads to generate the passwords")
-                .value_parser(value_parser!(u8).range(1..u8::MAX as i64))
+                .value_parser(value_parser!(usize))
                 .value_name("threads")
                 .default_value(default_threads),
         );
@@ -201,7 +201,7 @@ fn build_command_context() -> Command {
                 .short('t')
                 .long("threads")
                 .help("Number of threads to use for the CPU benchmark")
-                .value_parser(value_parser!(u8).range(1..u8::MAX as i64))
+                .value_parser(value_parser!(usize))
                 .value_name("threads")
                 .default_value(default_threads),
         );
@@ -245,7 +245,7 @@ pub fn run() -> Result<(), WorgenXError> {
         Some(("wordlist", sub_matches)) => run_wordlist(sub_matches),
         Some(("password", sub_matches)) => run_passwd(sub_matches),
         Some(("benchmark", sub_matches)) => run_benchmark(sub_matches),
-        _ => Err(WorgenXError::ArgError(ArgError::NoArgument)) // Should never happen.
+        _ => Err(WorgenXError::ArgError(ArgError::NoArgument))
     }
 }
 
@@ -313,6 +313,10 @@ fn run_passwd(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
 fn allocate_passwd_config_cli(
     sub_matches: &ArgMatches,
 ) -> Result<PasswordGenerationOptions, WorgenXError> {
+    // Clap framework ensures that the arguments are present.
+    let length: u32 = *sub_matches.get_one::<u32>("size").unwrap();
+    let size: u64 = *sub_matches.get_one::<u64>("count").unwrap();
+    
     let mut output_file: String = String::new();
     let mut json: bool = false;
     let mut no_display: bool = false;
@@ -322,8 +326,8 @@ fn allocate_passwd_config_cli(
             special_characters: false,
             uppercase: false,
             lowercase: false,
-            length: *sub_matches.get_one::<u32>("size").ok_or(WorgenXError::ArgError(ArgError::MissingValue("-s or --size".to_string())))?,
-            number_of_passwords: *sub_matches.get_one::<u64>("count").ok_or(WorgenXError::ArgError(ArgError::MissingValue("-c or --count".to_string())))?,
+            length,
+            number_of_passwords: size,
         };
 
     update_config(&mut password_config.lowercase, sub_matches, "lowercase_password");
@@ -401,7 +405,7 @@ fn allocate_wordlist_config_cli(
 ) -> Result<WordlistGenerationOptions, WorgenXError> {
     let mut output_file: String = String::new();
     let mut no_loading_bar: bool = false;
-    let mut threads: u8 = 0;
+    let mut threads: usize = 0;
     let mut wordlist_values: WordlistValues = WordlistValues {
         numbers: false,
         special_characters: false,
@@ -472,7 +476,7 @@ fn run_benchmark(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
 fn allocate_benchmark_config_cli(
     sub_matches: &ArgMatches,
 ) -> Result<BenchmarkOptions, WorgenXError> {
-    let mut threads: u8 = 0;
+    let mut threads: usize = 0;
     update_config(&mut threads, sub_matches, "threads_benchmark");
 
     Ok(BenchmarkOptions { threads })
@@ -541,7 +545,7 @@ fn display_help() {
     println!("\n  The following options are optional:");
     println!("    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist");
     println!("    -h, --hash <hash>\t\t\tHash algorithm to use for the wordlist.\n\t\t\t\t\tYou can choose between: md5, sha1, sha224, sha256, sha384, sha512,\n\t\t\t\t\tsha3-224, sha3-256, sha3-384, sha3-512, blake2b-512, blake2s-256 and whirlpool");
-    println!("    -t <threads>, --threads <threads>\tNumber of threads to generate the passwords\n\t\t\t\t\tBy default, the number of threads is based on the number of physical cores of the CPU");
+    println!("    -t <threads>, --threads <threads>\tNumber of threads to generate the passwords\n\t\t\t\t\tBy default, the number of threads is based on the number of logical cores of the CPU");
 
     println!("\n  --- Password generation ---");
     println!("  You must specify at least one of the following options: -l, -u, -n, -x");
@@ -559,7 +563,7 @@ fn display_help() {
 
     println!("\n  --- CPU Benchmark ---");
     println!("  The following option is optional:");
-    println!("    -t <threads>, --threads <threads>\tNumber of threads to use for the CPU benchmark\n\t\t\t\t\tBy default, the number of threads is based on the number of physical cores of the CPU\n");
+    println!("    -t <threads>, --threads <threads>\tNumber of threads to use for the CPU benchmark\n\t\t\t\t\tBy default, the number of threads is based on the number of logical cores of the CPU\n");
 }
 
 #[cfg(test)]
@@ -592,7 +596,7 @@ mod tests {
         let result: WordlistGenerationOptions = allocate_wordlist_config_cli(sub_matches).unwrap();
         
         assert_eq!(result.wordlist_values.mask, "A?1");
-        assert_eq!(result.threads, 4);
+        assert_eq!(result.threads, 4_usize);
         assert!(result.wordlist_values.lowercase);
         assert!(result.wordlist_values.uppercase);
         assert!(result.wordlist_values.numbers);
@@ -608,7 +612,7 @@ mod tests {
         let (_, sub_matches) = matches.subcommand().unwrap();
         let result: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches).unwrap();
         
-        assert_eq!(result.threads, 4);
+        assert_eq!(result.threads, 4_usize);
     }
 
     #[test]

@@ -164,7 +164,7 @@ pub fn build_wordlist_config(wordlist_values: &WordlistValues) -> WordlistConfig
 pub fn wordlist_generation_scheduler(
     wordlist_config: &WordlistConfig,
     nb_of_passwords: u64,
-    nb_of_threads: u8,
+    nb_of_threads: usize,
     file_path: &str,
     no_loading_bar: bool,
 ) -> Result<(), WorgenXError> {
@@ -217,7 +217,7 @@ pub fn wordlist_generation_scheduler(
 fn run_wordlist_generation(
     wordlist_config: &WordlistConfig,
     nb_of_passwords: u64,
-    nb_of_threads: u8,
+    nb_of_threads: usize,
     file_path: &str,
 ) -> Result<(), WorgenXError> {
     let shared_formated_mask: Arc<Vec<char>> = Arc::new(wordlist_config.formated_mask.clone());
