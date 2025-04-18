@@ -133,10 +133,12 @@ pub fn is_valid_path(path: &str) -> Result<String, SystemError> {
 
     let invalid_chars: &[char] = get_invalid_chars();
     if filename.chars().any(|c| invalid_chars.contains(&c)) {
-        return Err(SystemError::InvalidFilename(filename.to_string()));
+        return Err(SystemError::InvalidFilename(filename));
     }
 
-    let full_path: String = if !Path::new(path).is_absolute() {
+    let full_path: String = if Path::new(path).is_absolute() {
+        path.to_string()
+    } else {
         let current_dir: String = match std::env::current_dir() {
             Ok(c) => match c.to_str() {
                 Some(s) => s.to_string(),
@@ -150,8 +152,6 @@ pub fn is_valid_path(path: &str) -> Result<String, SystemError> {
             }
         };
         current_dir + "/" + path.trim_start_matches("./")
-    } else {
-        path.to_string()
     };
 
     #[cfg(target_family = "windows")]
@@ -176,10 +176,7 @@ pub fn is_valid_path(path: &str) -> Result<String, SystemError> {
 /// True if the parent folder exists, false otherwise.
 ///
 pub fn check_if_parent_folder_exists(file_path: &str) -> bool {
-    match Path::new(file_path).parent() {
-        Some(p) => p.exists(),
-        None => false,
-    }
+    Path::new(file_path).parent().is_some_and(|p| p.exists())
 }
 
 /// This function is responsible for creating the passwords or wordlists folder if it doesn't exist.
@@ -213,7 +210,7 @@ pub fn create_folder_if_not_exists(folder: &str) -> Result<(), SystemError> {
 /// '<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@', '\0', '\r', '\n' chars.
 ///
 #[cfg(target_family = "windows")]
-fn get_invalid_chars() -> &'static [char] {
+const fn get_invalid_chars() -> &'static [char] {
     &['<', '>', ':', '"', '/', '\\', '|', '?', '*', '+', ',', ';', '=', '@', '\0', '\r', '\n',]
 }
 
@@ -224,7 +221,7 @@ fn get_invalid_chars() -> &'static [char] {
 /// '/', '\0', '\r', '\n' chars.
 ///
 #[cfg(target_family = "unix")]
-fn get_invalid_chars() -> &'static [char] {
+const fn get_invalid_chars() -> &'static [char] {
     &['/', '\0', '\r', '\n']
 }
 

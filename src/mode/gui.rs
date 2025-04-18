@@ -102,7 +102,7 @@ fn main_passwd_generation() {
             let (password_file, _) = file_result.unwrap();
             let shared_file: Arc<Mutex<File>> = Arc::new(Mutex::new(password_file));
             while let Err(e) =
-                system::save_passwd_to_file(shared_file.clone(), passwords.join("\n"))
+                system::save_passwd_to_file(Arc::clone(&shared_file), passwords.join("\n"))
             {
                 println!("\n{}", e);
                 println!("Do you want to try again ? (y/n)");
@@ -298,11 +298,11 @@ fn allocate_wordlist_config_gui() -> WordlistValues {
         } else if !wordlist_config.mask.contains('?') {
             println!("The mask must contain at least one '?' !");
             continue;
-        } else {
-            println!("Do you want to validate the following mask : '{}' ? (y/n)", wordlist_config.mask);
-            if system::get_user_choice_yn().eq("y") {
-                is_valid_mask = true;
-            }
+        }
+
+        println!("Do you want to validate the following mask : '{}' ? (y/n)", wordlist_config.mask);
+        if system::get_user_choice_yn().eq("y") {
+            is_valid_mask = true;
         }
     }
 
@@ -319,13 +319,10 @@ fn main_benchmark() {
         println!("The benchmark will start in 5 seconds...");
         thread::sleep(std::time::Duration::from_secs(5));
         match benchmark::load_cpu_benchmark(num_cpus::get()) {
-            Ok(nb_of_passwords) => {
-                println!("Your CPU has generated {} passwords in 1 minute", nb_of_passwords);
-            }
-            Err(e) => {
-                println!("{}", e);
-            }
+            Ok(nb_of_passwords) => println!("Your CPU has generated {} passwords in 1 minute", nb_of_passwords),
+            Err(e) => println!("{}", e),
         }
+        
         println!("\nDo you want to run a new benchmark ? (y/n)");
         again = system::get_user_choice_yn();
     }
@@ -351,25 +348,22 @@ pub fn saving_procedure(target: &str) -> Result<(File, String), SystemError> {
         result = system::is_valid_path(&filename);
     }
 
-    let filename: String = match env::var(target::HOME_ENV_VAR) {
-        Ok(home_path) => {
-            let parent_folder: String = format!("{}{}", home_path, target);
-            let parent_folder_created: String = match system::create_folder_if_not_exists(
-                &parent_folder,
-            ) {
-                Ok(_) => format!("{}{}", home_path, target),
-                Err(e) => {
-                    println!("{}", e);
-                    println!("Unable to create the folder, the file will be saved in the current directory");
-                    format!("./{}", filename)
-                }
-            };
-            format!("{}{}", parent_folder_created, filename)
-        }
-        Err(_) => {
-            println!("Unable to get the home directory, the file will be saved in the current directory\n");
-            format!("./{}", filename)
-        }
+    let filename: String = if let Ok(home_path) = env::var(target::HOME_ENV_VAR) {
+        let parent_folder: String = format!("{}{}", home_path, target);
+        let parent_folder_created: String = match system::create_folder_if_not_exists(
+            &parent_folder,
+        ) {
+            Ok(_) => format!("{}{}", home_path, target),
+            Err(e) => {
+                println!("{}", e);
+                println!("Unable to create the folder, the file will be saved in the current directory");
+                format!("./{}", filename)
+            }
+        };
+        format!("{}{}", parent_folder_created, filename)
+    } else {
+        println!("Unable to get the home directory, the file will be saved in the current directory\n");
+        format!("./{}", filename)
     };
 
     let file: File = match OpenOptions::new()

@@ -287,7 +287,7 @@ fn run_passwd(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
             Ok(file) => file,
             Err(_) => {
                 return Err(WorgenXError::SystemError(SystemError::UnableToCreateFile(
-                    password_generation_parameters.output_file.to_string(),
+                    password_generation_parameters.output_file,
                     "Please check the path and try again".to_string(),
                 )))
             }
@@ -310,9 +310,7 @@ fn run_passwd(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
 ///
 /// PasswordGenerationOptions containing the password configuration and optional arguments, WorgenXError otherwise.
 ///
-fn allocate_passwd_config_cli(
-    sub_matches: &ArgMatches,
-) -> Result<PasswordGenerationOptions, WorgenXError> {
+fn allocate_passwd_config_cli(sub_matches: &ArgMatches) -> Result<PasswordGenerationOptions, WorgenXError> {
     // Clap framework ensures that the arguments are present.
     let length: u32 = *sub_matches.get_one::<u32>("size").unwrap();
     let size: u64 = *sub_matches.get_one::<u64>("count").unwrap();
@@ -400,9 +398,7 @@ fn run_wordlist(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
 ///
 /// WordlistGenerationOptions containing the wordlist configuration and optional arguments, WorgenXError otherwise.
 ///
-fn allocate_wordlist_config_cli(
-    sub_matches: &ArgMatches,
-) -> Result<WordlistGenerationOptions, WorgenXError> {
+fn allocate_wordlist_config_cli(sub_matches: &ArgMatches) -> Result<WordlistGenerationOptions, WorgenXError> {
     let mut output_file: String = String::new();
     let mut no_loading_bar: bool = false;
     let mut threads: usize = 0;
@@ -455,7 +451,7 @@ fn allocate_wordlist_config_cli(
 /// Ok(()) if the benchmark has correctly been executed, WorgenXError otherwise.
 ///
 fn run_benchmark(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
-    let benchmark_parameters: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches)?;
+    let benchmark_parameters: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches);
     let result: u64 = benchmark::load_cpu_benchmark(benchmark_parameters.threads)?;
     
     println!("Your CPU has generated {} passwords in 1 minute", result);
@@ -471,15 +467,12 @@ fn run_benchmark(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
 ///
 /// # Returns
 ///
-/// BenchmarkOptions containing the benchmark configuration, WorgenXError otherwise.
+/// BenchmarkOptions struct containing the benchmark configuration.
 ///
-fn allocate_benchmark_config_cli(
-    sub_matches: &ArgMatches,
-) -> Result<BenchmarkOptions, WorgenXError> {
+fn allocate_benchmark_config_cli(sub_matches: &ArgMatches) -> BenchmarkOptions {
     let mut threads: usize = 0;
     update_config(&mut threads, sub_matches, "threads_benchmark");
-
-    Ok(BenchmarkOptions { threads })
+    BenchmarkOptions { threads }
 }
 
 /// This function is responsible for checking the path for the 'output' arguments, if it's a valid path on the filesystem.
@@ -610,7 +603,7 @@ mod tests {
         let command_context: Command = build_command_context();
         let matches: ArgMatches = command_context.get_matches_from(vec!["worgenX", "benchmark", "-t", "4"]);
         let (_, sub_matches) = matches.subcommand().unwrap();
-        let result: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches).unwrap();
+        let result: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches);
         
         assert_eq!(result.threads, 4_usize);
     }
