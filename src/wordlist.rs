@@ -9,7 +9,10 @@ use crate::{
 use indicatif::ProgressBar;
 use std::{
     fs::{File, OpenOptions},
-    sync::{Arc, Mutex, MutexGuard},
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Arc, Mutex,
+    },
     thread::{self, JoinHandle},
     time::Instant,
 };
@@ -21,9 +24,9 @@ const BUFFER_SIZE: usize = 100000;
 
 /// This static variable is used to track the number of passwords generated.
 /// It is used to update the progress bar.
-/// It is wrapped in a Mutex to avoid data sharing issues between the threads.
+/// It is wrapped in a AtomicU64 to avoid data sharing issues between the threads.
 ///
-static GLOBAL_COUNTER: Mutex<u64> = Mutex::new(0);
+static GLOBAL_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 /// This struct is built from the user's choices and will be used to generate the wordlist.
 ///
@@ -173,13 +176,9 @@ pub fn wordlist_generation_scheduler(
     let start: Instant = Instant::now();
     
     let main_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
-        let mut current_value: u64 = 0;
-        while current_value < nb_of_passwords {
-            if let Ok(global_counter) = GLOBAL_COUNTER.lock() {
-                current_value = *global_counter;
-                if !no_loading_bar {
-                    build_wordlist_progress_bar(current_value, nb_of_passwords, &pb_clone);
-                }
+        while GLOBAL_COUNTER.load(Ordering::SeqCst) < nb_of_passwords {
+            if !no_loading_bar {
+                build_wordlist_progress_bar(GLOBAL_COUNTER.load(Ordering::SeqCst), nb_of_passwords, &pb_clone);
             }
             thread::sleep(std::time::Duration::from_millis(100));
         }
@@ -190,11 +189,9 @@ pub fn wordlist_generation_scheduler(
     if let Err(e) = main_thread.join() {
         if let Some(err) = e.downcast_ref::<WorgenXError>() {
             return Err(err.clone());
-        } else {
-            return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                format!("{:?}", e),
-            )));
         }
+
+        return Err(WorgenXError::SystemError(SystemError::ThreadError(format!("{:?}", e))));
     }
 
     println!("\nWordlist generated in {}", system::get_elapsed_time(start));
@@ -318,15 +315,15 @@ fn generate_wordlist_part(
     let mut line: Vec<char> = Vec::with_capacity(formated_mask.len());
 
     // This closure is used to hash the password if the user has specified a hash algorithm.
-    let process_line: Box<dyn Fn(String) -> Result<String, WorgenXError>> = if !hash.is_empty() {
+    let process_line: Box<dyn Fn(String) -> Result<String, WorgenXError>> = if hash.is_empty() {
+        Box::new(|line_str: String| -> Result<String, WorgenXError> { Ok(line_str) })
+    } else {
         Box::new(|line_str: String| -> Result<String, WorgenXError> {
             match system::manage_hash(line_str, hash) {
                 Ok(hashed_passwd) => Ok(hashed_passwd),
                 Err(e) => Err(WorgenXError::SystemError(e)),
             }
         })
-    } else {
-        Box::new(|line_str: String| -> Result<String, WorgenXError> { Ok(line_str) })
     };
 
     for _ in 0..nb_of_passwords {
@@ -355,16 +352,7 @@ fn generate_wordlist_part(
         }
 
         buffer.push(process_line(line.iter().collect::<String>())?);
-
-        let mut counter: MutexGuard<u64> = match GLOBAL_COUNTER.lock() {
-            Ok(counter) => counter,
-            Err(e) => {
-                return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                    e.to_string(),
-                )))
-            }
-        };
-        *counter += 1;
+        GLOBAL_COUNTER.fetch_add(1, Ordering::SeqCst);
 
         if buffer.len() == BUFFER_SIZE {
             system::save_passwd_to_file(Arc::clone(&file), buffer.join("\n"))?;
