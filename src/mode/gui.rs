@@ -56,14 +56,14 @@ fn print_menu() {
 
     display_title();
     println!(
-        r#"
+        r"
       __        __                        __  __  _            __  __           ___       
       \ \      / /__  _ __ __ _  ___ _ __ \ \/ / | |__  _   _  \ \/ /___ _ __  / _ \ _ __ 
        \ \ /\ / / _ \| '__/ _` |/ _ \ '_ \ \  /  | '_ \| | | |  \  // _ \ '_ \| | | | '__|
         \ V  V / (_) | | | (_| |  __/ | | |/  \  | |_) | |_| |  /  \  __/ | | | |_| | |   
          \_/\_/ \___/|_|  \__, |\___|_| |_/_/\_\ |_.__/ \__, | /_/\_\___|_| |_|\___/|_|   
                           |___/                         |___/                             
-"#
+"
     );
     display_title();
 
@@ -102,7 +102,7 @@ fn main_passwd_generation() {
             let (password_file, _) = file_result.unwrap();
             let shared_file: Arc<Mutex<File>> = Arc::new(Mutex::new(password_file));
             while let Err(e) =
-                system::save_passwd_to_file(Arc::clone(&shared_file), passwords.join("\n"))
+                system::save_passwd_to_file(&Arc::clone(&shared_file), &passwords.join("\n"))
             {
                 println!("\n{}", e);
                 println!("Do you want to try again ? (y/n)");
@@ -348,12 +348,15 @@ pub fn saving_procedure(target: &str) -> Result<(File, String), SystemError> {
         result = system::is_valid_path(&filename);
     }
 
-    let filename: String = if let Ok(home_path) = env::var(target::HOME_ENV_VAR) {
+    let filename: String = env::var(target::HOME_ENV_VAR).map_or_else(|_| {
+        println!("Unable to get the home directory, the file will be saved in the current directory\n");
+        format!("./{}", filename)
+    }, |home_path| {
         let parent_folder: String = format!("{}{}", home_path, target);
         let parent_folder_created: String = match system::create_folder_if_not_exists(
             &parent_folder,
         ) {
-            Ok(_) => format!("{}{}", home_path, target),
+            Ok(()) => format!("{}{}", home_path, target),
             Err(e) => {
                 println!("{}", e);
                 println!("Unable to create the folder, the file will be saved in the current directory");
@@ -361,10 +364,7 @@ pub fn saving_procedure(target: &str) -> Result<(File, String), SystemError> {
             }
         };
         format!("{}{}", parent_folder_created, filename)
-    } else {
-        println!("Unable to get the home directory, the file will be saved in the current directory\n");
-        format!("./{}", filename)
-    };
+    });
 
     let file: File = match OpenOptions::new()
         .write(true)

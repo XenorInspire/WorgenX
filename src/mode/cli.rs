@@ -293,7 +293,7 @@ fn run_passwd(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
             }
         };
         let shared_file: Arc<Mutex<File>> = Arc::new(Mutex::new(file));
-        system::save_passwd_to_file(shared_file, all_passwords)?;
+        system::save_passwd_to_file(&shared_file, &all_passwords)?;
     }
 
     Ok(())

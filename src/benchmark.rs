@@ -65,7 +65,7 @@ pub fn load_cpu_benchmark(nb_of_threads: usize) -> Result<u64, WorgenXError> {
     for _ in 0..nb_of_threads {
         let shared_signal_rst: Arc<AtomicBool> = Arc::clone(&shared_signal);
         threads.push(thread::spawn(move || {
-            run_stress_test(shared_signal_rst).unwrap_or_else(|e| println!("{}", e));
+            run_stress_test(&shared_signal_rst).unwrap_or_else(|e| println!("{}", e));
         }));
     }
 
@@ -108,7 +108,7 @@ pub fn load_cpu_benchmark(nb_of_threads: usize) -> Result<u64, WorgenXError> {
 ///
 /// Ok(()) if the stress test succeed, WorgenXError otherwise.
 ///
-fn run_stress_test(stop_signal: Arc<AtomicBool>) -> Result<(), WorgenXError> {
+fn run_stress_test(stop_signal: &Arc<AtomicBool>) -> Result<(), WorgenXError> {
     let mut nb_of_passwd: u64 = 0;
     loop {
         if !stop_signal.load(Ordering::SeqCst) {

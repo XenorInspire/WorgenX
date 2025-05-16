@@ -237,7 +237,7 @@ fn run_wordlist_generation(
     let dict_indexes: Vec<usize> = vec![0; wordlist_config.mask_indexes.len()];
     let mut nb_of_passwd_per_thread: u64 = nb_of_passwords / nb_of_threads as u64;
     let nb_of_passwd_last_thread: u64 = nb_of_passwd_per_thread + nb_of_passwords % nb_of_threads as u64;
-    let mut temp: Vec<usize> = dict_indexes.clone();
+    let mut temp: Vec<usize> = dict_indexes;
 
     for i in 0..nb_of_threads {
         if i == nb_of_threads - 1 {
@@ -257,7 +257,7 @@ fn run_wordlist_generation(
                 &shared_formated_mask,
                 &shared_mask_indexes,
                 &shared_dict,
-                file,
+                &file,
                 &shared_hash,
             )
         });
@@ -308,7 +308,7 @@ fn generate_wordlist_part(
     formated_mask: &[char],
     mask_indexes: &[usize],
     dict: &[u8],
-    file: Arc<Mutex<File>>,
+    file: &Arc<Mutex<File>>,
     hash: &str,
 ) -> Result<(), WorgenXError> {
     let mut buffer: Vec<String> = Vec::new();
@@ -355,13 +355,13 @@ fn generate_wordlist_part(
         GLOBAL_COUNTER.fetch_add(1, Ordering::SeqCst);
 
         if buffer.len() == BUFFER_SIZE {
-            system::save_passwd_to_file(Arc::clone(&file), buffer.join("\n"))?;
+            system::save_passwd_to_file(&Arc::clone(file), &buffer.join("\n"))?;
             buffer.clear();
         }
     }
 
     if !buffer.is_empty() {
-        system::save_passwd_to_file(Arc::clone(&file), buffer.join("\n"))?;
+        system::save_passwd_to_file(&Arc::clone(file), &buffer.join("\n"))?;
     }
     Ok(())
 }
@@ -450,7 +450,7 @@ mod tests {
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "",
         );
         assert!(result.is_ok());
@@ -476,7 +476,7 @@ mod tests {
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "md5",
         );
         assert!(result.is_ok());
@@ -520,7 +520,7 @@ c16a5320fa475530d9583c34fd356ef5
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha1",
         );
         assert!(result.is_ok());
@@ -564,7 +564,7 @@ b6692ea5df920cad691c20319a6fffd7a4a766b8
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha224",
         );
         assert!(result.is_ok());
@@ -608,7 +608,7 @@ f193e8b0c6e8e436ed6fbff804917367733cddc04514d1865452f399
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha256",
         );
         assert!(result.is_ok());
@@ -652,7 +652,7 @@ c6f3ac57944a531490cd39902d0f777715fd005efac9a30622d5f5205e7f6894
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha384",
         );
         assert!(result.is_ok());
@@ -694,7 +694,7 @@ fd21efb0c2863b1d2460f7e6048d757beb2326c6e1bbee5194826be2c626a9de3bc8d6f2488617e5
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha512",
         );
         assert!(result.is_ok());
@@ -736,7 +736,7 @@ e63006bd9f35f06cd20582fc8b34ae76a15080297be886decd6dfd42f59e5174a537e8cd92ef5772
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha3-224",
         );
         assert!(result.is_ok());
@@ -780,7 +780,7 @@ b89f89ea282cc149f04623635c24f5a4ca6671200c07673080c9f201
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha3-256",
         );
         assert!(result.is_ok());
@@ -824,7 +824,7 @@ f372fd5a0bce0ade7c2339a622d124fd1950a9bc0584611f8c334931e39ced32
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha3-384",
         );
         assert!(result.is_ok());
@@ -866,7 +866,7 @@ c7441fbb2b270adfff0ef242adc120ed41cc7d3ad0550555dd0d19bd2caa8b87dcae4ebfdf14dd06
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha3-512",
         );
         assert!(result.is_ok());
@@ -908,7 +908,7 @@ a114cd1299fea4e32d86d9bc877dddf99dee3bf306477e744e894d25a81c713c7d7109883779e6f3
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "blake2b-512",
         );
         assert!(result.is_ok());
@@ -951,7 +951,7 @@ afd85ebe3a733ccf64c11c681e05595490854c4a485be585dfff1f2c1958823a0fa11069467c8260
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "blake2s-256",
         );
         assert!(result.is_ok());
@@ -996,7 +996,7 @@ fd5f8f39e9a41e624fb837cd766f55805bd120aac42fe4bc426497eeb7aeaacf
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "whirlpool",
         );
         assert!(result.is_ok());

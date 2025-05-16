@@ -176,7 +176,7 @@ pub fn is_valid_path(path: &str) -> Result<String, SystemError> {
 /// True if the parent folder exists, false otherwise.
 ///
 pub fn check_if_parent_folder_exists(file_path: &str) -> bool {
-    Path::new(file_path).parent().is_some_and(|p| p.exists())
+    Path::new(file_path).parent().is_some_and(Path::exists)
 }
 
 /// This function is responsible for creating the passwords or wordlists folder if it doesn't exist.
@@ -275,7 +275,7 @@ pub fn get_elapsed_time(start_time: Instant) -> String {
 ///
 /// Ok(()) if the passwords have been written to the file, WorgenXError otherwise.
 ///
-pub fn save_passwd_to_file(file: Arc<Mutex<File>>, passwords: String) -> Result<(), WorgenXError> {
+pub fn save_passwd_to_file(file: &Arc<Mutex<File>>, passwords: &str) -> Result<(), WorgenXError> {
     let mut file = file.lock().map_err(|_| {
         WorgenXError::SystemError(SystemError::UnableToWriteToFile(
             "output file".to_string(),
@@ -303,7 +303,7 @@ pub fn get_progress_bar() -> indicatif::ProgressBar {
     pb.set_style(
         ProgressStyle::default_bar()
             .template("[{bar:40.green}] {pos:>7}% | {msg}")
-            .unwrap_or(ProgressStyle::default_bar()) // Provide the default argument
+            .unwrap_or_else(|_| ProgressStyle::default_bar()) // Provide the default argument
             .progress_chars("##-"),
     );
     pb
@@ -364,19 +364,19 @@ pub fn get_estimated_size(nb_of_passwords: u64, length: u64) -> String {
 ///
 pub fn manage_hash(password: String, hash: &str) -> Result<String, SystemError> {
     match hash {
-        "md5" => Ok(hash_with_digest(Md5::new(), password)),
-        "sha1" => Ok(hash_with_digest(Sha1::new(), password)),
-        "sha224" => Ok(hash_with_digest(Sha224::new(), password)),
-        "sha256" => Ok(hash_with_digest(Sha256::new(), password)),
-        "sha384" => Ok(hash_with_digest(Sha384::new(), password)),
-        "sha512" => Ok(hash_with_digest(Sha512::new(), password)),
-        "sha3-224" => Ok(hash_with_digest(Sha3_224::new(), password)),
-        "sha3-256" => Ok(hash_with_digest(Sha3_256::new(), password)),
-        "sha3-384" => Ok(hash_with_digest(Sha3_384::new(), password)),
-        "sha3-512" => Ok(hash_with_digest(Sha3_512::new(), password)),
-        "blake2b-512" => Ok(hash_with_digest(Blake2b512::new(), password)),
-        "blake2s-256" => Ok(hash_with_digest(Blake2s256::new(), password)),
-        "whirlpool" => Ok(hash_with_digest(Whirlpool::new(), password)),
+        "md5" => Ok(hash_with_digest(Md5::new(), &password)),
+        "sha1" => Ok(hash_with_digest(Sha1::new(), &password)),
+        "sha224" => Ok(hash_with_digest(Sha224::new(), &password)),
+        "sha256" => Ok(hash_with_digest(Sha256::new(), &password)),
+        "sha384" => Ok(hash_with_digest(Sha384::new(), &password)),
+        "sha512" => Ok(hash_with_digest(Sha512::new(), &password)),
+        "sha3-224" => Ok(hash_with_digest(Sha3_224::new(), &password)),
+        "sha3-256" => Ok(hash_with_digest(Sha3_256::new(), &password)),
+        "sha3-384" => Ok(hash_with_digest(Sha3_384::new(), &password)),
+        "sha3-512" => Ok(hash_with_digest(Sha3_512::new(), &password)),
+        "blake2b-512" => Ok(hash_with_digest(Blake2b512::new(), &password)),
+        "blake2s-256" => Ok(hash_with_digest(Blake2s256::new(), &password)),
+        "whirlpool" => Ok(hash_with_digest(Whirlpool::new(), &password)),
         _ => Err(SystemError::UnsupportedHashAlgorithm(hash.to_string())),
     }
 }
@@ -393,7 +393,7 @@ pub fn manage_hash(password: String, hash: &str) -> Result<String, SystemError> 
 ///
 /// The hashed password.
 ///
-fn hash_with_digest<D: Digest>(mut hasher: D, password: String) -> String {
+fn hash_with_digest<D: Digest>(mut hasher: D, password: &str) -> String {
     hasher.update(password.as_bytes());
     let result = hasher.finalize();
     hex::encode(result)
@@ -457,7 +457,7 @@ mod tests {
     fn test_save_passwd_to_file() {
         let file: Arc<Mutex<File>> = Arc::new(Mutex::new(File::create("./test.txt").unwrap()));
         let passwords: String = "test".to_string();
-        assert!(save_passwd_to_file(file, passwords).is_ok());
+        assert!(save_passwd_to_file(&file, &passwords).is_ok());
 
         let content: String = std::fs::read_to_string("./test.txt").unwrap();
         assert_eq!(content, "test\n");
