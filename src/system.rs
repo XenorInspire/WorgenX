@@ -362,21 +362,21 @@ pub fn get_estimated_size(nb_of_passwords: u64, length: u64) -> String {
 ///
 /// The hashed password, SystemError otherwise.
 ///
-pub fn manage_hash(password: String, hash: &str) -> Result<String, SystemError> {
+pub fn manage_hash(password: &str, hash: &str) -> Result<String, SystemError> {
     match hash {
-        "md5" => Ok(hash_with_digest(Md5::new(), &password)),
-        "sha1" => Ok(hash_with_digest(Sha1::new(), &password)),
-        "sha224" => Ok(hash_with_digest(Sha224::new(), &password)),
-        "sha256" => Ok(hash_with_digest(Sha256::new(), &password)),
-        "sha384" => Ok(hash_with_digest(Sha384::new(), &password)),
-        "sha512" => Ok(hash_with_digest(Sha512::new(), &password)),
-        "sha3-224" => Ok(hash_with_digest(Sha3_224::new(), &password)),
-        "sha3-256" => Ok(hash_with_digest(Sha3_256::new(), &password)),
-        "sha3-384" => Ok(hash_with_digest(Sha3_384::new(), &password)),
-        "sha3-512" => Ok(hash_with_digest(Sha3_512::new(), &password)),
-        "blake2b-512" => Ok(hash_with_digest(Blake2b512::new(), &password)),
-        "blake2s-256" => Ok(hash_with_digest(Blake2s256::new(), &password)),
-        "whirlpool" => Ok(hash_with_digest(Whirlpool::new(), &password)),
+        "md5" => Ok(hash_with_digest(Md5::new(), password)),
+        "sha1" => Ok(hash_with_digest(Sha1::new(), password)),
+        "sha224" => Ok(hash_with_digest(Sha224::new(), password)),
+        "sha256" => Ok(hash_with_digest(Sha256::new(), password)),
+        "sha384" => Ok(hash_with_digest(Sha384::new(), password)),
+        "sha512" => Ok(hash_with_digest(Sha512::new(), password)),
+        "sha3-224" => Ok(hash_with_digest(Sha3_224::new(), password)),
+        "sha3-256" => Ok(hash_with_digest(Sha3_256::new(), password)),
+        "sha3-384" => Ok(hash_with_digest(Sha3_384::new(), password)),
+        "sha3-512" => Ok(hash_with_digest(Sha3_512::new(), password)),
+        "blake2b-512" => Ok(hash_with_digest(Blake2b512::new(), password)),
+        "blake2s-256" => Ok(hash_with_digest(Blake2s256::new(), password)),
+        "whirlpool" => Ok(hash_with_digest(Whirlpool::new(), password)),
         _ => Err(SystemError::UnsupportedHashAlgorithm(hash.to_string())),
     }
 }
@@ -492,21 +492,21 @@ mod tests {
 
     #[test]
     fn test_hash_password() {
-        let password: String = String::from("password");
+        let password: &str = "password";
 
-        assert_eq!(manage_hash(password.clone(), "md5").unwrap(), "5f4dcc3b5aa765d61d8327deb882cf99");
-        assert_eq!(manage_hash(password.clone(), "sha1").unwrap(), "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" );
-        assert_eq!(manage_hash(password.clone(), "sha224").unwrap(), "d63dc919e201d7bc4c825630d2cf25fdc93d4b2f0d46706d29038d01");
-        assert_eq!(manage_hash(password.clone(), "sha256").unwrap(), "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8");
-        assert_eq!(manage_hash(password.clone(), "sha384").unwrap(), "a8b64babd0aca91a59bdbb7761b421d4f2bb38280d3a75ba0f21f2bebc45583d446c598660c94ce680c47d19c30783a7");
-        assert_eq!(manage_hash(password.clone(), "sha512").unwrap(), "b109f3bbbc244eb82441917ed06d618b9008dd09b3befd1b5e07394c706a8bb980b1d7785e5976ec049b46df5f1326af5a2ea6d103fd07c95385ffab0cacbc86");
-        assert_eq!(manage_hash(password.clone(), "sha3-224").unwrap(), "c3f847612c3780385a859a1993dfd9fe7c4e6d7f477148e527e9374c");
-        assert_eq!(manage_hash(password.clone(), "sha3-256").unwrap(), "c0067d4af4e87f00dbac63b6156828237059172d1bbeac67427345d6a9fda484");
-        assert_eq!(manage_hash(password.clone(), "sha3-384").unwrap(), "9c1565e99afa2ce7800e96a73c125363c06697c5674d59f227b3368fd00b85ead506eefa90702673d873cb2c9357eafc");
-        assert_eq!(manage_hash(password.clone(), "sha3-512").unwrap(), "e9a75486736a550af4fea861e2378305c4a555a05094dee1dca2f68afea49cc3a50e8de6ea131ea521311f4d6fb054a146e8282f8e35ff2e6368c1a62e909716");
-        assert_eq!(manage_hash(password.clone(), "blake2s-256").unwrap(), "4c81099df884bd6e14a639d648bccd808512e48af211ae4f44d545ea6d5e5f2b");
-        assert_eq!(manage_hash(password.clone(), "blake2b-512").unwrap(), "7c863950ac93c93692995e4732ce1e1466ad74a775352ffbaaf2a4a4ce9b549d0b414a1f3150452be6c7c72c694a7cb46f76452917298d33e67611f0a42addb8");
-        assert_eq!(manage_hash(password.clone(), "whirlpool").unwrap(), "74dfc2b27acfa364da55f93a5caee29ccad3557247eda238831b3e9bd931b01d77fe994e4f12b9d4cfa92a124461d2065197d8cf7f33fc88566da2db2a4d6eae");
+        assert_eq!(manage_hash(password, "md5").unwrap(), "5f4dcc3b5aa765d61d8327deb882cf99");
+        assert_eq!(manage_hash(password, "sha1").unwrap(), "5baa61e4c9b93f3f0682250b6cf8331b7ee68fd8" );
+        assert_eq!(manage_hash(password, "sha224").unwrap(), "d63dc919e201d7bc4c825630d2cf25fdc93d4b2f0d46706d29038d01");
+        assert_eq!(manage_hash(password, "sha256").unwrap(), "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8");
+        assert_eq!(manage_hash(password, "sha384").unwrap(), "a8b64babd0aca91a59bdbb7761b421d4f2bb38280d3a75ba0f21f2bebc45583d446c598660c94ce680c47d19c30783a7");
+        assert_eq!(manage_hash(password, "sha512").unwrap(), "b109f3bbbc244eb82441917ed06d618b9008dd09b3befd1b5e07394c706a8bb980b1d7785e5976ec049b46df5f1326af5a2ea6d103fd07c95385ffab0cacbc86");
+        assert_eq!(manage_hash(password, "sha3-224").unwrap(), "c3f847612c3780385a859a1993dfd9fe7c4e6d7f477148e527e9374c");
+        assert_eq!(manage_hash(password, "sha3-256").unwrap(), "c0067d4af4e87f00dbac63b6156828237059172d1bbeac67427345d6a9fda484");
+        assert_eq!(manage_hash(password, "sha3-384").unwrap(), "9c1565e99afa2ce7800e96a73c125363c06697c5674d59f227b3368fd00b85ead506eefa90702673d873cb2c9357eafc");
+        assert_eq!(manage_hash(password, "sha3-512").unwrap(), "e9a75486736a550af4fea861e2378305c4a555a05094dee1dca2f68afea49cc3a50e8de6ea131ea521311f4d6fb054a146e8282f8e35ff2e6368c1a62e909716");
+        assert_eq!(manage_hash(password, "blake2s-256").unwrap(), "4c81099df884bd6e14a639d648bccd808512e48af211ae4f44d545ea6d5e5f2b");
+        assert_eq!(manage_hash(password, "blake2b-512").unwrap(), "7c863950ac93c93692995e4732ce1e1466ad74a775352ffbaaf2a4a4ce9b549d0b414a1f3150452be6c7c72c694a7cb46f76452917298d33e67611f0a42addb8");
+        assert_eq!(manage_hash(password, "whirlpool").unwrap(), "74dfc2b27acfa364da55f93a5caee29ccad3557247eda238831b3e9bd931b01d77fe994e4f12b9d4cfa92a124461d2065197d8cf7f33fc88566da2db2a4d6eae");
         assert!(manage_hash(password, "sha999").is_err());
     }
 }

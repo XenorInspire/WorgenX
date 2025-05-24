@@ -319,7 +319,7 @@ fn generate_wordlist_part(
         Box::new(|line_str: String| -> Result<String, WorgenXError> { Ok(line_str) })
     } else {
         Box::new(|line_str: String| -> Result<String, WorgenXError> {
-            match system::manage_hash(line_str, hash) {
+            match system::manage_hash(&line_str, hash) {
                 Ok(hashed_passwd) => Ok(hashed_passwd),
                 Err(e) => Err(WorgenXError::SystemError(e)),
             }

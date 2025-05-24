@@ -156,7 +156,7 @@ fn build_command_context() -> Command {
                 .short('s')
                 .long("size")
                 .help("Size of the passwords in characters")
-                .value_parser(value_parser!(u32).range(1..u32::MAX as i64))
+                .value_parser(value_parser!(u32).range(1..i64::from(u32::MAX)))
                 .value_name("size")
                 .required(true),
         )
