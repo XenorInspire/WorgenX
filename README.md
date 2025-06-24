@@ -18,8 +18,7 @@ This software has been developed to be used especially for CLI use, but a GUI ve
 - [x] Generate a relevant wordlist with a custom mask and charset
 - [x] Generate a list of random passwords with a strong entropy
 - [x] Generate a relevant wordlist with a custom mask and charset, using hash algorithms
-- [x] Benchmark the performance of your CPU
-- [ ] Benchmark the performance of your GPU (not available yet)
+- [x] Benchmark the performance of your CPU for wordlist generation
 
 
 ## Installation
@@ -47,7 +46,7 @@ Just download the .exe file and execute it. You can also add the path to the env
 
 ### Install from the source code
 
-First, if you don't have rustup installed, you can install it by following the instructions on the official website : [rustup.rs](https://rustup.rs/)
+First, if you don't have rustup or cargo installed, you can download these tools by following the instructions on the official website : [rustup.rs](https://rustup.rs/)
 
 #### Choose a directory and clone the repository :  
 ```
@@ -161,11 +160,6 @@ $ worgenX_gui
 
 
 ```
-
-# Mirrors
-
-- <a href="https://github.com/XenorInspire/WorgenX">Github</a>
-- <a href="https://gitlab.com/XenorInspire/WorgenX">Gitlab</a>
 
 # Licence
 
