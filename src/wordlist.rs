@@ -9,7 +9,10 @@ use crate::{
 use indicatif::ProgressBar;
 use std::{
     fs::{File, OpenOptions},
-    sync::{Arc, Mutex, MutexGuard},
+    sync::{
+        atomic::{AtomicU64, Ordering},
+        Arc, Mutex,
+    },
     thread::{self, JoinHandle},
     time::Instant,
 };
@@ -21,9 +24,9 @@ const BUFFER_SIZE: usize = 100000;
 
 /// This static variable is used to track the number of passwords generated.
 /// It is used to update the progress bar.
-/// It is wrapped in a Mutex to avoid data sharing issues between the threads.
+/// It is wrapped in a AtomicU64 to avoid data sharing issues between the threads.
 ///
-static GLOBAL_COUNTER: Mutex<u64> = Mutex::new(0);
+static GLOBAL_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 /// This struct is built from the user's choices and will be used to generate the wordlist.
 ///
@@ -173,13 +176,9 @@ pub fn wordlist_generation_scheduler(
     let start: Instant = Instant::now();
     
     let main_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
-        let mut current_value: u64 = 0;
-        while current_value < nb_of_passwords {
-            if let Ok(global_counter) = GLOBAL_COUNTER.lock() {
-                current_value = *global_counter;
-                if !no_loading_bar {
-                    build_wordlist_progress_bar(current_value, nb_of_passwords, &pb_clone);
-                }
+        while GLOBAL_COUNTER.load(Ordering::SeqCst) < nb_of_passwords {
+            if !no_loading_bar {
+                build_wordlist_progress_bar(GLOBAL_COUNTER.load(Ordering::SeqCst), nb_of_passwords, &pb_clone);
             }
             thread::sleep(std::time::Duration::from_millis(100));
         }
@@ -190,11 +189,9 @@ pub fn wordlist_generation_scheduler(
     if let Err(e) = main_thread.join() {
         if let Some(err) = e.downcast_ref::<WorgenXError>() {
             return Err(err.clone());
-        } else {
-            return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                format!("{:?}", e),
-            )));
         }
+
+        return Err(WorgenXError::SystemError(SystemError::ThreadError(format!("{:?}", e))));
     }
 
     println!("\nWordlist generated in {}", system::get_elapsed_time(start));
@@ -240,7 +237,7 @@ fn run_wordlist_generation(
     let dict_indexes: Vec<usize> = vec![0; wordlist_config.mask_indexes.len()];
     let mut nb_of_passwd_per_thread: u64 = nb_of_passwords / nb_of_threads as u64;
     let nb_of_passwd_last_thread: u64 = nb_of_passwd_per_thread + nb_of_passwords % nb_of_threads as u64;
-    let mut temp: Vec<usize> = dict_indexes.clone();
+    let mut temp: Vec<usize> = dict_indexes;
 
     for i in 0..nb_of_threads {
         if i == nb_of_threads - 1 {
@@ -260,7 +257,7 @@ fn run_wordlist_generation(
                 &shared_formated_mask,
                 &shared_mask_indexes,
                 &shared_dict,
-                file,
+                &file,
                 &shared_hash,
             )
         });
@@ -311,22 +308,22 @@ fn generate_wordlist_part(
     formated_mask: &[char],
     mask_indexes: &[usize],
     dict: &[u8],
-    file: Arc<Mutex<File>>,
+    file: &Arc<Mutex<File>>,
     hash: &str,
 ) -> Result<(), WorgenXError> {
     let mut buffer: Vec<String> = Vec::new();
     let mut line: Vec<char> = Vec::with_capacity(formated_mask.len());
 
     // This closure is used to hash the password if the user has specified a hash algorithm.
-    let process_line: Box<dyn Fn(String) -> Result<String, WorgenXError>> = if !hash.is_empty() {
+    let process_line: Box<dyn Fn(String) -> Result<String, WorgenXError>> = if hash.is_empty() {
+        Box::new(|line_str: String| -> Result<String, WorgenXError> { Ok(line_str) })
+    } else {
         Box::new(|line_str: String| -> Result<String, WorgenXError> {
-            match system::manage_hash(line_str, hash) {
+            match system::manage_hash(&line_str, hash) {
                 Ok(hashed_passwd) => Ok(hashed_passwd),
                 Err(e) => Err(WorgenXError::SystemError(e)),
             }
         })
-    } else {
-        Box::new(|line_str: String| -> Result<String, WorgenXError> { Ok(line_str) })
     };
 
     for _ in 0..nb_of_passwords {
@@ -355,25 +352,16 @@ fn generate_wordlist_part(
         }
 
         buffer.push(process_line(line.iter().collect::<String>())?);
-
-        let mut counter: MutexGuard<u64> = match GLOBAL_COUNTER.lock() {
-            Ok(counter) => counter,
-            Err(e) => {
-                return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                    e.to_string(),
-                )))
-            }
-        };
-        *counter += 1;
+        GLOBAL_COUNTER.fetch_add(1, Ordering::SeqCst);
 
         if buffer.len() == BUFFER_SIZE {
-            system::save_passwd_to_file(Arc::clone(&file), buffer.join("\n"))?;
+            system::save_passwd_to_file(&Arc::clone(file), &buffer.join("\n"))?;
             buffer.clear();
         }
     }
 
     if !buffer.is_empty() {
-        system::save_passwd_to_file(Arc::clone(&file), buffer.join("\n"))?;
+        system::save_passwd_to_file(&Arc::clone(file), &buffer.join("\n"))?;
     }
     Ok(())
 }
@@ -462,7 +450,7 @@ mod tests {
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "",
         );
         assert!(result.is_ok());
@@ -488,7 +476,7 @@ mod tests {
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "md5",
         );
         assert!(result.is_ok());
@@ -532,7 +520,7 @@ c16a5320fa475530d9583c34fd356ef5
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha1",
         );
         assert!(result.is_ok());
@@ -576,7 +564,7 @@ b6692ea5df920cad691c20319a6fffd7a4a766b8
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha224",
         );
         assert!(result.is_ok());
@@ -620,7 +608,7 @@ f193e8b0c6e8e436ed6fbff804917367733cddc04514d1865452f399
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha256",
         );
         assert!(result.is_ok());
@@ -664,7 +652,7 @@ c6f3ac57944a531490cd39902d0f777715fd005efac9a30622d5f5205e7f6894
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha384",
         );
         assert!(result.is_ok());
@@ -706,7 +694,7 @@ fd21efb0c2863b1d2460f7e6048d757beb2326c6e1bbee5194826be2c626a9de3bc8d6f2488617e5
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha512",
         );
         assert!(result.is_ok());
@@ -748,7 +736,7 @@ e63006bd9f35f06cd20582fc8b34ae76a15080297be886decd6dfd42f59e5174a537e8cd92ef5772
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha3-224",
         );
         assert!(result.is_ok());
@@ -792,7 +780,7 @@ b89f89ea282cc149f04623635c24f5a4ca6671200c07673080c9f201
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha3-256",
         );
         assert!(result.is_ok());
@@ -836,7 +824,7 @@ f372fd5a0bce0ade7c2339a622d124fd1950a9bc0584611f8c334931e39ced32
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha3-384",
         );
         assert!(result.is_ok());
@@ -878,7 +866,7 @@ c7441fbb2b270adfff0ef242adc120ed41cc7d3ad0550555dd0d19bd2caa8b87dcae4ebfdf14dd06
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "sha3-512",
         );
         assert!(result.is_ok());
@@ -920,7 +908,7 @@ a114cd1299fea4e32d86d9bc877dddf99dee3bf306477e744e894d25a81c713c7d7109883779e6f3
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "blake2b-512",
         );
         assert!(result.is_ok());
@@ -963,7 +951,7 @@ afd85ebe3a733ccf64c11c681e05595490854c4a485be585dfff1f2c1958823a0fa11069467c8260
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "blake2s-256",
         );
         assert!(result.is_ok());
@@ -1008,7 +996,7 @@ fd5f8f39e9a41e624fb837cd766f55805bd120aac42fe4bc426497eeb7aeaacf
             &formated_mask,
             &mask_indexes,
             &dict,
-            Arc::clone(&file),
+            &Arc::clone(&file),
             "whirlpool",
         );
         assert!(result.is_ok());

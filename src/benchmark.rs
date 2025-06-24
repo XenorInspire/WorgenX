@@ -9,7 +9,7 @@ use crate::{
 use indicatif::ProgressBar;
 use std::{
     sync::{
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         mpsc, Arc, Mutex,
     },
     thread::{self, JoinHandle},
@@ -28,6 +28,12 @@ const PASSWORD_CONFIG: PasswordConfig = PasswordConfig {
     number_of_passwords: 1, // Don't change this value, it's used to generate a single password on each iteration.
 };
 
+/// This static variable is used to track the number of passwords generated.
+/// It is used to update the progress bar.
+/// It is wrapped in a AtomicU64 to avoid data sharing issues between the threads.
+///
+static GLOBAL_COUNTER: AtomicU64 = AtomicU64::new(0);
+
 /// This function is responsible for loading the CPU benchmark.
 ///
 /// # Arguments
@@ -44,8 +50,7 @@ pub fn load_cpu_benchmark(nb_of_threads: usize) -> Result<u64, WorgenXError> {
     let pb_clone: Arc<Mutex<ProgressBar>> = Arc::clone(&pb);
     let mut threads: Vec<JoinHandle<()>> = Vec::new();
     let shared_signal: Arc<AtomicBool> = Arc::new(AtomicBool::new(true));
-    let shared_passwd_counter: Arc<Mutex<u64>> = Arc::new(Mutex::new(0));
-
+    
     let progress_bar_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
         println!("WorgenX CPU Benchmark is in progress...");
         for received in rx_progress_bar {
@@ -59,10 +64,8 @@ pub fn load_cpu_benchmark(nb_of_threads: usize) -> Result<u64, WorgenXError> {
     let start: Instant = Instant::now();
     for _ in 0..nb_of_threads {
         let shared_signal_rst: Arc<AtomicBool> = Arc::clone(&shared_signal);
-        let shared_passwd_counter: Arc<Mutex<u64>> = Arc::clone(&shared_passwd_counter);
         threads.push(thread::spawn(move || {
-            run_stress_test(shared_signal_rst, shared_passwd_counter)
-                .unwrap_or_else(|e| println!("{}", e));
+            run_stress_test(&shared_signal_rst).unwrap_or_else(|e| println!("{}", e));
         }));
     }
 
@@ -75,7 +78,7 @@ pub fn load_cpu_benchmark(nb_of_threads: usize) -> Result<u64, WorgenXError> {
     shared_signal.store(false, Ordering::SeqCst); // Stop the stress test
     drop(tx_progress_bar); // Drop the channel to stop the progress bar thread
 
-    let _ = progress_bar_thread.join().map_err(|_| {
+    let _: Result<(), WorgenXError> = progress_bar_thread.join().map_err(|_| {
         WorgenXError::SystemError(SystemError::ThreadError(
             "Something went wrong with the progress bar thread".to_string(),
         ))
@@ -89,14 +92,7 @@ pub fn load_cpu_benchmark(nb_of_threads: usize) -> Result<u64, WorgenXError> {
         })?;
     }
 
-    let nb_of_passwd: u64 = match shared_passwd_counter.lock() {
-        Ok(counter) => *counter,
-        Err(_) => {
-            return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                "Something went wrong with the shared counter".to_string(),
-            )))
-        }
-    };
+    let nb_of_passwd: u64 = GLOBAL_COUNTER.load(Ordering::SeqCst);
     Ok(nb_of_passwd)
 }
 
@@ -107,30 +103,17 @@ pub fn load_cpu_benchmark(nb_of_threads: usize) -> Result<u64, WorgenXError> {
 /// # Arguments
 ///
 /// * `stop_signal` - The stop signal to stop the stress test.
-/// * `shared_passwd_counter` - The shared counter to store the number of passwords generated.
 ///
 /// # Returns
 ///
 /// Ok(()) if the stress test succeed, WorgenXError otherwise.
 ///
-fn run_stress_test(
-    stop_signal: Arc<AtomicBool>,
-    shared_passwd_counter: Arc<Mutex<u64>>,
-) -> Result<(), WorgenXError> {
+fn run_stress_test(stop_signal: &Arc<AtomicBool>) -> Result<(), WorgenXError> {
     let mut nb_of_passwd: u64 = 0;
     loop {
         if !stop_signal.load(Ordering::SeqCst) {
-            match shared_passwd_counter.lock() {
-                Ok(mut counter) => {
-                    *counter += nb_of_passwd;
-                    return Ok(());
-                }
-                Err(_) => {
-                    return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                        "Something went wrong with the a stress test thread".to_string(),
-                    )))
-                }
-            }
+            GLOBAL_COUNTER.fetch_add(nb_of_passwd, Ordering::SeqCst);
+            return Ok(());
         }
 
         password::generate_random_passwords(&PASSWORD_CONFIG);
