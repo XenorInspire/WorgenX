@@ -105,7 +105,7 @@ where
                     println!("Please enter a valid number greater than 0");
                 }
             }
-            Err(e) => println!("Please enter a valid number greater than 0, {}", e),
+            Err(e) => println!("Please enter a valid number greater than 0, {e}"),
         }
     }
 
@@ -283,7 +283,7 @@ pub fn save_passwd_to_file(file: &Arc<Mutex<File>>, passwords: &str) -> Result<(
         ))
     })?;
 
-    file.write_all(format!("{}\n", passwords).as_bytes())
+    file.write_all(format!("{passwords}\n").as_bytes())
         .map_err(|_| {
             WorgenXError::SystemError(SystemError::UnableToWriteToFile(
                 "output file".to_string(),

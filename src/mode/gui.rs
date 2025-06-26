@@ -104,7 +104,7 @@ fn main_passwd_generation() {
             while let Err(e) =
                 system::save_passwd_to_file(&Arc::clone(&shared_file), &passwords.join("\n"))
             {
-                println!("\n{}", e);
+                println!("\n{e}");
                 println!("Do you want to try again ? (y/n)");
                 let choice: String = system::get_user_choice_yn();
                 if choice.eq("n") {
@@ -220,11 +220,11 @@ fn main_wordlist_generation() {
             &filename,
             false,
         ) {
-            println!("{}", e);
+            println!("{e}");
             return;
         }
 
-        println!("The wordlist has been saved in the file : {}", filename);
+        println!("The wordlist has been saved in the file : {filename}");
         println!("\nDo you want to generate another wordlist ? (y/n)");
         again = system::get_user_choice_yn();
     }
@@ -319,8 +319,8 @@ fn main_benchmark() {
         println!("The benchmark will start in 5 seconds...");
         thread::sleep(std::time::Duration::from_secs(5));
         match benchmark::load_cpu_benchmark(num_cpus::get()) {
-            Ok(nb_of_passwords) => println!("Your CPU has generated {} passwords in 1 minute", nb_of_passwords),
-            Err(e) => println!("{}", e),
+            Ok(nb_of_passwords) => println!("Your CPU has generated {nb_of_passwords} passwords in 1 minute"),
+            Err(e) => println!("{e}"),
         }
         
         println!("\nDo you want to run a new benchmark ? (y/n)");
@@ -350,20 +350,20 @@ pub fn saving_procedure(target: &str) -> Result<(File, String), SystemError> {
 
     let filename: String = env::var(target::HOME_ENV_VAR).map_or_else(|_| {
         println!("Unable to get the home directory, the file will be saved in the current directory\n");
-        format!("./{}", filename)
+        format!("./{filename}")
     }, |home_path| {
-        let parent_folder: String = format!("{}{}", home_path, target);
+        let parent_folder: String = format!("{home_path}{target}");
         let parent_folder_created: String = match system::create_folder_if_not_exists(
             &parent_folder,
         ) {
-            Ok(()) => format!("{}{}", home_path, target),
+            Ok(()) => format!("{home_path}{target}"),
             Err(e) => {
-                println!("{}", e);
+                println!("{e}");
                 println!("Unable to create the folder, the file will be saved in the current directory");
-                format!("./{}", filename)
+                format!("./{filename}")
             }
         };
-        format!("{}{}", parent_folder_created, filename)
+        format!("{parent_folder_created}{filename}")
     });
 
     let file: File = match OpenOptions::new()
@@ -374,7 +374,7 @@ pub fn saving_procedure(target: &str) -> Result<(File, String), SystemError> {
     {
         Ok(file) => file,
         Err(e) => {
-            println!("{}", e);
+            println!("{e}");
             return Err(SystemError::UnableToCreateFile(filename, e.to_string()));
         }
     };

@@ -29,7 +29,7 @@ fn main() {
 
     #[cfg(feature = "cli")]
     if let Err(e) =  mode::cli::run() {
-        eprintln!("{}", e);
+        eprintln!("{e}");
         std::process::exit(1);
     }
 

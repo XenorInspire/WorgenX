@@ -274,7 +274,7 @@ fn run_passwd(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     };
 
     if !password_generation_parameters.no_display {
-        println!("{}", all_passwords);
+        println!("{all_passwords}");
     }
 
     if !password_generation_parameters.output_file.is_empty() {
@@ -454,7 +454,7 @@ fn run_benchmark(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     let benchmark_parameters: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches);
     let result: u64 = benchmark::load_cpu_benchmark(benchmark_parameters.threads)?;
     
-    println!("Your CPU has generated {} passwords in 1 minute", result);
+    println!("Your CPU has generated {result} passwords in 1 minute");
     Ok(())
 }
 
