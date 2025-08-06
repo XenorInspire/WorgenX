@@ -20,7 +20,7 @@ thiserror = { version = "2.0.12", default-features = false }
 num_cpus = { version = "1.17.0", default-features = false }
 serde_json = { version = "1.0.142", optional = true, features = ["std"], default-features = false }
 indicatif = { version = "0.18.0", default-features = false }
-clap = { version = "4.5.42", optional = true, features = ["std"], default-features = false }
+clap = { version = "4.5.43", optional = true, features = ["std"], default-features = false }
 hex = { version = "0.4.3", features = ["alloc"], default-features = false }
 md-5 = { version = "0.10.6", default-features = false }
 sha-1 = { version = "0.10.1", default-features = false }
