@@ -376,7 +376,13 @@ fn run_wordlist(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
 
     let wordlist_config: WordlistConfig = wordlist::build_wordlist_config(&wordlist_generation_parameters.wordlist_values);
     let nb_of_passwords: u64 = wordlist_config.dict.len().pow(wordlist_config.mask_indexes.len() as u32) as u64;
-    println!("Estimated size of the wordlist: {}", system::get_estimated_size(nb_of_passwords, wordlist_config.formated_mask.len() as u64));
+    let len_of_string: u64 = if wordlist_config.hash.is_empty() { 
+        wordlist_config.formated_mask.len() as u64
+    } else { 
+        system::get_size_of_hash(&wordlist_config.hash) as u64
+    };
+
+    println!("Estimated size of the wordlist: {}", system::get_estimated_size(nb_of_passwords, len_of_string));
     println!("Wordlist generation in progress...");
 
     wordlist::wordlist_generation_scheduler(

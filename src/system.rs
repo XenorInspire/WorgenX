@@ -400,6 +400,36 @@ fn hash_with_digest<D: Digest>(mut hasher: D, password: &str) -> String {
     hex::encode(result)
 }
 
+/// This function returns the size of the hash in bytes for a given hash algorithm.
+/// It is used to determine the size of the hash in bytes.
+///
+/// # Arguments
+///
+/// * `hash` - The hash algorithm to check.
+///
+/// # Returns
+///
+/// The size of the hash in bytes. If the hash algorithm is not supported, it returns 0.
+///
+pub fn get_size_of_hash(hash: &str) -> usize {
+    match hash {
+        "md5" => 32,
+        "sha1" => 40,
+        "sha224" => 56,
+        "sha256" => 64,
+        "sha384" => 96,
+        "sha512" => 128,
+        "sha3-224" => 56,
+        "sha3-256" => 64,
+        "sha3-384" => 96,
+        "sha3-512" => 128,
+        "blake2b-512" => 128,
+        "blake2s-256" => 64,
+        "whirlpool" => 128,
+        _ => 0, // Unsupported hash algorithm.
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -509,5 +539,23 @@ mod tests {
         assert_eq!(manage_hash(password, "blake2b-512").unwrap(), "7c863950ac93c93692995e4732ce1e1466ad74a775352ffbaaf2a4a4ce9b549d0b414a1f3150452be6c7c72c694a7cb46f76452917298d33e67611f0a42addb8");
         assert_eq!(manage_hash(password, "whirlpool").unwrap(), "74dfc2b27acfa364da55f93a5caee29ccad3557247eda238831b3e9bd931b01d77fe994e4f12b9d4cfa92a124461d2065197d8cf7f33fc88566da2db2a4d6eae");
         assert!(manage_hash(password, "sha999").is_err());
+    }
+
+    #[test]
+    fn test_get_size_of_hash() {
+        assert_eq!(get_size_of_hash("md5"), 32);
+        assert_eq!(get_size_of_hash("sha1"), 40);
+        assert_eq!(get_size_of_hash("sha224"), 56);
+        assert_eq!(get_size_of_hash("sha256"), 64);
+        assert_eq!(get_size_of_hash("sha384"), 96);
+        assert_eq!(get_size_of_hash("sha512"), 128);
+        assert_eq!(get_size_of_hash("sha3-224"), 56);
+        assert_eq!(get_size_of_hash("sha3-256"), 64);
+        assert_eq!(get_size_of_hash("sha3-384"), 96);
+        assert_eq!(get_size_of_hash("sha3-512"), 128);
+        assert_eq!(get_size_of_hash("blake2b-512"), 128);
+        assert_eq!(get_size_of_hash("blake2s-256"), 64);
+        assert_eq!(get_size_of_hash("whirlpool"), 128);
+        assert_eq!(get_size_of_hash("sha999"), 0); // Unsupported hash algorithm
     }
 }

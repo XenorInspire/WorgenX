@@ -192,10 +192,13 @@ fn main_wordlist_generation() {
             .len()
             .pow(wordlist_config.mask_indexes.len() as u32)
             as u64;
-        println!(
-            "Estimated size of the wordlist: {}",
-            system::get_estimated_size(nb_of_passwords, wordlist_config.formated_mask.len() as u64)
-        );
+
+        let len_of_string: u64 = if wordlist_config.hash.is_empty() { 
+            wordlist_config.formated_mask.len() as u64
+        } else { 
+            system::get_size_of_hash(&wordlist_config.hash) as u64
+        };
+        println!("Estimated size of the wordlist: {}", system::get_estimated_size(nb_of_passwords, len_of_string));
         println!("Do you want to continue ? (y/n)");
         if system::get_user_choice_yn().eq("n") {
             return;
