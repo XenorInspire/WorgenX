@@ -10,6 +10,7 @@ use sha1::Sha1;
 use sha2::{Sha224, Sha256, Sha384, Sha512};
 use sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
 use std::{
+    fmt::Write as WriteStr,
     fs::File,
     io::Write,
     path::Path,
@@ -331,20 +332,20 @@ pub fn get_estimated_size(nb_of_passwords: u64, length: u64) -> String {
     let size: u64 = nb_of_passwords * (length + 1); // +1 for the newline character
     let mut size_str: String = String::new();
     if size < 1024 {
-        size_str.push_str(&size.to_string());
-        size_str.push_str(" bytes");
+        write!(size_str, "{size}").unwrap_or_default();
+        write!(size_str, " bytes").unwrap_or_default();
     } else if size < 1048576 {
-        size_str.push_str(&format!("{:.2}", size as f64 / 1024.0));
-        size_str.push_str(" KB");
+        write!(size_str, "{:.2}", size as f64 / 1024.0).unwrap_or_default();
+        write!(size_str, " KB").unwrap_or_default();
     } else if size < 1073741824 {
-        size_str.push_str(&format!("{:.2}", size as f64 / 1048576.0));
-        size_str.push_str(" MB");
+        write!(size_str, "{:.2}", size as f64 / 1048576.0).unwrap_or_default();
+        write!(size_str, " MB").unwrap_or_default();
     } else if size < 1099511627776 {
-        size_str.push_str(&format!("{:.2}", size as f64 / 1073741824.0));
-        size_str.push_str(" GB");
+        write!(size_str, "{:.2}", size as f64 / 1073741824.0).unwrap_or_default();
+        write!(size_str, " GB").unwrap_or_default();
     } else {
-        size_str.push_str(&format!("{:.2}", size as f64 / 1099511627776.0));
-        size_str.push_str(" TB");
+        write!(size_str, "{:.2}", size as f64 / 1099511627776.0).unwrap_or_default();
+        write!(size_str, " TB").unwrap_or_default();
     }
     size_str
 }

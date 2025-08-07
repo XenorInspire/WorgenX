@@ -340,7 +340,7 @@ fn generate_wordlist_part(
             }
 
             if !found {
-                line.push(formated_mask[i])
+                line.push(formated_mask[i]);
             }
         });
         for idx in (0..dict_indexes.len()).rev() {

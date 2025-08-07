@@ -46,6 +46,7 @@ struct BenchmarkOptions {
 ///
 /// Command struct containing the different features of WorgenX.
 ///
+#[allow(clippy::too_many_lines)]
 fn build_command_context() -> Command {
     let default_threads: &'static str = Box::leak(num_cpus::get().to_string().into_boxed_str()); // Ensure a static reference to the number of logical cores of the CPU
     let wordlist_command: Command = Command::new("wordlist")
