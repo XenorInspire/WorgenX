@@ -46,6 +46,7 @@ struct BenchmarkOptions {
 ///
 /// Command struct containing the different features of WorgenX.
 ///
+#[allow(clippy::too_many_lines)]
 fn build_command_context() -> Command {
     let default_threads: &'static str = Box::leak(num_cpus::get().to_string().into_boxed_str()); // Ensure a static reference to the number of logical cores of the CPU
     let wordlist_command: Command = Command::new("wordlist")
@@ -274,7 +275,7 @@ fn run_passwd(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     };
 
     if !password_generation_parameters.no_display {
-        println!("{}", all_passwords);
+        println!("{all_passwords}");
     }
 
     if !password_generation_parameters.output_file.is_empty() {
@@ -375,7 +376,13 @@ fn run_wordlist(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
 
     let wordlist_config: WordlistConfig = wordlist::build_wordlist_config(&wordlist_generation_parameters.wordlist_values);
     let nb_of_passwords: u64 = wordlist_config.dict.len().pow(wordlist_config.mask_indexes.len() as u32) as u64;
-    println!("Estimated size of the wordlist: {}", system::get_estimated_size(nb_of_passwords, wordlist_config.formated_mask.len() as u64));
+    let len_of_string: u64 = if wordlist_config.hash.is_empty() { 
+        wordlist_config.formated_mask.len() as u64
+    } else { 
+        system::get_size_of_hash(&wordlist_config.hash) as u64
+    };
+
+    println!("Estimated size of the wordlist: {}", system::get_estimated_size(nb_of_passwords, len_of_string));
     println!("Wordlist generation in progress...");
 
     wordlist::wordlist_generation_scheduler(
@@ -454,7 +461,7 @@ fn run_benchmark(sub_matches: &ArgMatches) -> Result<(), WorgenXError> {
     let benchmark_parameters: BenchmarkOptions = allocate_benchmark_config_cli(sub_matches);
     let result: u64 = benchmark::load_cpu_benchmark(benchmark_parameters.threads)?;
     
-    println!("Your CPU has generated {} passwords in 1 minute", result);
+    println!("Your CPU has generated {result} passwords in 1 minute");
     Ok(())
 }
 

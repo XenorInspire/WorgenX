@@ -10,6 +10,7 @@ use sha1::Sha1;
 use sha2::{Sha224, Sha256, Sha384, Sha512};
 use sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
 use std::{
+    fmt::Write as WriteStr,
     fs::File,
     io::Write,
     path::Path,
@@ -105,7 +106,7 @@ where
                     println!("Please enter a valid number greater than 0");
                 }
             }
-            Err(e) => println!("Please enter a valid number greater than 0, {}", e),
+            Err(e) => println!("Please enter a valid number greater than 0, {e}"),
         }
     }
 
@@ -283,7 +284,7 @@ pub fn save_passwd_to_file(file: &Arc<Mutex<File>>, passwords: &str) -> Result<(
         ))
     })?;
 
-    file.write_all(format!("{}\n", passwords).as_bytes())
+    file.write_all(format!("{passwords}\n").as_bytes())
         .map_err(|_| {
             WorgenXError::SystemError(SystemError::UnableToWriteToFile(
                 "output file".to_string(),
@@ -331,20 +332,20 @@ pub fn get_estimated_size(nb_of_passwords: u64, length: u64) -> String {
     let size: u64 = nb_of_passwords * (length + 1); // +1 for the newline character
     let mut size_str: String = String::new();
     if size < 1024 {
-        size_str.push_str(&size.to_string());
-        size_str.push_str(" bytes");
+        write!(size_str, "{size}").unwrap_or_default();
+        write!(size_str, " bytes").unwrap_or_default();
     } else if size < 1048576 {
-        size_str.push_str(&format!("{:.2}", size as f64 / 1024.0));
-        size_str.push_str(" KB");
+        write!(size_str, "{:.2}", size as f64 / 1024.0).unwrap_or_default();
+        write!(size_str, " KB").unwrap_or_default();
     } else if size < 1073741824 {
-        size_str.push_str(&format!("{:.2}", size as f64 / 1048576.0));
-        size_str.push_str(" MB");
+        write!(size_str, "{:.2}", size as f64 / 1048576.0).unwrap_or_default();
+        write!(size_str, " MB").unwrap_or_default();
     } else if size < 1099511627776 {
-        size_str.push_str(&format!("{:.2}", size as f64 / 1073741824.0));
-        size_str.push_str(" GB");
+        write!(size_str, "{:.2}", size as f64 / 1073741824.0).unwrap_or_default();
+        write!(size_str, " GB").unwrap_or_default();
     } else {
-        size_str.push_str(&format!("{:.2}", size as f64 / 1099511627776.0));
-        size_str.push_str(" TB");
+        write!(size_str, "{:.2}", size as f64 / 1099511627776.0).unwrap_or_default();
+        write!(size_str, " TB").unwrap_or_default();
     }
     size_str
 }
@@ -397,6 +398,36 @@ fn hash_with_digest<D: Digest>(mut hasher: D, password: &str) -> String {
     hasher.update(password.as_bytes());
     let result = hasher.finalize();
     hex::encode(result)
+}
+
+/// This function returns the size of the hash in bytes for a given hash algorithm.
+/// It is used to determine the size of the hash in bytes.
+///
+/// # Arguments
+///
+/// * `hash` - The hash algorithm to check.
+///
+/// # Returns
+///
+/// The size of the hash in bytes. If the hash algorithm is not supported, it returns 0.
+///
+pub fn get_size_of_hash(hash: &str) -> usize {
+    match hash {
+        "md5" => 32,
+        "sha1" => 40,
+        "sha224" => 56,
+        "sha256" => 64,
+        "sha384" => 96,
+        "sha512" => 128,
+        "sha3-224" => 56,
+        "sha3-256" => 64,
+        "sha3-384" => 96,
+        "sha3-512" => 128,
+        "blake2b-512" => 128,
+        "blake2s-256" => 64,
+        "whirlpool" => 128,
+        _ => 0, // Unsupported hash algorithm.
+    }
 }
 
 #[cfg(test)]
@@ -508,5 +539,23 @@ mod tests {
         assert_eq!(manage_hash(password, "blake2b-512").unwrap(), "7c863950ac93c93692995e4732ce1e1466ad74a775352ffbaaf2a4a4ce9b549d0b414a1f3150452be6c7c72c694a7cb46f76452917298d33e67611f0a42addb8");
         assert_eq!(manage_hash(password, "whirlpool").unwrap(), "74dfc2b27acfa364da55f93a5caee29ccad3557247eda238831b3e9bd931b01d77fe994e4f12b9d4cfa92a124461d2065197d8cf7f33fc88566da2db2a4d6eae");
         assert!(manage_hash(password, "sha999").is_err());
+    }
+
+    #[test]
+    fn test_get_size_of_hash() {
+        assert_eq!(get_size_of_hash("md5"), 32);
+        assert_eq!(get_size_of_hash("sha1"), 40);
+        assert_eq!(get_size_of_hash("sha224"), 56);
+        assert_eq!(get_size_of_hash("sha256"), 64);
+        assert_eq!(get_size_of_hash("sha384"), 96);
+        assert_eq!(get_size_of_hash("sha512"), 128);
+        assert_eq!(get_size_of_hash("sha3-224"), 56);
+        assert_eq!(get_size_of_hash("sha3-256"), 64);
+        assert_eq!(get_size_of_hash("sha3-384"), 96);
+        assert_eq!(get_size_of_hash("sha3-512"), 128);
+        assert_eq!(get_size_of_hash("blake2b-512"), 128);
+        assert_eq!(get_size_of_hash("blake2s-256"), 64);
+        assert_eq!(get_size_of_hash("whirlpool"), 128);
+        assert_eq!(get_size_of_hash("sha999"), 0); // Unsupported hash algorithm
     }
 }

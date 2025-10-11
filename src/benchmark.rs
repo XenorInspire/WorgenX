@@ -65,7 +65,7 @@ pub fn load_cpu_benchmark(nb_of_threads: usize) -> Result<u64, WorgenXError> {
     for _ in 0..nb_of_threads {
         let shared_signal_rst: Arc<AtomicBool> = Arc::clone(&shared_signal);
         threads.push(thread::spawn(move || {
-            run_stress_test(&shared_signal_rst).unwrap_or_else(|e| println!("{}", e));
+            run_stress_test(&shared_signal_rst).unwrap_or_else(|e| println!("{e}"));
         }));
     }
 

@@ -191,7 +191,7 @@ pub fn wordlist_generation_scheduler(
             return Err(err.clone());
         }
 
-        return Err(WorgenXError::SystemError(SystemError::ThreadError(format!("{:?}", e))));
+        return Err(WorgenXError::SystemError(SystemError::ThreadError(format!("{e:?}"))));
     }
 
     println!("\nWordlist generated in {}", system::get_elapsed_time(start));
@@ -340,7 +340,7 @@ fn generate_wordlist_part(
             }
 
             if !found {
-                line.push(formated_mask[i])
+                line.push(formated_mask[i]);
             }
         });
         for idx in (0..dict_indexes.len()).rev() {
