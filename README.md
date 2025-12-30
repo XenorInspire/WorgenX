@@ -3,7 +3,7 @@
 WorgenX is a powerful Rust wordlist generator with many functionalities.<br>
 You can generate efficient wordlists with a custom mask and charset, generate random passwords with a strong entropy, and benchmark the performance of your CPU.
 
-This software has been developed to be used especially for CLI use, but a GUI version is also available for a quick and easy use (but still in a command line interface).
+This software has been developed to be used especially for CLI use, but a TUI version is also available for a quick and easy use.
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![unsafe forbidden](https://img.shields.io/badge/unsafe-forbidden-success.svg)](https://github.com/rust-secure-code/safety-dance/)
@@ -58,12 +58,12 @@ cd WorgenX/
 ```
 #### Compile the project :
 
-For CLI version : 
+For the CLI version : 
 ```
 cargo build --release --features cli
 ```
 
-For GUI version : 
+For the TUI version : 
 ```
 cargo build --release --features gui
 ```
@@ -136,7 +136,7 @@ You can find below the options for the main features of WorgenX:
 
 ```
 
-### In GUI mode :
+### In TUI mode :
 
 Just start worgenX_gui :
 ```bash
