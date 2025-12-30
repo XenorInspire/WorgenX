@@ -5,7 +5,7 @@
 #[cfg(all(not(feature = "gui"), not(feature = "cli")))]
 compile_error!("You must specify a mode: 'gui' or 'cli'.");
 
-// Decomment these lines if in production to prevent both modes to be compiled
+// Decomment these lines if in production to prevent compilation with both modes
 // #[cfg(all(feature = "gui", feature = "cli"))]
 // compile_error!("You must specify only one mode: 'gui' or 'cli'.");
 
