@@ -227,8 +227,8 @@ fn build_command_context() -> Command {
 /// Ok(()) if the program has been executed, WorgenXError otherwise.
 ///
 pub fn run() -> Result<(), WorgenXError> {
-    let mut command_context: Command = build_command_context();
-    if let Ok(matches) = command_context.clone().try_get_matches() {
+    let command_context: Command = build_command_context();
+    if let Ok(matches) = command_context.try_get_matches() {
         // Call the `display_help()` function instead of clap help with the -h or --help arguments (better control of the help message).
         if matches.get_flag("help") {
             display_help();
@@ -239,15 +239,19 @@ pub fn run() -> Result<(), WorgenXError> {
             println!("WorgenX v{}", env!("CARGO_PKG_VERSION"));
             return Ok(());
         }
+        
+        // WorgenX subcommands handling.
+        match matches.subcommand() {
+            Some(("wordlist", sub_matches)) => return run_wordlist(sub_matches),
+            Some(("password", sub_matches)) => return run_passwd(sub_matches),
+            Some(("benchmark", sub_matches)) => return run_benchmark(sub_matches),
+            _ => {}
+        }
+        
     }
-
-    command_context.build();
-    match command_context.get_matches().subcommand() {
-        Some(("wordlist", sub_matches)) => run_wordlist(sub_matches),
-        Some(("password", sub_matches)) => run_passwd(sub_matches),
-        Some(("benchmark", sub_matches)) => run_benchmark(sub_matches),
-        _ => Err(WorgenXError::ArgError(ArgError::NoArgument))
-    }
+        
+    Err(WorgenXError::ArgError(ArgError::NoArgument))
+    
 }
 
 /// This function is responsible for scheduling the execution of the random password generation functions of the program.
@@ -540,7 +544,7 @@ fn display_help() {
     println!("    -n, --numbers\t\t\tAdd numbers to the words");
     println!("    -x, --special-characters\t\tAdd special characters to the words");
     println!("\n  These parameters are mandatory:");
-    println!("    -m <mask>, --mask <mask>\t\tMask used to generate the words");
+    println!("    -m <mask>, --mask <mask>\t\tMask used to generate the words.\n\t\t\t\t\tUse quotes to avoid issues with special characters in the shell");
     println!("    -o <path>, --output <path>\t\tSave the wordlist in a text file");
     println!("\n  The following options are optional:");
     println!("    -d, --disable-loading-bar\t\tDisable the loading bar when generating the wordlist");
