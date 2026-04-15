@@ -415,17 +415,10 @@ pub fn get_size_of_hash(hash: &str) -> usize {
     match hash {
         "md5" => 32,
         "sha1" => 40,
-        "sha224" => 56,
-        "sha256" => 64,
-        "sha384" => 96,
-        "sha512" => 128,
-        "sha3-224" => 56,
-        "sha3-256" => 64,
-        "sha3-384" => 96,
-        "sha3-512" => 128,
-        "blake2b-512" => 128,
-        "blake2s-256" => 64,
-        "whirlpool" => 128,
+        "sha224" | "sha3-224" => 56,
+        "sha256" | "sha3-256" | "blake2s-256" => 64,
+        "sha384" | "sha3-384" => 96,
+        "sha512" | "sha3-512" | "blake2b-512" | "whirlpool" => 128,
         _ => 0, // Unsupported hash algorithm.
     }
 }
