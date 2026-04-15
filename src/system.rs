@@ -2,10 +2,10 @@
 use crate::error::{SystemError, WorgenXError};
 
 // External crates.
-use blake2::{Blake2b512, Blake2s256};
+use blake2::{Digest as Blake2Digest, Blake2b512, Blake2s256};
 use digest::Digest;
 use indicatif::{ProgressBar, ProgressStyle};
-use md5::Md5;
+use md5::{Md5};
 use sha1::Sha1;
 use sha2::{Sha224, Sha256, Sha384, Sha512};
 use sha3::{Sha3_224, Sha3_256, Sha3_384, Sha3_512};
