@@ -355,13 +355,13 @@ fn generate_wordlist_part(
         GLOBAL_COUNTER.fetch_add(1, Ordering::SeqCst);
 
         if buffer.len() == BUFFER_SIZE {
-            system::save_passwd_to_file(&Arc::clone(file), &buffer.join("\n"))?;
+            system::save_passwd_to_file(file, &buffer.join("\n"))?;
             buffer.clear();
         }
     }
 
     if !buffer.is_empty() {
-        system::save_passwd_to_file(&Arc::clone(file), &buffer.join("\n"))?;
+        system::save_passwd_to_file(file, &buffer.join("\n"))?;
     }
     Ok(())
 }

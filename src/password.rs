@@ -2,7 +2,7 @@
 use crate::dict;
 
 // External crates.
-use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
+use rand::{rngs::ThreadRng, seq::SliceRandom, RngExt};
 
 /// This struct built from the user's choices will be used to generate the random password.
 ///

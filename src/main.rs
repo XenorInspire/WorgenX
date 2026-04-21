@@ -1,4 +1,3 @@
-// Prevents the use of unsafe code
 #![forbid(unsafe_code)]
 
 // Prevents the compilation of both modes which may cause conflicts
@@ -20,8 +19,6 @@ mod wordlist;
 #[cfg(feature = "cli")]
 mod json;
 
-/// This function is the "entry point" of the program.
-///
 fn main() {
     #[cfg(feature = "gui")]
     mode::gui::run();

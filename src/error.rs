@@ -14,7 +14,7 @@ pub enum WorgenXError {
 #[derive(Debug, Error, Clone)]
 pub enum ArgError {
     /// This error is raised if the user doesn't specify any argument.
-    #[error("Error: no argument specified\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
+    #[error("Error: no argument or wrong subcommand specified\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
     NoArgument,
     /// This error is raised if there isn't any configuration given by the user (for example just wordlist feature without any type of characters specified).
     #[error("Error: no configuration given for argument.\nPlease specify the mandatory parameters and at least one type of characters.\nUsage: worgenX <command> [options]\nTry 'worgenX --help' for more information.")]
