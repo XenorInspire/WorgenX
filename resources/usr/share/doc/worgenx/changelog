@@ -1,0 +1,105 @@
+worgenx (1.2.6) stable; urgency=medium
+  * Update dependencies, including security fixes:
+    - GHSA-cq8v-f236-94qc
+    - GHSA-3288-p39f-rqpv
+  * Small clippy hints
+
+ -- Xen0r <contact@no-email.com>  Sat, 03 Oct 2023 09:10:00 +0000
+ 
+worgenx (1.2.5) stable; urgency=medium
+
+  * FIX file size estimation with hash algorithm specified
+  * Update dependencies
+  * Small clippy hints
+
+ -- Xen0r <contact@no-email.com>  Tue, 14 Oct 2025 21:10:00 +0000
+
+worgenx (1.2.4) stable; urgency=medium
+
+  * Improve wordlist and password generation performance
+  * Update to Rust edition 2024
+  * Update dependencies
+  * Small clippy hints
+
+ -- Xen0r <contact@no-email.com>  Tue, 24 Jun 2025 14:30:00 +0000
+
+worgenx (1.2.3) stable; urgency=medium
+
+  * Improve wordlist generation performance
+  * Optimize CLI argument checking
+  * Typo & comments
+  * Update dependencies
+  * Small hotfixes
+
+ -- Xen0r <contact@no-email.com>  Fri, 21 Mar 2025 16:30:00 +0000
+
+worgenx (1.2.2) stable; urgency=medium
+
+  * Optimize benchmarking feature for CLI mode
+  * Optimize file path checking functions
+  * Update tests for wordlist generation
+  * Update dependencies
+
+ -- Xen0r <contact@no-email.com>  Fri, 20 Dec 2024 10:10:00 +0000
+
+worgenx (1.2.1) stable; urgency=medium
+
+  * Optimize wordlist generation performance
+  * Update dependencies
+  * Few other small hotfixes
+
+ -- Xen0r <contact@no-email.com>  Fri, 20 Sep 2024 19:20:00 +0000
+
+worgenx (1.2.0) stable; urgency=medium
+
+  * Add new feature to generate a wordlist from 
+  a given hash algorithm (-h, --hash)
+  * Optimize wordlist generation feature
+  * Improve argument checking for CLI mode
+  * Add test functions for cargo test
+  * Update dependencies
+  * Delete useless dependencies (unused features)
+  * Few other hotfixes
+
+ -- Xen0r <contact@no-email.com>  Thu, 18 Jul 2024 21:00:00 +0000
+
+worgenx (1.1.1) stable; urgency=medium
+
+  * Improve performances for password generation
+  feature by using a better entropy source
+  * Optimize benchmarking feature
+  * Clean up code for better readability and
+  performance
+  * Few other hotfixes
+
+ -- Xen0r <contact@no-email.com>  Mon, 06 May 2024 22:00:00 +0000
+
+worgenx (1.1.0) stable; urgency=medium
+
+  * Improve performances for wordlist generation
+  (faster + less RAM-consuming)
+  * Update CLI argument handling with clap framework
+  * Update help menu, now possible to have a 
+  custom help menu for each feature
+  * Add new start-up menu for GUI mode
+  * Update dependencies
+  * Few other hotfixes
+
+ -- Xen0r <contact@no-email.com>  Mon, 22 Apr 2024 15:00:00 +0000
+
+worgenx (1.0.1) unstable; urgency=medium
+
+  * Add new message in GUI mode to tell the user 
+  where the wordlist has been saved
+  * Update password saving, now it is more explicit
+  * Update dependencies
+  * Fix typos in help menu (-h, --help arguments)
+  * Fix typos in man page
+
+ -- Xen0r <contact@no-email.com>  Wed, 03 Apr 2024 14:00:00 +0000
+
+worgenx (1.0.0) unstable; urgency=medium
+
+  * Initial release.
+
+ -- Xen0r <contact@no-email.com>  Wed, 27 Mar 2024 15:50:38 +0000
