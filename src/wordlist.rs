@@ -10,8 +10,8 @@ use indicatif::ProgressBar;
 use std::{
     fs::{File, OpenOptions},
     sync::{
-        atomic::{AtomicU64, Ordering},
         Arc, Mutex,
+        atomic::{AtomicBool, AtomicU64, Ordering},
     },
     thread::{self, JoinHandle},
     time::Instant,
@@ -21,12 +21,6 @@ use std::{
 /// It specifies the maximum number of passwords that will be written in the file at once per thread.
 ///
 const BUFFER_SIZE: usize = 100000;
-
-/// This static variable is used to track the number of passwords generated.
-/// It is used to update the progress bar.
-/// It is wrapped in a AtomicU64 to avoid data sharing issues between the threads.
-///
-static GLOBAL_COUNTER: AtomicU64 = AtomicU64::new(0);
 
 /// This struct is built from the user's choices and will be used to generate the wordlist.
 ///
@@ -173,28 +167,46 @@ pub fn wordlist_generation_scheduler(
 ) -> Result<(), WorgenXError> {
     let pb: Arc<Mutex<indicatif::ProgressBar>> = Arc::new(Mutex::new(system::get_progress_bar()));
     let pb_clone: Arc<Mutex<indicatif::ProgressBar>> = Arc::clone(&pb);
+    let generated_passwords: Arc<AtomicU64> = Arc::new(AtomicU64::new(0));
+    let stop_progress: Arc<AtomicBool> = Arc::new(AtomicBool::new(false));
+    let generated_passwords_clone: Arc<AtomicU64> = Arc::clone(&generated_passwords);
+    let stop_progress_clone: Arc<AtomicBool> = Arc::clone(&stop_progress);
     let start: Instant = Instant::now();
-    
+
     let main_thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
-        while GLOBAL_COUNTER.load(Ordering::SeqCst) < nb_of_passwords {
+        while !stop_progress_clone.load(Ordering::Relaxed) {
             if !no_loading_bar {
-                build_wordlist_progress_bar(GLOBAL_COUNTER.load(Ordering::SeqCst), nb_of_passwords, &pb_clone);
+                build_wordlist_progress_bar(
+                    generated_passwords_clone.load(Ordering::Relaxed),
+                    nb_of_passwords,
+                    &pb_clone,
+                );
             }
             thread::sleep(std::time::Duration::from_millis(100));
         }
         Ok(())
     });
 
-    run_wordlist_generation(wordlist_config, nb_of_passwords, nb_of_threads, file_path)?;
-    if let Err(e) = main_thread.join() {
-        if let Some(err) = e.downcast_ref::<WorgenXError>() {
-            return Err(err.clone());
-        }
-
-        return Err(WorgenXError::SystemError(SystemError::ThreadError(format!("{e:?}"))));
+    let generation_result = run_wordlist_generation(
+        wordlist_config,
+        nb_of_passwords,
+        nb_of_threads,
+        file_path,
+        Arc::clone(&generated_passwords),
+    );
+    stop_progress.store(true, Ordering::Relaxed);
+    main_thread
+        .join()
+        .map_err(|e| WorgenXError::SystemError(SystemError::ThreadError(format!("{e:?}"))))??;
+    generation_result?;
+    if !no_loading_bar {
+        build_wordlist_progress_bar(nb_of_passwords, nb_of_passwords, &pb);
     }
 
-    println!("\nWordlist generated in {}", system::get_elapsed_time(start));
+    println!(
+        "\nWordlist generated in {}",
+        system::get_elapsed_time(start)
+    );
     Ok(())
 }
 
@@ -216,7 +228,14 @@ fn run_wordlist_generation(
     nb_of_passwords: u64,
     nb_of_threads: usize,
     file_path: &str,
+    generated_passwords: Arc<AtomicU64>,
 ) -> Result<(), WorgenXError> {
+    if nb_of_threads == 0 {
+        return Err(WorgenXError::SystemError(SystemError::ThreadError(
+            "thread count must be greater than zero".to_string(),
+        )));
+    }
+
     let shared_formated_mask: Arc<Vec<char>> = Arc::new(wordlist_config.formated_mask.clone());
     let shared_mask_indexes: Arc<Vec<usize>> = Arc::new(wordlist_config.mask_indexes.clone());
     let dict_size: usize = wordlist_config.dict.len();
@@ -227,21 +246,35 @@ fn run_wordlist_generation(
         .create(true)
         .truncate(true)
         .open(file_path)
-        .map_err(|_| WorgenXError::SystemError(SystemError::UnableToCreateFile(
-            file_path.to_string(),
-            "Please check the path and try again".to_string(),
-        )))?;
+        .map_err(|_| {
+            WorgenXError::SystemError(SystemError::UnableToCreateFile(
+                file_path.to_string(),
+                "Please check the path and try again".to_string(),
+            ))
+        })?;
 
     let shared_file: Arc<Mutex<File>> = Arc::new(Mutex::new(file));
-    let mut threads: Vec<JoinHandle<Result<(), WorgenXError>>> = Vec::new();
-    let dict_indexes: Vec<usize> = vec![0; wordlist_config.mask_indexes.len()];
-    let mut nb_of_passwd_per_thread: u64 = nb_of_passwords / nb_of_threads as u64;
-    let nb_of_passwd_last_thread: u64 = nb_of_passwd_per_thread + nb_of_passwords % nb_of_threads as u64;
-    let mut temp: Vec<usize> = dict_indexes;
+    if nb_of_passwords == 0 {
+        return Ok(());
+    }
 
-    for i in 0..nb_of_threads {
-        if i == nb_of_threads - 1 {
-            nb_of_passwd_per_thread = nb_of_passwd_last_thread;
+    let mut threads: Vec<JoinHandle<Result<(), WorgenXError>>> = Vec::new();
+    let thread_count = if nb_of_passwords < nb_of_threads as u64 {
+        nb_of_passwords as usize
+    } else {
+        nb_of_threads
+    };
+    let passwords_per_thread = nb_of_passwords / thread_count as u64;
+    let remainder = (nb_of_passwords % thread_count as u64) as usize;
+
+    for i in 0..thread_count {
+        let nb_of_passwd_per_thread = passwords_per_thread + if i < remainder { 1 } else { 0 };
+        let start_offset = i as u64 * passwords_per_thread + i.min(remainder) as u64;
+        let mut dict_indexes = vec![0; wordlist_config.mask_indexes.len()];
+        let mut offset = start_offset;
+        for index in dict_indexes.iter_mut().rev() {
+            *index = (offset % dict_size as u64) as usize;
+            offset /= dict_size as u64;
         }
 
         let shared_formated_mask: Arc<Vec<char>> = Arc::clone(&shared_formated_mask);
@@ -249,40 +282,42 @@ fn run_wordlist_generation(
         let shared_dict: Arc<Vec<u8>> = Arc::clone(&shared_dict);
         let shared_hash: String = wordlist_config.hash.clone();
         let file: Arc<Mutex<File>> = Arc::clone(&shared_file);
-        let temp_clone: Vec<usize> = temp.clone();
+        let generated_passwords: Arc<AtomicU64> = Arc::clone(&generated_passwords);
         let thread: JoinHandle<Result<(), WorgenXError>> = thread::spawn(move || {
-            generate_wordlist_part(
+            generate_wordlist_part_with_counter(
                 nb_of_passwd_per_thread,
-                temp_clone,
+                dict_indexes,
                 &shared_formated_mask,
                 &shared_mask_indexes,
                 &shared_dict,
                 &file,
                 &shared_hash,
+                &generated_passwords,
             )
         });
         threads.push(thread);
+    }
 
-        for _ in 0..nb_of_passwd_per_thread {
-            for idx in (0..temp.len()).rev() {
-                if temp[idx] < dict_size - 1 {
-                    temp[idx] += 1;
-                    break;
+    let mut first_error = None;
+    for thread in threads {
+        match thread.join() {
+            Ok(Ok(())) => {}
+            Ok(Err(error)) => {
+                if first_error.is_none() {
+                    first_error = Some(error);
                 }
-                temp[idx] = 0;
+            }
+            Err(error) => {
+                if first_error.is_none() {
+                    first_error = Some(WorgenXError::SystemError(SystemError::ThreadError(
+                        format!("{error:?}"),
+                    )));
+                }
             }
         }
     }
 
-    for thread in threads {
-        if thread.join().is_err() {
-            return Err(WorgenXError::SystemError(SystemError::ThreadError(
-                "wordlist generation".to_string(),
-            )))
-        }
-    }
-
-    Ok(())
+    first_error.map_or(Ok(()), Err)
 }
 
 /// This function is responsible for generating a part of the wordlist or the whole wordlist if there is only one thread.
@@ -302,7 +337,49 @@ fn run_wordlist_generation(
 ///
 /// Ok(()) if the wordlist generation is successful, WorgenXError otherwise.
 ///
+#[cfg(test)]
 fn generate_wordlist_part(
+    nb_of_passwords: u64,
+    dict_indexes: Vec<usize>,
+    formated_mask: &[char],
+    mask_indexes: &[usize],
+    dict: &[u8],
+    file: &Arc<Mutex<File>>,
+    hash: &str,
+) -> Result<(), WorgenXError> {
+    let generated_passwords: AtomicU64 = AtomicU64::new(0);
+    generate_wordlist_part_with_counter(
+        nb_of_passwords,
+        dict_indexes,
+        formated_mask,
+        mask_indexes,
+        dict,
+        file,
+        hash,
+        &generated_passwords,
+    )
+}
+
+/// This function is responsible for generating a part of the wordlist depending on the number of threads.
+/// It sends the progress value through the channel (to update the progess bar).
+///
+/// #Arguments
+///
+/// * `nb_of_passwords` - The number of passwords to generate.
+/// * `dict_indexes` - The indexes of the dictionary.
+/// * `formated_mask` - The final mask.
+/// * `mask_indexes` - The indexes of the mask.
+/// * `dict` - The dictionary.
+/// * `file` - The file to write to, wrapped in an `Arc<Mutex<File>>`.
+/// * `hash` - The hash algorithm to use, if any.
+/// * `generated_passwords` - The atomic counter for the number of generated passwords.
+///
+/// # Returns
+///
+/// Ok(()) if the wordlist generation is successful, WorgenXError otherwise.
+///
+#[allow(clippy::too_many_arguments)]
+fn generate_wordlist_part_with_counter(
     nb_of_passwords: u64,
     mut dict_indexes: Vec<usize>,
     formated_mask: &[char],
@@ -310,39 +387,24 @@ fn generate_wordlist_part(
     dict: &[u8],
     file: &Arc<Mutex<File>>,
     hash: &str,
+    generated_passwords: &AtomicU64,
 ) -> Result<(), WorgenXError> {
-    let mut buffer: Vec<String> = Vec::new();
-    let mut line: Vec<char> = Vec::with_capacity(formated_mask.len());
-
-    // This closure is used to hash the password if the user has specified a hash algorithm.
-    let process_line: Box<dyn Fn(String) -> Result<String, WorgenXError>> = if hash.is_empty() {
-        Box::new(|line_str: String| -> Result<String, WorgenXError> { Ok(line_str) })
-    } else {
-        Box::new(|line_str: String| -> Result<String, WorgenXError> {
-            match system::manage_hash(&line_str, hash) {
-                Ok(hashed_passwd) => Ok(hashed_passwd),
-                Err(e) => Err(WorgenXError::SystemError(e)),
-            }
-        })
-    };
+    let mut buffer: String = String::with_capacity(64 * 1024);
+    let mut buffered_passwords: usize = 0;
+    let mut line: String = String::with_capacity(formated_mask.len());
 
     for _ in 0..nb_of_passwords {
         line.clear();
 
-        (0..formated_mask.len()).for_each(|i| {
-            let mut found: bool = false;
-            for idx in 0..mask_indexes.len() {
-                if i == mask_indexes[idx] {
-                    found = true;
-                    line.push(dict[dict_indexes[idx]] as char);
-                    break;
-                }
+        let mut wildcard_index = 0;
+        for (i, &mask_char) in formated_mask.iter().enumerate() {
+            if mask_indexes.get(wildcard_index) == Some(&i) {
+                line.push(dict[dict_indexes[wildcard_index]] as char);
+                wildcard_index += 1;
+            } else {
+                line.push(mask_char);
             }
-
-            if !found {
-                line.push(formated_mask[i]);
-            }
-        });
+        }
         for idx in (0..dict_indexes.len()).rev() {
             if dict_indexes[idx] < dict.len() - 1 {
                 dict_indexes[idx] += 1;
@@ -351,17 +413,27 @@ fn generate_wordlist_part(
             dict_indexes[idx] = 0;
         }
 
-        buffer.push(process_line(line.iter().collect::<String>())?);
-        GLOBAL_COUNTER.fetch_add(1, Ordering::SeqCst);
+        if buffered_passwords > 0 {
+            buffer.push('\n');
+        }
+        if hash.is_empty() {
+            buffer.push_str(&line);
+        } else {
+            buffer.push_str(&system::manage_hash(&line, hash).map_err(WorgenXError::SystemError)?);
+        }
+        buffered_passwords += 1;
 
-        if buffer.len() == BUFFER_SIZE {
-            system::save_passwd_to_file(file, &buffer.join("\n"))?;
+        if buffered_passwords == BUFFER_SIZE {
+            system::save_passwd_to_file(file, &buffer)?;
+            generated_passwords.fetch_add(buffered_passwords as u64, Ordering::Relaxed);
             buffer.clear();
+            buffered_passwords = 0;
         }
     }
 
-    if !buffer.is_empty() {
-        system::save_passwd_to_file(file, &buffer.join("\n"))?;
+    if buffered_passwords > 0 {
+        system::save_passwd_to_file(file, &buffer)?;
+        generated_passwords.fetch_add(buffered_passwords as u64, Ordering::Relaxed);
     }
     Ok(())
 }
@@ -456,10 +528,51 @@ mod tests {
         assert!(result.is_ok());
 
         let content: String = std::fs::read_to_string("test1.txt").unwrap();
-        let expected_content: String = String::from("aaaa\naaab\naaac\naaad\naaba\naabb\naabc\naabd\naaca\naacb\n");
+        let expected_content: String =
+            String::from("aaaa\naaab\naaac\naaad\naaba\naabb\naabc\naabd\naaca\naacb\n");
         assert_eq!(content.lines().count(), 10);
         assert_eq!(content, expected_content);
         std::fs::remove_file("test1.txt").unwrap();
+    }
+
+    #[test]
+    fn test_run_wordlist_generation_partitions_all_candidates() {
+        let file_path = std::env::temp_dir().join(format!(
+            "worgenx-wordlist-partitions-{}.txt",
+            std::process::id()
+        ));
+        let wordlist_config = WordlistConfig {
+            dict: b"abcd".to_vec(),
+            mask_indexes: vec![0, 1],
+            formated_mask: vec!['\0', '\0'],
+            hash: String::new(),
+        };
+
+        run_wordlist_generation(
+            &wordlist_config,
+            16,
+            3,
+            file_path.to_str().unwrap(),
+            Arc::new(AtomicU64::new(0)),
+        )
+        .unwrap();
+
+        let mut generated: Vec<String> = std::fs::read_to_string(&file_path)
+            .unwrap()
+            .lines()
+            .map(str::to_string)
+            .collect();
+        let _ = std::fs::remove_file(file_path);
+        generated.sort();
+        let expected: Vec<String> = (b'a'..=b'd')
+            .flat_map(|first| {
+                (b'a'..=b'd').map(move |second| {
+                    String::from_utf8(vec![first, second]).unwrap()
+                })
+            })
+            .collect();
+
+        assert_eq!(generated, expected);
     }
 
     #[test]
