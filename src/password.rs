@@ -2,7 +2,7 @@
 use crate::dict;
 
 // External crates.
-use rand::{rngs::ThreadRng, seq::SliceRandom, RngExt};
+use rand::{RngExt, rngs::ThreadRng, seq::SliceRandom};
 
 /// This struct built from the user's choices will be used to generate the random password.
 ///
@@ -83,10 +83,10 @@ fn shuffle_dict(dict: &[u8]) -> Vec<u8> {
 pub fn generate_random_passwords(password_config: &PasswordConfig) -> Vec<String> {
     let mut passwords: Vec<String> = Vec::new();
     let password_content: Vec<u8> = create_passwd_content(password_config);
+    let mut rng: ThreadRng = rand::rng();
 
     for _ in 0..password_config.number_of_passwords {
-        let mut rng: ThreadRng = rand::rng();
-        let mut password: String = String::new();
+        let mut password: String = String::with_capacity(password_config.length as usize);
         for _ in 0..password_config.length {
             let idx: usize = rng.random_range(0..password_content.len());
             password.push(password_content[idx] as char);
