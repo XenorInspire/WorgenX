@@ -1,0 +1,55 @@
+name: worgenx
+arch: amd64
+platform: linux
+version: ${VERSION}
+maintainer: Xen0rInspire
+description: A command-line wordlist and password generator.
+homepage: https://github.com/XenorInspire/WorgenX
+license: GPL-3.0-only
+depends:
+  - libc6 (>= 2.34)
+  - libgcc-s1
+
+contents:
+  - src: /tmp/worgenx
+    dst: /usr/bin/worgenx
+    file_info:
+      mode: 0755
+  - src: /tmp/worgenx_gui
+    dst: /usr/bin/worgenx_gui
+    file_info:
+      mode: 0755
+  - src: /workspace/LICENSE
+    dst: /usr/share/licenses/worgenx/LICENSE
+    file_info:
+      mode: 0644
+  - src: /workspace/README.md
+    dst: /usr/share/doc/worgenx/README
+    file_info:
+      mode: 0644
+  - src: /workspace/resources/usr/share/doc/worgenx/AUTHORS
+    dst: /usr/share/doc/worgenx/AUTHORS
+    file_info:
+      mode: 0644
+  - src: /workspace/resources/usr/share/doc/worgenx/copyright
+    dst: /usr/share/doc/worgenx/copyright
+    file_info:
+      mode: 0644
+  - src: /tmp/worgenx-package-resources/usr/share/doc/worgenx/changelog.gz
+    dst: /usr/share/doc/worgenx/changelog.gz
+    file_info:
+      mode: 0644
+  - src: /tmp/worgenx-package-resources/usr/share/man/man1/worgenx.1.gz
+    dst: /usr/share/man/man1/worgenx.1.gz
+    file_info:
+      mode: 0644
+  - src: /tmp/worgenx-package-resources/usr/share/man/man1/worgenx_gui.1.gz
+    dst: /usr/share/man/man1/worgenx_gui.1.gz
+    file_info:
+      mode: 0644
+
+overrides:
+  rpm:
+    depends:
+      - glibc >= 2.34
+      - libgcc

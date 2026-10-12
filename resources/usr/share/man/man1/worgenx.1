@@ -1,0 +1,116 @@
+.\" Manpage for worgenX
+.TH WORGENX 1 "October 2026" "1.2.7" "worgenX Manual"
+.SH NAME
+worgenX \- Command line software for generating relevant wordlists, random passwords, and CPU benchmarking
+.SH SYNOPSIS
+.B worgenX
+.RI < command > " [ options ]"
+.SH DESCRIPTION
+WorgenX is a powerful Rust wordlist generator with many functionalities :
+.TP
+- Generate a relevant wordlist with a custom mask and charset.
+.TP
+- Generate random passwords with customizable length and complexity with a strong entropy.
+.TP
+- Conduct CPU benchmarking to evaluate system performance.
+.PP
+.SH COMMANDS
+.TP
+.BR wordlist
+Generate a wordlist
+.TP
+.BR password
+Generate random password(s)
+.TP
+.BR benchmark
+CPU Benchmark
+.TP
+.BR \-v, \-\-version
+Display the version of WorgenX
+.TP
+.BR \-h, \-\-help
+Display this help message
+.SH "WORDLIST GENERATION OPTIONS"
+.PP
+You must specify at least one of the following options:
+.TP
+.BR \-l, \-\-lowercase
+Add lowercase characters to the words
+.TP
+.BR \-u, \-\-uppercase
+Add uppercase characters to the words
+.TP
+.BR \-n, \-\-numbers
+Add numbers to the words
+.TP
+.BR \-x, \-\-special-characters
+Add special characters to the words
+.PP
+These parameters are mandatory:
+.TP
+.BR \-m , \-\-mask " <mask>"
+Mask used to generate the words
+.TP
+.BR \-o , \-\-output " <path>"
+Save the wordlist in a text file
+.PP
+The following options are optional:
+.TP
+.BR \-d, \-\-disable-loading-bar
+Disable the loading bar when generating the wordlist
+.TP
+.BR \-h, \-\-hash
+Hash algorithm to use for the wordlist.
+You can choose between: md5, sha1, sha224, sha256, sha384, sha512, sha3-224, sha3-256, sha3-384, sha3-512, blake2b, blake2s and whirlpool
+.TP
+.BR \-t , \-\-threads " <threads>"
+Number of threads to generate the passwords. 
+By default, the number of threads is based on the number of physical cores of the CPU
+.SH "PASSWORD GENERATION OPTIONS"
+.PP
+You must specify at least one of the following options:
+.TP
+.BR \-l, \-\-lowercase
+Add lowercase characters to the words
+.TP
+.BR \-u, \-\-uppercase
+Add uppercase characters to the words
+.TP
+.BR \-n, \-\-numbers
+Add numbers to the words
+.TP
+.BR \-x, \-\-special-characters
+Add special characters to the words
+.PP
+These parameters are mandatory:
+.TP
+.BR \-s , \-\-size " <size>"
+Size of the passwords in characters
+.TP
+.BR \-c , \-\-count " <count>"
+Number of passwords to generate
+.PP
+The following options are optional:
+.TP
+.BR \-o , \-\-output " <path>"
+Save the passwords in a file
+.TP
+.BR \-O , \-\-output-only " <path>"
+Save the passwords only in a file, not in stdout
+.TP
+.BR \-j, \-\-json
+Output in JSON format
+Combine with -o to save the json output in a file
+.SH "CPU BENCHMARK OPTIONS"
+.PP
+The following option is optional:
+.TP
+.BR \-t , \-\-threads " <threads>"
+Number of threads to use for the CPU benchmark. 
+By default, the number of threads is based on the number of physical cores of the CPU
+.SH "SEE ALSO"
+For more information, refer to the README file or visit the project page at https://github.com/XenorInspire/WorgenX.
+.SH "AUTHOR"
+Xen0r <contact@no-email.com>
+.SH "VERSION"
+WorgenX 1.2.7

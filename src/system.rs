@@ -284,7 +284,8 @@ pub fn save_passwd_to_file(file: &Arc<Mutex<File>>, passwords: &str) -> Result<(
         ))
     })?;
 
-    file.write_all(format!("{passwords}\n").as_bytes())
+    file.write_all(passwords.as_bytes())
+        .and_then(|()| file.write_all(b"\n"))
         .map_err(|_| {
             WorgenXError::SystemError(SystemError::UnableToWriteToFile(
                 "output file".to_string(),
