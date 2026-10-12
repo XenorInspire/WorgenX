@@ -1,10 +1,17 @@
+worgenx (1.2.7) stable; urgency=medium
+  * Enhance global password generation performance
+  * Update dependencies
+  * Small clippy hints
+
+ -- Xen0r <contact@no-email.com>  Mon, 12 Oct 2026 22:45:00 +0000
+
 worgenx (1.2.6) stable; urgency=medium
   * Update dependencies, including security fixes:
     - GHSA-cq8v-f236-94qc
     - GHSA-3288-p39f-rqpv
   * Small clippy hints
 
- -- Xen0r <contact@no-email.com>  Sat, 03 Oct 2023 09:10:00 +0000
+ -- Xen0r <contact@no-email.com>  Sat, 03 Oct 2025 09:10:00 +0000
  
 worgenx (1.2.5) stable; urgency=medium
 
