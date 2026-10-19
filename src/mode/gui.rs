@@ -81,8 +81,9 @@ fn main_passwd_generation() {
     while again.eq("y") {
         let password_config: PasswordConfig = allocate_passwd_config_gui();
         let passwords: Vec<String> = password::generate_random_passwords(&password_config);
+        let passwords_text: String = passwords.join("\n");
 
-        println!("\nYou can find your password(s) below :\n\n{}", passwords.join("\n"));
+        println!("\nYou can find your password(s) below :\n\n{passwords_text}");
         println!("\nDo you want to save the passwords in a file ? (y/n)");
 
         let choice: String = system::get_user_choice_yn();
@@ -102,7 +103,7 @@ fn main_passwd_generation() {
             let (password_file, _) = file_result.unwrap();
             let shared_file: Arc<Mutex<File>> = Arc::new(Mutex::new(password_file));
             while let Err(e) =
-                system::save_passwd_to_file(&Arc::clone(&shared_file), &passwords.join("\n"))
+                system::save_passwd_to_file(&Arc::clone(&shared_file), &passwords_text)
             {
                 println!("\n{e}");
                 println!("Do you want to try again ? (y/n)");
@@ -137,38 +138,13 @@ fn allocate_passwd_config_gui() -> PasswordConfig {
         length: 0,
         number_of_passwords: 0,
     };
-    let mut is_option_chosen: bool = false;
-
-    while !is_option_chosen {
-        println!("\nChoose what your password is composed of :");
-        println!("Uppercase letters (A-Z) ? (y/n)");
-        if system::get_user_choice_yn().eq("y") {
-            password_config.uppercase = true;
-            is_option_chosen = true;
-        }
-
-        println!("Lowercase letters (a-z) ? (y/n)");
-        if system::get_user_choice_yn().eq("y") {
-            password_config.lowercase = true;
-            is_option_chosen = true;
-        }
-
-        println!("Numbers (0-9) ? (y/n)");
-        if system::get_user_choice_yn().eq("y") {
-            password_config.numbers = true;
-            is_option_chosen = true;
-        }
-
-        println!("Special characters ? (y/n)");
-        if system::get_user_choice_yn().eq("y") {
-            password_config.special_characters = true;
-            is_option_chosen = true;
-        }
-
-        if !is_option_chosen {
-            println!("You must choose at least one option !");
-        }
-    }
+    allocate_charset_options(
+        "Choose what your password is composed of :",
+        &mut password_config.uppercase,
+        &mut password_config.lowercase,
+        &mut password_config.numbers,
+        &mut password_config.special_characters,
+    );
 
     println!("How long do you want your password to be ?");
     password_config.length = system::get_user_choice_int();
@@ -249,38 +225,13 @@ fn allocate_wordlist_config_gui() -> WordlistValues {
         mask: String::new(),
         hash: String::new(),
     };
-    let mut is_option_chosen: bool = false;
-
-    while !is_option_chosen {
-        println!("\nChoose what your wordlist is composed of :");
-        println!("Uppercase letters (A-Z) ? (y/n)");
-        if system::get_user_choice_yn().eq("y") {
-            wordlist_config.uppercase = true;
-            is_option_chosen = true;
-        }
-
-        println!("Lowercase letters (a-z) ? (y/n)");
-        if system::get_user_choice_yn().eq("y") {
-            wordlist_config.lowercase = true;
-            is_option_chosen = true;
-        }
-
-        println!("Numbers (0-9) ? (y/n)");
-        if system::get_user_choice_yn().eq("y") {
-            wordlist_config.numbers = true;
-            is_option_chosen = true;
-        }
-
-        println!("Special characters ? (y/n)");
-        if system::get_user_choice_yn().eq("y") {
-            wordlist_config.special_characters = true;
-            is_option_chosen = true;
-        }
-
-        if !is_option_chosen {
-            println!("You must choose at least one option !");
-        }
-    }
+    allocate_charset_options(
+        "Choose what your wordlist is composed of :",
+        &mut wordlist_config.uppercase,
+        &mut wordlist_config.lowercase,
+        &mut wordlist_config.numbers,
+        &mut wordlist_config.special_characters,
+    );
 
     println!("Do you want to hash the passwords of the wordlist ? (y/n)");
     if system::get_user_choice_yn().eq("y") {
@@ -310,6 +261,38 @@ fn allocate_wordlist_config_gui() -> WordlistValues {
     }
 
     wordlist_config
+}
+
+fn allocate_charset_options(
+    prompt: &str,
+    uppercase: &mut bool,
+    lowercase: &mut bool,
+    numbers: &mut bool,
+    special_characters: &mut bool,
+) {
+    loop {
+        println!("\n{prompt}");
+        let options = [
+            ("Uppercase letters (A-Z) ? (y/n)", &mut *uppercase),
+            ("Lowercase letters (a-z) ? (y/n)", &mut *lowercase),
+            ("Numbers (0-9) ? (y/n)", &mut *numbers),
+            ("Special characters ? (y/n)", &mut *special_characters),
+        ];
+        let mut is_option_chosen: bool = false;
+
+        for (question, enabled) in options {
+            println!("{question}");
+            if system::get_user_choice_yn().eq("y") {
+                *enabled = true;
+                is_option_chosen = true;
+            }
+        }
+
+        if is_option_chosen {
+            return;
+        }
+        println!("You must choose at least one option !");
+    }
 }
 
 /// This is the main function of the CPU benchmark feature.

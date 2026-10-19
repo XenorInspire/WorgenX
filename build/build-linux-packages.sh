@@ -10,12 +10,10 @@ if [[ "$(uname -m)" != "x86_64" ]]; then
     exit 1
 fi
 
-if command -v docker >/dev/null 2>&1; then
-    CONTAINER_RUNTIME=docker
-elif command -v podman >/dev/null 2>&1; then
+if command -v podman >/dev/null 2>&1; then
     CONTAINER_RUNTIME=podman
 else
-    printf 'Error: install Docker or Podman before running this script.\n' >&2
+    printf 'Error: install Podman before running this script.\n' >&2
     exit 1
 fi
 
