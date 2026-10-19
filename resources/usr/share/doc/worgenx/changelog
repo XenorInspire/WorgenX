@@ -1,3 +1,9 @@
+worgenx (1.2.8) stable; urgency=medium
+  * Optimize a few TUI features
+  * Update dependencies
+
+ -- Xen0r <contact@no-email.com>  Mon, 19 Oct 2026 22:10:00 +0000
+
 worgenx (1.2.7) stable; urgency=medium
   * Enhance global password generation performance
   * Update dependencies
